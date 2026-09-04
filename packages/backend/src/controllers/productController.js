@@ -16,6 +16,7 @@ const listProducts = async (req, res, next) => {
     if (minPrice || maxPrice) filter.basePrice = { ...(minPrice ? { $gte: Number(minPrice) } : {}), ...(maxPrice ? { $lte: Number(maxPrice) } : {}) };
     if (search) filter.$text = { $search: String(search).trim() };
     if (category) { const categoryDoc = mongoose.isValidObjectId(category) ? category : await require('../models/Category').findOne({ slug: category }).select('_id').lean(); if (!categoryDoc) return res.json({ success: true, data: [], pagination: { page, limit, total: 0, pages: 0 } }); filter.category = categoryDoc._id || categoryDoc; }
+    const variantFilter = {}; if (req.query.scent) variantFilter.scent = String(req.query.scent); if (req.query.color) variantFilter.color = String(req.query.color); if (Object.keys(variantFilter).length) { const matchingVariants = await ProductVariant.find(variantFilter).distinct('product'); filter._id = { $in: matchingVariants }; }
     const sortMap = { priceLow: { basePrice: 1 }, priceHigh: { basePrice: -1 }, newest: { createdAt: -1 }, featured: { isFeatured: -1, createdAt: -1 } };
     const [products, total] = await Promise.all([Product.find(filter).populate('category', 'name slug image').sort(sortMap[sort] || sortMap.featured).skip((page - 1) * limit).limit(limit).lean(), Product.countDocuments(filter)]);
     const data = await Promise.all(products.map(async (product) => ({ ...product, variants: await variantData(await ProductVariant.find({ product: product._id, isActive: true })) })));
