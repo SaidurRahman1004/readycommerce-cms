@@ -22,3 +22,4 @@ ReadyCommerce CMS - A premium, self-hosted commerce platform for lifestyle busin
 * **[2026-09-03]**: Initialized monorepo infrastructure.
 * **[2026-09-03]**: Initialized Next.js storefront app in `/apps/storefront` with Tailwind CSS, TypeScript, and ESLint. Configured as part of the monorepo workspace.
 * **[2026-09-03]**: Scaffolded backend engine, added Documentation (README & Roadmap), and prepared initial commit for GitHub.
+* **[2026-09-04]**: Configured Google Stitch MCP integration in `.agents/mcp_config.json` to enable AI agent access to the ReadyCommerce design system.
