@@ -7,6 +7,7 @@ const rateLimit = require('express-rate-limit');
 const connectDB = require('./config/db');
 const { notFoundHandler, errorHandler } = require('./middlewares/errorHandler');
 const authRoutes = require('./routes/authRoutes');
+const catalogRoutes = require('./routes/catalogRoutes');
 
 dotenv.config();
 
@@ -24,6 +25,7 @@ app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'success', message: 'ReadyCommerce API Engine is running' });
 });
 app.use('/api/auth', authRoutes);
+app.use('/api', catalogRoutes);
 
 const PORT = process.env.PORT || 5000;
 

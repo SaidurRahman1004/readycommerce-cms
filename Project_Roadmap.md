@@ -26,12 +26,12 @@ The Admin Dashboard must not begin until Phase 12's Storefront Production Gate p
 - [x] Connect Storefront login/register/logout/current-user session restoration to these APIs.
 - [ ] Run real MongoDB integration verification and automated auth tests.
 
-### Phase 3 — Catalog
+### Phase 3 — Catalog *(IN PROGRESS)*
 
-- [ ] Build Product, Category, Variant and Inventory CRUD APIs.
+- [x] Add public Product, Category, Variant and Inventory read APIs with filtering and pagination.
 - [ ] Add publish states, category hierarchy, variant pricing, stock reservation and availability rules.
 - [ ] Add image/media handling, pagination and catalog response contracts.
-- [ ] Add catalog validation, authorization and API tests.
+- [ ] Build protected catalog CRUD APIs, catalog validation, authorization and API tests.
 
 ### Phase 4 — Storefront Integration + Search
 
