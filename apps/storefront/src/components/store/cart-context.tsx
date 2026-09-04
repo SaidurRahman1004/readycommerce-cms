@@ -1,6 +1,6 @@
 'use client';
 
-import {createContext, useContext, useMemo, useState} from 'react';
+import {createContext, useContext, useMemo, useState, useEffect} from 'react';
 import {catalog} from './catalog';
 
 export type CartLine = {productId: string; quantity: number};
@@ -10,6 +10,21 @@ const CartContext = createContext<CartContextValue | null>(null);
 export function CartProvider({children}: {children: React.ReactNode}) {
   const [items, setItems] = useState<CartLine[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('rc_cart');
+      if (stored) setItems(JSON.parse(stored));
+    } catch {}
+    setIsLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (isLoaded) {
+      localStorage.setItem('rc_cart', JSON.stringify(items));
+    }
+  }, [items, isLoaded]);
   const addItem = (productId = 'noir-07', quantity = 1) => setItems((current) => { const existing = current.find((item) => item.productId === productId); return existing ? current.map((item) => item.productId === productId ? {...item, quantity: item.quantity + quantity} : item) : [...current, {productId, quantity}]; });
   const updateQuantity = (productId: string, quantity: number) => setItems((current) => quantity > 0 ? current.map((item) => item.productId === productId ? {...item, quantity} : item) : current.filter((item) => item.productId !== productId));
   const removeItem = (productId: string) => setItems((current) => current.filter((item) => item.productId !== productId));

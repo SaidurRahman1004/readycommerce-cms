@@ -2,6 +2,11 @@
   "name": "readycommerce-cms",
   "version": "1.0.0",
   "private": true,
+  "scripts": {
+    "dev": "npm run dev --workspace=apps/storefront",
+    "dev:backend": "npm run dev --workspace=packages/backend",
+    "dev:all": "npm run dev --workspaces --if-present"
+  },
   "workspaces": [
     "apps/*",
     "packages/*"
