@@ -1,15 +1,20 @@
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const helmet = require('helmet');
+const morgan = require('morgan');
+const rateLimit = require('express-rate-limit');
 const connectDB = require('./config/db');
+const { notFoundHandler, errorHandler } = require('./middlewares/errorHandler');
 
 dotenv.config();
 
-connectDB();
-
 const app = express();
 
-app.use(cors());
+app.use(helmet());
+app.use(cors({ origin: process.env.CLIENT_URL || true, credentials: true }));
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+app.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 100, standardHeaders: true, legacyHeaders: false }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -19,6 +24,19 @@ app.get('/api/health', (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+const startServer = async () => {
+  try {
+    await connectDB();
+    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  } catch (error) {
+    console.error(`Unable to start server: ${error.message}`);
+    process.exitCode = 1;
+  }
+};
+
+app.use(notFoundHandler);
+app.use(errorHandler);
+
+if (require.main === module) startServer();
+
+module.exports = { app, startServer };

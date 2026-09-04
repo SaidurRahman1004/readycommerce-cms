@@ -1,86 +1,102 @@
-# Project Roadmap - ReadyCommerce CMS
+# ReadyCommerce CMS — 12-Phase Master Roadmap
 
-This roadmap is based on the comprehensive project audit. The overarching rule is: **Do NOT start the Admin Dashboard until the Storefront E2E workflow and Backend Foundation are fully complete.**
+## Architecture Decision
 
----
+ReadyCommerce is officially moving to a **backend-first architecture**. The Storefront UI/UX foundation is completed as an **Advanced Prototype**: the bilingual public pages, account screens, cart/checkout presentation, search and wishlist interactions exist. However, **real backend integration, real authentication, and end-to-end commerce flows remain PENDING** until the phases below are delivered and verified.
 
-### Priority 0 — Foundation Before More UI
-- [x] Create monorepo using npm workspaces & configure Git.
-- [x] Initialize Next.js app (`/apps/storefront`) & configure i18n (`next-intl`).
-- [x] Scaffold Node.js Express backend & connect to MongoDB.
-- [ ] Implement Real backend architecture (Models: User, Product, Category, Order, Payment, Review, Wishlist, Address).
-- [ ] Implement Auth API and secure session/token strategy.
-- [ ] Setup protected customer routes.
-- [ ] Implement Central API error format.
-- [ ] Create Frontend service layer connected to real API.
-- [x] Fix Order ID state generation and synchronize Checkout with Success.
-- [ ] Setup Automated unit/E2E tests.
-- [ ] Configure Environment variable/security policy.
-- [ ] Verify UTF-8 Bengali translations.
+The Admin Dashboard must not begin until Phase 12's Storefront Production Gate passes.
 
-### Priority 1 — Core Customer Journey
-*Goal: Complete the core shopping flow (Search → Product → Cart → Payment → Order).*
-- [x] Search (Keyword, Suggestions, query-based results).
-- [ ] Category pages.
-- [ ] Stock validation & Product Variants.
-- [x] Cart persistence & validation (client-side LocalStorage persistence implemented).
-- [ ] Address selection during checkout.
-- [ ] Shipping charge & Tax calculation.
-- [ ] Coupon integration.
-- [ ] Payment states & verification (bKash/Nagad manual).
-- [ ] Real order creation and backend synchronization.
-- [ ] Order detail & Tracking.
+## Master Plan
 
-### Priority 2 — Account & Post-purchase
-- [ ] Session-aware Customer Portal.
-- [ ] Dashboard overview.
-- [ ] Order details route.
-- [ ] Cancel order, Return request, Refund request.
-- [ ] Reorder capability.
-- [ ] Invoice download.
-- [ ] Address edit/default address management.
-- [x] Wishlist logic & UI (client-side LocalStorage persistence implemented).
-- [ ] Review submission & My reviews.
-- [ ] Notifications system.
+### Phase 1 — Backend Foundation
 
-### Priority 3 — Discovery & Conversion
-- [ ] Wishlist features across catalog.
-- [x] Search suggestions (debounced mock suggestions implemented).
-- [ ] Related & Recommended products.
-- [ ] Recently viewed products.
-- [ ] Best sellers & New arrivals.
-- [ ] Offers/discounts engine.
-- [ ] Product reviews display.
-- [ ] Newsletter subscription.
-- [ ] Abandoned cart recovery logic.
+- [x] Establish Express/Mongoose backend structure and environment-aware database connection.
+- [x] Create core commerce schemas: users, addresses, catalog, variants, inventory, cart, orders, payments, reviews, wishlist and coupons.
+- [x] Add baseline security middleware: Helmet, CORS, rate limiting and request logging.
+- [x] Add Joi validation middleware and a consistent centralized error response.
+- [ ] Add environment validation, structured logging, audit fields and automated backend tests.
 
-### Priority 4 — Trust, Legal & Operations
-- [ ] Privacy Policy, Terms, Refund Policy, Shipping Policy.
-- [ ] Contact Us & FAQ.
-- [ ] Cookie/consent banner.
-- [ ] 404 page & Error page templates.
-- [ ] Offline/retry state handling.
-- [ ] SEO metadata, Sitemap & robots.txt.
-- [ ] Product structured data (Schema.org).
-- [ ] Analytics & Conversion tracking.
-- [ ] Monitoring/logging integration.
+### Phase 2 — Real Authentication
 
-### Priority 5 — QA & Production Readiness
-- [ ] Unit tests, Integration tests, E2E tests execution.
-- [ ] Responsive UI verification (Mobile, Tablet, Desktop, Widescreen).
-- [ ] Accessibility audit & Keyboard navigation.
-- [ ] Screen reader testing.
-- [ ] Performance & Security review.
-- [ ] Rate limiting & Input sanitization.
-- [ ] Backup/restore strategy.
-- [ ] Deployment pipeline (CI/CD).
+- [ ] Build registration, login, logout and refresh/session endpoints.
+- [ ] Implement JWT/session strategy with secure cookies, rotation and revocation.
+- [ ] Add password hashing, forgot/reset/change password tokens and email/account verification.
+- [ ] Add role-based authorization, account activation/deactivation and protected routes.
+- [ ] Connect the Storefront auth/account UI to these APIs.
 
----
+### Phase 3 — Catalog
 
-### Priority 6 — Admin Dashboard
-*Will only begin after Priorities 0-5 are successfully verified.*
-- [ ] Initialize Next.js dashboard app (`/apps/dashboard`).
-- [ ] Core admin authentication.
-- [ ] Catalog management (Products, Categories).
-- [ ] Order fulfillment management.
-- [ ] Customer management.
+- [ ] Build Product, Category, Variant and Inventory CRUD APIs.
+- [ ] Add publish states, category hierarchy, variant pricing, stock reservation and availability rules.
+- [ ] Add image/media handling, pagination and catalog response contracts.
+- [ ] Add catalog validation, authorization and API tests.
+
+### Phase 4 — Storefront Integration + Search
+
+- [ ] Replace mock product data with catalog APIs.
+- [ ] Connect category pages, product listing, PDP, filters, sorting and pagination.
+- [ ] Implement server-backed search, suggestions, no-result handling and availability filtering.
+- [ ] Add request loading, error, retry, caching and stale-state behavior.
+
+### Phase 5 — Cart
+
+- [ ] Implement server-side customer/guest carts and cart item APIs.
+- [ ] Validate product, variant, price and stock on every cart mutation.
+- [ ] Support merge-on-login, quantity limits, reservation expiry and accurate totals.
+- [ ] Replace local-only cart state while retaining resilient UI loading/error states.
+
+### Phase 6 — Address + Shipping + Checkout
+
+- [ ] Connect address book CRUD and checkout address selection.
+- [ ] Implement shipping methods, rates, tax/VAT rules and order total calculation.
+- [ ] Build idempotent checkout/order creation with server-side price revalidation.
+- [ ] Support logged-in checkout and explicitly decide whether guest checkout is enabled.
+
+### Phase 7 — Payment Integration
+
+- [ ] Integrate selected gateways (including bKash/Nagad where applicable) and COD rules.
+- [ ] Implement initiation, callback/webhook verification and payment status synchronization.
+- [ ] Handle pending, success, failed and cancelled payments safely.
+- [ ] Add idempotency and duplicate payment/order protection with reconciliation logs.
+
+### Phase 8 — Orders & Order Lifecycle
+
+- [ ] Implement Pending → Confirmed → Processing → Shipped → Delivered lifecycle APIs.
+- [ ] Support Cancelled, Failed, Returned and Refunded states with transition rules.
+- [ ] Add tracking number/carrier, customer notifications and order detail endpoints.
+- [ ] Connect confirmation, success, tracking, cancellation and refund UI flows.
+
+### Phase 9 — Customer Portal
+
+- [ ] Connect profile, password, security and address management to real APIs.
+- [ ] Add order history/details, tracking, cancellation, return/refund and reorder.
+- [ ] Add invoice/receipt downloads, wishlist and review submission/history.
+- [ ] Add customer notifications, account preferences and authorization checks.
+
+### Phase 10 — Commerce Enhancements
+
+- [ ] Add recommendations, related products, recently viewed, featured and best-seller logic.
+- [ ] Implement offers, coupons, eligibility, usage limits and discount auditing.
+- [ ] Add newsletter subscription with consent, duplicate handling and delivery integration.
+
+### Phase 11 — Legal + SEO + Performance + Accessibility
+
+- [ ] Publish Privacy, Terms, Refund, Shipping, Contact and FAQ pages.
+- [ ] Add metadata, canonical URLs, Open Graph, sitemap, robots and structured product data.
+- [ ] Set image/CDN, caching, performance budgets, analytics and conversion tracking.
+- [ ] Complete keyboard, screen-reader, contrast, Bengali typography and responsive audits.
+
+### Phase 12 — Full E2E QA → Storefront Production Gate → Admin Dashboard
+
+- [ ] Run automated and manual E2E coverage: Browse → Search → PDP → Cart → Checkout → Payment → Order → Tracking → Account → Review/Return/Refund.
+- [ ] Verify desktop, laptop, tablet and mobile layouts, network failures, retries, loading and empty/error states.
+- [ ] Complete security, data integrity, observability, deployment, backups and rollback checks.
+- [ ] Approve the Storefront Production Gate only when all customer-facing flows are real, connected and verified.
+- [ ] Start Admin Dashboard design and implementation after the gate is approved.
+
+## Immediate Next Steps
+
+1. Review and approve the Phase 1 schema contracts.
+2. Add backend environment validation and automated model/API tests.
+3. Implement Phase 2 authentication and protected-route APIs.
+4. Connect the existing Storefront service layer to the first real auth endpoints.

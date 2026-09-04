@@ -32,6 +32,7 @@ ReadyCommerce CMS - A premium, self-hosted commerce platform for lifestyle busin
 - **Customer Portal**: Added the bilingual `/account` portal with responsive sidebar navigation, profile update, change password, logout, mocked order history/details, and address book management.
 - **Storefront State & Discovery**: Cart and wishlist now persist through guarded LocalStorage hydration; global debounced search, query-based results, wishlist listing, and product-card/PDP wishlist controls are connected.
 - **Order Confirmation Integrity**: Checkout now stores the generated mock order ID and the Success page reads the same ID, removing the previous mismatch.
+- **Backend-First Phase 1 Foundation**: Added production-oriented Mongoose schemas for the core commerce domain, secure password hashing hooks, Joi validation utilities, Helmet security headers, rate limiting, Morgan request logging, a resilient MongoDB connection utility, and centralized error handling. Real APIs, authentication, and backend-connected commerce behavior remain pending in the 12-phase roadmap.
 
 ## Pending Gap Analysis
 - [ ] Real backend/API integration, authentication persistence, sessions, authorization, and secure password reset tokens.
