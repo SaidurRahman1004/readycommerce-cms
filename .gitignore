@@ -17,3 +17,4 @@ pnpm-debug.log*
 coverage/
 
 .agents/mcp_config.json
+.agents/mcp.toml
