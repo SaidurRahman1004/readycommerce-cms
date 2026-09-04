@@ -11,6 +11,8 @@ const userSchema = new mongoose.Schema({
   isActive: { type: Boolean, default: true, index: true },
   isEmailVerified: { type: Boolean, default: false },
   lastLoginAt: Date,
+  passwordResetTokenHash: { type: String, select: false },
+  passwordResetExpiresAt: { type: Date, select: false },
 }, { timestamps: true });
 
 userSchema.pre('save', async function hashPassword(next) {

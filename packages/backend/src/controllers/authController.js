@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const Session = require('../models/Session');
+const crypto = require('crypto');
 const { AppError } = require('../middlewares/errorHandler');
 const { createAccessToken, createRefreshToken, hashToken } = require('../utils/tokens');
 
@@ -57,4 +58,38 @@ const refresh = async (req, res, next) => {
   } catch (error) { return next(error); }
 };
 
-module.exports = { register, login, logout, currentUser, refresh };
+const forgotPassword = async (req, res, next) => {
+  try {
+    const user = await User.findOne({ email: req.body.email.toLowerCase() });
+    if (user) {
+      const token = crypto.randomBytes(32).toString('hex');
+      user.passwordResetTokenHash = hashToken(token);
+      user.passwordResetExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
+      await user.save({ validateBeforeSave: false });
+      console.log(`Password reset link (development only): ${process.env.FRONTEND_ORIGIN || 'http://localhost:3000'}/en/reset-password?token=${token}`);
+    }
+    return res.json({ success: true, message: 'If an account exists, a reset link has been sent.' });
+  } catch (error) { return next(error); }
+};
+
+const resetPassword = async (req, res, next) => {
+  try {
+    const user = await User.findOne({ passwordResetTokenHash: hashToken(req.body.token), passwordResetExpiresAt: { $gt: new Date() } }).select('+passwordResetTokenHash +passwordResetExpiresAt');
+    if (!user) return next(new AppError('Reset link is invalid or expired.', 400, 'INVALID_RESET_TOKEN'));
+    user.password = req.body.password; user.passwordResetTokenHash = undefined; user.passwordResetExpiresAt = undefined;
+    await user.save();
+    return res.json({ success: true, message: 'Password reset successfully.' });
+  } catch (error) { return next(error); }
+};
+
+const changePassword = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id).select('+password');
+    if (!user || !(await user.comparePassword(req.body.currentPassword))) return next(new AppError('Current password is incorrect.', 401, 'INVALID_CURRENT_PASSWORD'));
+    user.password = req.body.newPassword; await user.save();
+    await Session.updateMany({ user: user._id, revokedAt: null }, { $set: { revokedAt: new Date() } });
+    return res.json({ success: true, message: 'Password changed successfully.' });
+  } catch (error) { return next(error); }
+};
+
+module.exports = { register, login, logout, currentUser, refresh, forgotPassword, resetPassword, changePassword };

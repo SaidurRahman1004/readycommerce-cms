@@ -23,9 +23,9 @@ export const authService = {
   register: async (payload: AuthPayload) => request<{success: boolean; user: AuthUser}>('/auth/register', {method: 'POST', body: JSON.stringify({name: payload.name, email: payload.email, password: payload.password})}),
   me: async () => request<{success: boolean; user: AuthUser}>('/auth/me'),
   refresh: async () => request<{success: boolean; user: AuthUser}>('/auth/refresh', {method: 'POST'}),
-  forgotPassword: async (email: string) => mockRequest({message: 'reset_sent', email}),
-  resetPassword: async (password: string) => mockRequest({message: 'password_reset', passwordChanged: Boolean(password)}),
-  changePassword: async (currentPassword: string, newPassword: string) => mockRequest({message: 'password_changed', valid: Boolean(currentPassword && newPassword)}),
+  forgotPassword: async (email: string) => request<{success: boolean}>('/auth/forgot-password', {method: 'POST', body: JSON.stringify({email})}),
+  resetPassword: async (password: string, token: string) => request<{success: boolean}>('/auth/reset-password', {method: 'POST', body: JSON.stringify({password, token})}),
+  changePassword: async (currentPassword: string, newPassword: string) => request<{success: boolean}>('/auth/change-password', {method: 'POST', body: JSON.stringify({currentPassword, newPassword})}),
   logout: async () => request<{success: boolean}>('/auth/logout', {method: 'POST'})
 };
 
