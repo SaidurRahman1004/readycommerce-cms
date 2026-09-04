@@ -11,9 +11,9 @@ export default function CatalogCard({product}: {product: CatalogProduct}) {
   const t = useTranslations('Storefront'); 
   const {addItem} = useCart();
   
-  // Simulated dynamic rating and reviews count for premium feel
-  const rating = (Math.random() * (5 - 4.2) + 4.2).toFixed(1);
-  const reviews = Math.floor(Math.random() * 200) + 24;
+  // Stable prototype values avoid changing product content on every render.
+  const rating = '4.8';
+  const reviews = 124;
 
   return (
     <article className="group flex flex-col rounded-[2rem] bg-surface p-3 shadow-sm border border-border/60 transition-all duration-500 hover:shadow-premium hover:-translate-y-1.5">
