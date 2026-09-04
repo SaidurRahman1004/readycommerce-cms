@@ -4,7 +4,7 @@ import {createContext, useContext, useMemo, useState} from 'react';
 import {catalog} from './catalog';
 
 export type CartLine = {productId: string; quantity: number};
-type CartContextValue = {items: CartLine[]; count: number; subtotal: number; isOpen: boolean; addItem: (productId?: string, quantity?: number) => void; updateQuantity: (productId: string, quantity: number) => void; removeItem: (productId: string) => void; openCart: () => void; closeCart: () => void};
+type CartContextValue = {items: CartLine[]; count: number; subtotal: number; isOpen: boolean; addItem: (productId?: string, quantity?: number) => void; updateQuantity: (productId: string, quantity: number) => void; removeItem: (productId: string) => void; clearCart: () => void; openCart: () => void; closeCart: () => void};
 const CartContext = createContext<CartContextValue | null>(null);
 
 export function CartProvider({children}: {children: React.ReactNode}) {
@@ -15,7 +15,7 @@ export function CartProvider({children}: {children: React.ReactNode}) {
   const removeItem = (productId: string) => setItems((current) => current.filter((item) => item.productId !== productId));
   const count = items.reduce((total, item) => total + item.quantity, 0);
   const subtotal = items.reduce((total, item) => total + (catalog.find((product) => product.id === item.productId)?.price ?? 0) * item.quantity, 0);
-  const value = useMemo(() => ({items, count, subtotal, isOpen, addItem, updateQuantity, removeItem, openCart: () => setIsOpen(true), closeCart: () => setIsOpen(false)}), [items, count, subtotal, isOpen]);
+  const value = useMemo(() => ({items, count, subtotal, isOpen, addItem, updateQuantity, removeItem, clearCart: () => setItems([]), openCart: () => setIsOpen(true), closeCart: () => setIsOpen(false)}), [items, count, subtotal, isOpen]);
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
 
