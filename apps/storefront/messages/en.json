@@ -1,6 +1,11 @@
 {
-  "HomePage": {
-    "title": "Welcome to ReadyCommerce",
-    "description": "Premium self-hosted commerce platform"
+  "HomePage": {"title": "ReadyCommerce", "description": "A premium commerce experience for modern lifestyle brands.", "languageEnglish": "English", "languageBengali": "বাংলা"},
+  "Auth": {
+    "login": {"eyebrow": "Welcome back", "title": "Sign in to your account", "description": "Continue your journey with a more thoughtful way to shop.", "submit": "Sign in", "switchPrompt": "Don't have an account?", "switchAction": "Create one", "forgotPassword": "Forgot password?", "success": "Your details look good. Sign-in is ready to connect to your account."},
+    "register": {"eyebrow": "Begin your journey", "title": "Create your account", "description": "Save your favourites and make every purchase feel personal.", "submit": "Create account", "switchPrompt": "Already have an account?", "switchAction": "Sign in", "success": "Your details look good. Your account is ready to be created."},
+    "fields": {"name": "Full name", "email": "Email address", "password": "Password", "confirmPassword": "Confirm password"},
+    "placeholders": {"name": "Your full name", "email": "you@example.com", "password": "At least 8 characters", "confirmPassword": "Re-enter your password"},
+    "errors": {"nameRequired": "Please enter your full name.", "emailRequired": "Please enter your email address.", "emailInvalid": "Please enter a valid email address.", "passwordRequired": "Please enter a password.", "passwordShort": "Password must be at least 8 characters.", "confirmRequired": "Please confirm your password.", "passwordMismatch": "Passwords do not match."},
+    "visual": {"imageAlt": "A luxury perfume bottle and skincare products", "quote": "Beauty is not a routine. It is a ritual.", "tagline": "Curated for the way you live.", "brand": "ReadyCommerce"}
   }
 }

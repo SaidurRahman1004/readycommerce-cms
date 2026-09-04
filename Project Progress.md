@@ -20,6 +20,7 @@ ReadyCommerce CMS - A premium, self-hosted commerce platform for lifestyle busin
 - Documentation (README and Roadmap) added.
 - **Storefront i18n**: Configured with `next-intl` (English & Bengali).
 - **Backend Setup**: Basic backend initialized and MongoDB connection configured.
+- **Customer Authentication UI**: Login and Registration screens completed in English and Bengali with responsive premium layout, accessible form states, and client-side validation.
 
 ## UI/UX Status
 - Wireframes and complete UI flow available via Google Stitch (Ready for implementation).
@@ -30,3 +31,4 @@ ReadyCommerce CMS - A premium, self-hosted commerce platform for lifestyle busin
 * **[2026-09-03]**: Scaffolded backend engine, added Documentation (README & Roadmap), and prepared initial commit for GitHub.
 * **[2026-09-04]**: Configured Google Stitch MCP and Codex MCP in `.agents/mcp.toml` and untracked config from Git.
 * **[2026-09-04]**: Updated project rules (Stitch designs as reference, premium UI, dual languages). Set up `next-intl` in storefront for English and Bengali. Added MongoDB connection config to backend.
+* **[2026-09-04]**: Built bilingual Storefront Customer Authentication UI for Login and Registration with responsive split-screen design, Unsplash lifestyle visual, and frontend validation.
