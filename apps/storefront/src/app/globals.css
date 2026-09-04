@@ -1,28 +1,78 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
+@theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-subtle: var(--primary-subtle);
+  
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  
+  --font-sans: var(--font-sans-primary);
+  --font-bengali: var(--font-sans-bengali);
+  
+  /* Additional Premium Shadows */
+  --shadow-premium: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+  --shadow-premium-hover: 0 10px 30px -5px rgba(0, 0, 0, 0.08);
+}
+
+:root {
+  --background: #fafbff;
+  --foreground: #0f172a;
+  
+  /* ReadyCommerce Primary Brand (Pro-Market Trust) */
+  --primary: #00B894;
+  --primary-hover: #00a383;
+  --primary-subtle: #e6f8f4;
+  
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --border: #e2e8f0;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #020617;
+    --foreground: #f8fafc;
+    
+    --primary: #00B894;
+    --primary-hover: #00d2aa;
+    --primary-subtle: #002e25;
+    
+    --muted: #0f172a;
+    --muted-foreground: #94a3b8;
+    --border: #1e293b;
   }
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, "Noto Sans Bengali", "Hind Siliguri", sans-serif;
+  font-family: var(--font-sans-primary), var(--font-sans-bengali), sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-*:focus-visible { outline: 2px solid #6366f1; outline-offset: 3px; }
+/* Premium Focus States */
+*:focus-visible { 
+  outline: 2px solid var(--primary); 
+  outline-offset: 3px; 
+}
+
+/* Hide scrollbar for clean UI where needed */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
