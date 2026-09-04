@@ -6,13 +6,15 @@ const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const connectDB = require('./config/db');
 const { notFoundHandler, errorHandler } = require('./middlewares/errorHandler');
+const authRoutes = require('./routes/authRoutes');
 
 dotenv.config();
 
 const app = express();
 
 app.use(helmet());
-app.use(cors({ origin: process.env.CLIENT_URL || true, credentials: true }));
+const allowedOrigins = (process.env.FRONTEND_ORIGIN || 'http://localhost:3000').split(',').map((origin) => origin.trim());
+app.use(cors({ origin: (origin, callback) => (!origin || allowedOrigins.includes(origin) ? callback(null, true) : callback(new Error('Origin not allowed'))), credentials: true }));
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 100, standardHeaders: true, legacyHeaders: false }));
 app.use(express.json());
@@ -21,6 +23,7 @@ app.use(express.urlencoded({ extended: true }));
 app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'success', message: 'ReadyCommerce API Engine is running' });
 });
+app.use('/api/auth', authRoutes);
 
 const PORT = process.env.PORT || 5000;
 

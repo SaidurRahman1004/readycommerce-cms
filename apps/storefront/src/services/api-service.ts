@@ -1,5 +1,15 @@
 const wait = (milliseconds: number) => new Promise<void>((resolve) => setTimeout(resolve, milliseconds));
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+export type AuthUser = {id: string; firstName: string; lastName: string; email: string; phone?: string; role: string; isActive: boolean; isEmailVerified: boolean; createdAt?: string};
+class ApiError extends Error { status: number; code?: string; constructor(message: string, status: number, code?: string) { super(message); this.status = status; this.code = code; } }
+async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const response = await fetch(`${API_URL}${path}`, {...options, credentials: 'include', headers: {'Content-Type': 'application/json', ...(options.headers || {})}});
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new ApiError(body?.error?.message || 'Request failed.', response.status, body?.error?.code);
+  return body as T;
+}
+
 export type AuthPayload = {name?: string; email: string; password: string};
 export type CheckoutPayload = {name: string; email: string; phone: string; address: string; city: string; postal: string; payment: string; txid: string; items: unknown[]};
 
@@ -9,12 +19,14 @@ async function mockRequest<T>(result: T): Promise<T> {
 }
 
 export const authService = {
-  login: async (payload: AuthPayload) => mockRequest({message: 'login_success', user: {email: payload.email}}),
-  register: async (payload: AuthPayload) => mockRequest({message: 'register_success', user: {email: payload.email, name: payload.name}}),
+  login: async (payload: AuthPayload) => request<{success: boolean; user: AuthUser}>('/auth/login', {method: 'POST', body: JSON.stringify({email: payload.email, password: payload.password})}),
+  register: async (payload: AuthPayload) => request<{success: boolean; user: AuthUser}>('/auth/register', {method: 'POST', body: JSON.stringify({name: payload.name, email: payload.email, password: payload.password})}),
+  me: async () => request<{success: boolean; user: AuthUser}>('/auth/me'),
+  refresh: async () => request<{success: boolean; user: AuthUser}>('/auth/refresh', {method: 'POST'}),
   forgotPassword: async (email: string) => mockRequest({message: 'reset_sent', email}),
   resetPassword: async (password: string) => mockRequest({message: 'password_reset', passwordChanged: Boolean(password)}),
   changePassword: async (currentPassword: string, newPassword: string) => mockRequest({message: 'password_changed', valid: Boolean(currentPassword && newPassword)}),
-  logout: async () => mockRequest({message: 'logout_success'})
+  logout: async () => request<{success: boolean}>('/auth/logout', {method: 'POST'})
 };
 
 export const accountService = {

@@ -20,6 +20,7 @@ ReadyCommerce CMS - A premium, self-hosted commerce platform for lifestyle busin
 - Documentation (README and Roadmap) added.
 - **Storefront i18n**: Configured with `next-intl` (English & Bengali).
 - **Backend Setup**: Basic backend initialized and MongoDB connection configured.
+- **Phase 2 Real Authentication**: Backend-backed registration, login, logout, current-user retrieval, rotating database sessions, short-lived HttpOnly JWT access cookies, explicit CORS, and protected customer-route session restoration are implemented. Password recovery/reset remains pending until the secure email-token workflow is added.
 - **Customer Authentication UI**: Login and Registration screens completed in English and Bengali with responsive premium layout, accessible form states, and client-side validation.
 - **Global Storefront Layout**: Responsive i18n-aware Navbar, language switcher, cart badge state, route-aware shell, and minimalist Footer completed.
 - **Public Storefront Homepage**: Premium responsive hero, category discovery cards, and bilingual trending product grid completed.

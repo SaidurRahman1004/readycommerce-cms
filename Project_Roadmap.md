@@ -16,13 +16,14 @@ The Admin Dashboard must not begin until Phase 12's Storefront Production Gate p
 - [x] Add Joi validation middleware and a consistent centralized error response.
 - [ ] Add environment validation, structured logging, audit fields and automated backend tests.
 
-### Phase 2 — Real Authentication
+### Phase 2 — Real Authentication *(PARTIALLY COMPLETED / PASS WITH CONDITIONS)*
 
-- [ ] Build registration, login, logout and refresh/session endpoints.
-- [ ] Implement JWT/session strategy with secure cookies, rotation and revocation.
-- [ ] Add password hashing, forgot/reset/change password tokens and email/account verification.
-- [ ] Add role-based authorization, account activation/deactivation and protected routes.
-- [ ] Connect the Storefront auth/account UI to these APIs.
+- [x] Build registration, login, logout, current-user and refresh/session endpoints.
+- [x] Implement short-lived JWT access cookies and rotating DB-backed refresh sessions with revocation.
+- [x] Add password hashing, role foundation, account activation checks and protected customer route session restoration.
+- [ ] Add secure forgot/reset/change password tokens and email/account verification.
+- [x] Connect Storefront login/register/logout/current-user session restoration to these APIs.
+- [ ] Run real MongoDB integration verification and automated auth tests.
 
 ### Phase 3 — Catalog
 
