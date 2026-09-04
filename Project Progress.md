@@ -30,6 +30,8 @@ ReadyCommerce CMS - A premium, self-hosted commerce platform for lifestyle busin
 - **Frontend Hardening**: Added service-layer mock API requests with replaceable network boundary, Zod validation, loading/disabled states, react-hot-toast success/error feedback, redirects, and regression-safe responsive interactions.
 - **Missing Auth Flows**: Forgot Password, Reset Password, Profile Change Password, and Logout are now connected with mocked async logic and bilingual UX.
 - **Customer Portal**: Added the bilingual `/account` portal with responsive sidebar navigation, profile update, change password, logout, mocked order history/details, and address book management.
+- **Storefront State & Discovery**: Cart and wishlist now persist through guarded LocalStorage hydration; global debounced search, query-based results, wishlist listing, and product-card/PDP wishlist controls are connected.
+- **Order Confirmation Integrity**: Checkout now stores the generated mock order ID and the Success page reads the same ID, removing the previous mismatch.
 
 ## Pending Gap Analysis
 - [ ] Real backend/API integration, authentication persistence, sessions, authorization, and secure password reset tokens.
@@ -63,3 +65,4 @@ ReadyCommerce CMS - A premium, self-hosted commerce platform for lifestyle busin
 * **[2026-09-04]**: Completed Phase 3 Checkout Flow with cart drawer, responsive shipping/contact checkout, manual mobile-wallet payment validation, and order success screen.
 * **[2026-09-04]**: Completed frontend hardening, missing auth flows, and service layer implementation with simulated network latency, robust validation, toast feedback, loading states, cart clearing, and redirects.
 * **[2026-09-04]**: Completed Customer Portal with responsive account navigation, profile and password management, mocked order history, address book CRUD, bilingual UX, validation, loading states, and toast feedback. Added the future Pending Gap Analysis checklist.
+* **[2026-09-04]**: Hardened storefront client state with LocalStorage-persistent cart/wishlist, added debounced global search and search results, connected wishlist discovery flow, and synchronized checkout order IDs with the Success page.

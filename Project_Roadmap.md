@@ -13,17 +13,17 @@ This roadmap is based on the comprehensive project audit. The overarching rule i
 - [ ] Setup protected customer routes.
 - [ ] Implement Central API error format.
 - [ ] Create Frontend service layer connected to real API.
-- [ ] Fix Order ID state generation.
+- [x] Fix Order ID state generation and synchronize Checkout with Success.
 - [ ] Setup Automated unit/E2E tests.
 - [ ] Configure Environment variable/security policy.
 - [ ] Verify UTF-8 Bengali translations.
 
 ### Priority 1 — Core Customer Journey
 *Goal: Complete the core shopping flow (Search → Product → Cart → Payment → Order).*
-- [ ] Search (Keyword, Category, Suggestions).
+- [x] Search (Keyword, Suggestions, query-based results).
 - [ ] Category pages.
 - [ ] Stock validation & Product Variants.
-- [ ] Cart persistence & validation.
+- [x] Cart persistence & validation (client-side LocalStorage persistence implemented).
 - [ ] Address selection during checkout.
 - [ ] Shipping charge & Tax calculation.
 - [ ] Coupon integration.
@@ -39,13 +39,13 @@ This roadmap is based on the comprehensive project audit. The overarching rule i
 - [ ] Reorder capability.
 - [ ] Invoice download.
 - [ ] Address edit/default address management.
-- [ ] Wishlist logic & UI.
+- [x] Wishlist logic & UI (client-side LocalStorage persistence implemented).
 - [ ] Review submission & My reviews.
 - [ ] Notifications system.
 
 ### Priority 3 — Discovery & Conversion
 - [ ] Wishlist features across catalog.
-- [ ] Search suggestions.
+- [x] Search suggestions (debounced mock suggestions implemented).
 - [ ] Related & Recommended products.
 - [ ] Recently viewed products.
 - [ ] Best sellers & New arrivals.
