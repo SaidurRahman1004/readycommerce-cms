@@ -25,6 +25,8 @@ ReadyCommerce CMS - A premium, self-hosted commerce platform for lifestyle busin
 - **Public Storefront Homepage**: Premium responsive hero, category discovery cards, and bilingual trending product grid completed.
 - **Shop Product Listing**: Responsive product listing with category, price, scent, and colour filters, sorting, empty state, and mobile bottom-sheet filter controls completed.
 - **Product Details (PDP)**: Responsive product gallery/carousel, thumbnails, reviews, size selectors, quantity control, accordion details, and sticky mobile Add to Cart completed.
+- **Checkout Flow**: Globally accessible cart drawer with line items, quantity controls, subtotal, distraction-free bilingual checkout, manual bKash/Nagad TxID payment, and responsive order summary completed.
+- **Order Success**: Minimalist bilingual confirmation page with order ID and continue-shopping CTA completed.
 
 ## UI/UX Status
 - Wireframes and complete UI flow available via Google Stitch (Ready for implementation).
@@ -38,3 +40,4 @@ ReadyCommerce CMS - A premium, self-hosted commerce platform for lifestyle busin
 * **[2026-09-04]**: Built bilingual Storefront Customer Authentication UI for Login and Registration with responsive split-screen design, Unsplash lifestyle visual, and frontend validation.
 * **[2026-09-04]**: Completed Phase 2 Public Storefront core with responsive global navigation, EN/BN language switching, cart badge state, footer, hero, category cards, and trending products.
 * **[2026-09-04]**: Completed Shop listing and Product Details pages with responsive filtering, sorting, swipeable mobile gallery, product options, and conversion-focused cart actions.
+* **[2026-09-04]**: Completed Phase 3 Checkout Flow with cart drawer, responsive shipping/contact checkout, manual mobile-wallet payment validation, and order success screen.
