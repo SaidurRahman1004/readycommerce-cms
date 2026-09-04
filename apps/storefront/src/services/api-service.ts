@@ -17,6 +17,17 @@ export const authService = {
   logout: async () => mockRequest({message: 'logout_success'})
 };
 
+export const accountService = {
+  updateProfile: async (payload: {firstName: string; lastName: string; phone: string}) => mockRequest({message: 'profile_updated', payload}),
+  listOrders: async () => mockRequest([
+    {id: 'RC-2409-1842', date: '09 Sep 2026', status: 'Delivered', total: 158, items: 2},
+    {id: 'RC-2408-0931', date: '27 Aug 2026', status: 'Shipped', total: 94, items: 1},
+    {id: 'RC-2407-7710', date: '14 Jul 2026', status: 'Processing', total: 136, items: 3}
+  ]),
+  saveAddress: async (payload: {label: string; line: string; city: string; postal: string}) => mockRequest({message: 'address_saved', payload}),
+  deleteAddress: async (id: string) => mockRequest({message: 'address_deleted', id})
+};
+
 export const orderService = {
   create: async (payload: CheckoutPayload) => mockRequest({message: 'order_created', orderId: `RC-${Date.now().toString().slice(-8)}`, payload})
 };

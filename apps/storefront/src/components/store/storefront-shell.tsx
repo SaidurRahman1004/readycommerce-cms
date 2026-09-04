@@ -9,6 +9,6 @@ import ToastProvider from '@/components/ui/toast-provider';
 
 export default function StorefrontShell({children, locale}: {children: React.ReactNode; locale: string}) {
   const pathname = usePathname();
-  const isChromeFree = ['/login', '/register', '/checkout', '/success'].includes(pathname);
+  const isChromeFree = ['/login', '/register', '/forgot-password', '/reset-password', '/checkout', '/success'].includes(pathname);
   return <CartProvider><ToastProvider />{isChromeFree ? children : <><Navbar locale={locale} /><div className="flex-1">{children}</div><Footer /><CartDrawer /></>}</CartProvider>;
 }

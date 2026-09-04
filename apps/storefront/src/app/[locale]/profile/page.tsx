@@ -1,2 +1,2 @@
-import ProfilePanel from '@/components/auth/profile-panel';
-export default function ProfilePage() { return <ProfilePanel />; }
+import {redirect} from 'next/navigation';
+export default function ProfilePage() { redirect('/account/profile'); }
