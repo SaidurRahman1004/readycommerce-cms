@@ -23,6 +23,8 @@ ReadyCommerce CMS - A premium, self-hosted commerce platform for lifestyle busin
 - **Customer Authentication UI**: Login and Registration screens completed in English and Bengali with responsive premium layout, accessible form states, and client-side validation.
 - **Global Storefront Layout**: Responsive i18n-aware Navbar, language switcher, cart badge state, route-aware shell, and minimalist Footer completed.
 - **Public Storefront Homepage**: Premium responsive hero, category discovery cards, and bilingual trending product grid completed.
+- **Shop Product Listing**: Responsive product listing with category, price, scent, and colour filters, sorting, empty state, and mobile bottom-sheet filter controls completed.
+- **Product Details (PDP)**: Responsive product gallery/carousel, thumbnails, reviews, size selectors, quantity control, accordion details, and sticky mobile Add to Cart completed.
 
 ## UI/UX Status
 - Wireframes and complete UI flow available via Google Stitch (Ready for implementation).
@@ -35,3 +37,4 @@ ReadyCommerce CMS - A premium, self-hosted commerce platform for lifestyle busin
 * **[2026-09-04]**: Updated project rules (Stitch designs as reference, premium UI, dual languages). Set up `next-intl` in storefront for English and Bengali. Added MongoDB connection config to backend.
 * **[2026-09-04]**: Built bilingual Storefront Customer Authentication UI for Login and Registration with responsive split-screen design, Unsplash lifestyle visual, and frontend validation.
 * **[2026-09-04]**: Completed Phase 2 Public Storefront core with responsive global navigation, EN/BN language switching, cart badge state, footer, hero, category cards, and trending products.
+* **[2026-09-04]**: Completed Shop listing and Product Details pages with responsive filtering, sorting, swipeable mobile gallery, product options, and conversion-focused cart actions.
