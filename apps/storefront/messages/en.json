@@ -1,5 +1,13 @@
 {
   "HomePage": {"title": "ReadyCommerce", "description": "A premium commerce experience for modern lifestyle brands.", "languageEnglish": "English", "languageBengali": "বাংলা"},
+  "Storefront": {
+    "navigation": {"home": "ReadyCommerce home", "menu": "Main navigation", "shop": "Shop", "categories": "Categories", "about": "About", "cart": "Shopping cart"},
+    "hero": {"eyebrow": "The edit / 01", "title": "Objects of desire,\nbeautifully considered.", "description": "Discover elevated essentials and signature scents selected for your everyday rituals.", "cta": "Shop now", "secondary": "Explore the edit", "imageAlt": "Luxury skincare and perfume arranged in a warm editorial setting", "caption": "The daily ritual"},
+    "categories": {"eyebrow": "Find your ritual", "title": "Shop by category", "perfume": "Perfume", "skincare": "Skincare", "boutique": "Boutique", "wellness": "Wellness", "view": "Explore category"},
+    "trending": {"eyebrow": "Curated for you", "title": "Trending now", "viewAll": "View all products"},
+    "products": {"addToCart": "Add to cart", "noir": {"name": "Noir 07 Eau de Parfum", "category": "Signature scent"}, "santal": {"name": "Santal 33 Candle", "category": "Home ritual"}, "serum": {"name": "Botanical Glow Serum", "category": "Skincare essential"}, "muse": {"name": "Muse Body Veil", "category": "Body care"}},
+    "footer": {"copyright": "© 2026 ReadyCommerce. Thoughtfully made.", "about": "About us", "shop": "Shop"}
+  },
   "Auth": {
     "login": {"eyebrow": "Welcome back", "title": "Sign in to your account", "description": "Continue your journey with a more thoughtful way to shop.", "submit": "Sign in", "switchPrompt": "Don't have an account?", "switchAction": "Create one", "forgotPassword": "Forgot password?", "success": "Your details look good. Sign-in is ready to connect to your account."},
     "register": {"eyebrow": "Begin your journey", "title": "Create your account", "description": "Save your favourites and make every purchase feel personal.", "submit": "Create account", "switchPrompt": "Already have an account?", "switchAction": "Sign in", "success": "Your details look good. Your account is ready to be created."},

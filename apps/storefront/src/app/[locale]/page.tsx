@@ -1,24 +1,23 @@
-import { useTranslations } from 'next-intl';
-import { Link } from '@/i18n/routing';
+import Image from 'next/image';
+import {useTranslations} from 'next-intl';
+import {Link} from '@/i18n/routing';
+import ProductGrid from '@/components/store/product-grid';
+
+const categoryCards = [
+  {key: 'perfume', image: 'https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&w=700&q=88'},
+  {key: 'skincare', image: 'https://images.unsplash.com/photo-1556229010-6c3f2c9ca5f8?auto=format&fit=crop&w=700&q=88'},
+  {key: 'boutique', image: 'https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=700&q=88'},
+  {key: 'wellness', image: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=700&q=88'}
+];
 
 export default function Home() {
-  const t = useTranslations('HomePage');
-  
-  return (
-    <div className="flex flex-col flex-1 items-center justify-center min-h-screen bg-zinc-50 font-sans dark:bg-black text-black dark:text-white">
-      <main className="flex flex-col items-center justify-center p-8 text-center max-w-2xl border border-zinc-200 dark:border-zinc-800 rounded-2xl bg-white dark:bg-zinc-900 shadow-sm">
-        <h1 className="text-4xl font-bold mb-4">{t('title')}</h1>
-        <p className="text-lg text-zinc-600 dark:text-zinc-400 mb-10">{t('description')}</p>
-        
-        <div className="flex gap-4">
-          <Link href="/" locale="en" className="px-6 py-2.5 bg-black dark:bg-white text-white dark:text-black font-medium rounded-full hover:opacity-80 transition-opacity">
-            English
-          </Link>
-          <Link href="/" locale="bn" className="px-6 py-2.5 bg-black dark:bg-white text-white dark:text-black font-medium rounded-full hover:opacity-80 transition-opacity">
-            বাংলা
-          </Link>
-        </div>
-      </main>
-    </div>
-  );
+  const t = useTranslations('Storefront');
+  return <main className="bg-[#fafbff] text-slate-950">
+    <section className="mx-auto grid max-w-7xl gap-8 px-5 pb-16 pt-6 sm:px-8 sm:pt-8 lg:grid-cols-[.92fr_1.08fr] lg:gap-12 lg:px-10 lg:pb-24 lg:pt-10">
+      <div className="flex flex-col justify-center py-8 lg:py-16"><p className="mb-6 text-xs font-semibold uppercase tracking-[0.25em] text-indigo-600 sm:text-sm">{t('hero.eyebrow')}</p><h1 className="max-w-xl whitespace-pre-line text-[clamp(2.8rem,6vw,5.75rem)] font-semibold leading-[.98] tracking-[-0.07em] text-slate-950">{t('hero.title')}</h1><p className="mt-7 max-w-md text-base leading-7 text-slate-500 sm:text-lg">{t('hero.description')}</p><div className="mt-9 flex flex-wrap items-center gap-5"><Link href="/shop" className="group inline-flex min-h-12 items-center gap-3 rounded-full bg-slate-950 px-6 text-sm font-semibold text-white shadow-xl shadow-slate-950/10 transition hover:bg-indigo-700">{t('hero.cta')}<span className="text-lg transition-transform group-hover:translate-x-1" aria-hidden="true">→</span></Link><Link href="/categories" className="text-sm font-semibold text-slate-700 underline decoration-slate-300 underline-offset-8 transition hover:text-indigo-600 hover:decoration-indigo-300">{t('hero.secondary')}</Link></div></div>
+      <div className="relative min-h-[440px] overflow-hidden rounded-[2rem] bg-slate-200 shadow-2xl shadow-slate-900/10 sm:min-h-[560px] lg:min-h-[680px]"><Image src="https://images.unsplash.com/photo-1612817288484-6f916006741a?auto=format&fit=crop&w=1500&q=90" alt={t('hero.imageAlt')} fill priority sizes="(max-width: 1023px) 100vw, 55vw" className="object-cover object-center transition duration-1000 hover:scale-105" /><div className="absolute inset-0 bg-gradient-to-t from-slate-950/35 via-transparent to-white/5" /><div className="absolute bottom-6 left-6 right-6 flex items-end justify-between text-white sm:bottom-8 sm:left-8 sm:right-8"><span className="text-xs font-medium uppercase tracking-[0.2em] text-white/80">{t('hero.caption')}</span><span className="flex h-11 w-11 items-center justify-center rounded-full border border-white/40 bg-white/10 text-xl backdrop-blur">↗</span></div></div>
+    </section>
+    <section className="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:px-10 lg:py-24"><div className="mb-9 flex items-end justify-between gap-5"><div><p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-indigo-600">{t('categories.eyebrow')}</p><h2 className="text-3xl font-semibold tracking-[-0.05em] sm:text-4xl">{t('categories.title')}</h2></div><Link href="/categories" className="hidden text-sm font-semibold text-slate-600 transition hover:text-indigo-600 sm:block">{t('categories.view')} <span aria-hidden="true">↗</span></Link></div><div className="grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-6">{categoryCards.map((category) => <Link href="/categories" key={category.key} className="group"><div className="relative aspect-square overflow-hidden rounded-[1.5rem] bg-slate-200"><Image src={category.image} alt={t(`categories.${category.key}`)} fill sizes="(max-width: 640px) 45vw, 23vw" className="object-cover transition duration-700 group-hover:scale-110" /><div className="absolute inset-0 bg-gradient-to-t from-slate-950/55 via-transparent to-transparent" /><h3 className="absolute bottom-4 left-4 text-base font-semibold text-white sm:bottom-5 sm:left-5 sm:text-lg">{t(`categories.${category.key}`)}</h3></div></Link>)}</div><Link href="/categories" className="mt-6 block text-center text-sm font-semibold text-slate-600 sm:hidden">{t('categories.view')} <span aria-hidden="true">↗</span></Link></section>
+    <section className="border-t border-slate-200/80 bg-white"><div className="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:px-10 lg:py-24"><div className="mb-10 flex items-end justify-between gap-5"><div><p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-indigo-600">{t('trending.eyebrow')}</p><h2 className="text-3xl font-semibold tracking-[-0.05em] sm:text-4xl">{t('trending.title')}</h2></div><Link href="/shop" className="text-sm font-semibold text-slate-600 transition hover:text-indigo-600">{t('trending.viewAll')} <span aria-hidden="true">↗</span></Link></div><ProductGrid /></div></section>
+  </main>;
 }
