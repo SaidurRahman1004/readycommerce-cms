@@ -12,8 +12,9 @@ const variantData = async (variants) => Promise.all(variants.map(async (variant)
 const listProducts = async (req, res, next) => {
   try {
     const page = Math.max(1, Number(req.query.page) || 1); const limit = Math.min(48, Math.max(1, Number(req.query.limit) || 12));
-    const filter = { status: 'active' }; const { category, minPrice, maxPrice, search, sort = 'featured' } = req.query;
+    const filter = { status: 'active' }; const { category, minPrice, maxPrice, search, isSpecialOffer, sort = 'featured' } = req.query;
     if (minPrice || maxPrice) filter.basePrice = { ...(minPrice ? { $gte: Number(minPrice) } : {}), ...(maxPrice ? { $lte: Number(maxPrice) } : {}) };
+    if (isSpecialOffer === 'true') filter.isSpecialOffer = true;
     if (search) filter.$text = { $search: String(search).trim() };
     if (category) { const categoryDoc = mongoose.isValidObjectId(category) ? category : await require('../models/Category').findOne({ slug: category }).select('_id').lean(); if (!categoryDoc) return res.json({ success: true, data: [], pagination: { page, limit, total: 0, pages: 0 } }); filter.category = categoryDoc._id || categoryDoc; }
     const variantFilter = {}; if (req.query.scent) variantFilter.scent = String(req.query.scent); if (req.query.color) variantFilter.color = String(req.query.color); if (Object.keys(variantFilter).length) { const matchingVariants = await ProductVariant.find(variantFilter).distinct('product'); filter._id = { $in: matchingVariants }; }
