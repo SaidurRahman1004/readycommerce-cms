@@ -28,7 +28,7 @@ export const shippingService = { quote: async (city: string) => request<{success
 export const couponService = { validate: async (code: string, orderAmount: number) => request<{success: boolean; data: {code: string; discount: number; discountType: string; discountValue: number}}>('/coupons/validate', {method: 'POST', body: JSON.stringify({code, orderAmount})}) };
 
 export type AuthPayload = {name?: string; email: string; password: string};
-export type CheckoutPayload = {addressId: string; paymentMethod: 'bkash' | 'nagad'; txid: string};
+export type CheckoutPayload = {addressId: string; paymentMethod: 'bkash' | 'nagad'; txid: string; couponCode?: string};
 
 export const authService = {
   login: async (payload: AuthPayload) => request<{success: boolean; user: AuthUser}>('/auth/login', {method: 'POST', body: JSON.stringify({email: payload.email, password: payload.password})}),

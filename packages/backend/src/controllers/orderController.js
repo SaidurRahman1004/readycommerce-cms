@@ -7,6 +7,7 @@ const Address = require('../models/Address');
 const Order = require('../models/Order');
 const OrderItem = require('../models/OrderItem');
 const Payment = require('../models/Payment');
+const Coupon = require('../models/Coupon');
 const { AppError } = require('../middlewares/errorHandler');
 const { getShippingCost } = require('../utils/shipping');
 
@@ -23,7 +24,7 @@ const getMyOrder = async (req, res, next) => { try { const order = await Order.f
 
 const createOrder = async (req, res, next) => {
   try {
-    const { addressId, paymentMethod, txid } = req.body;
+    const { addressId, paymentMethod, txid, couponCode } = req.body;
     if (!mongoose.isValidObjectId(addressId)) return next(new AppError('A valid shipping address is required.', 400, 'INVALID_ADDRESS'));
 
     const address = await Address.findOne({ _id: addressId, user: req.user._id, type: 'shipping' }).lean();
@@ -49,10 +50,12 @@ const createOrder = async (req, res, next) => {
       verifiedItems.push({ ...item, unitPrice: variant.price, total, sku: variant.sku, productName: item.productName });
     }
 
+    let discount = 0;
+    if (couponCode) { const coupon = await Coupon.findOne({ code: String(couponCode).trim().toUpperCase(), isActive: true, startsAt: { $lte: new Date() }, expiresAt: { $gt: new Date() } }).lean(); if (!coupon || subtotal < coupon.minOrderAmount) return next(new AppError('Coupon is invalid or no longer applicable.', 400, 'INVALID_COUPON')); discount = coupon.discountType === 'percent' ? subtotal * coupon.discountValue / 100 : coupon.discountValue; if (coupon.maxDiscountAmount) discount = Math.min(discount, coupon.maxDiscountAmount); discount = Math.min(subtotal, discount); }
     const shipping = getShippingCost(address.city);
-    const total = subtotal + shipping;
+    const total = subtotal - discount + shipping;
     const orderNumber = `RC-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
-    const order = await Order.create({ orderNumber, user: req.user._id, email: req.user.email, status: 'pending', paymentStatus: 'pending', subtotal, shipping, total, totalAmount: total, shippingAddress: address, shippingMethod: 'standard' });
+    const order = await Order.create({ orderNumber, user: req.user._id, email: req.user.email, status: 'pending', paymentStatus: 'pending', subtotal, discount, shipping, total, totalAmount: total, shippingAddress: address, shippingMethod: 'standard' });
     await OrderItem.insertMany(verifiedItems.map((item) => ({ order: order._id, product: item.product, variant: item.variant, productName: item.productName, sku: item.sku, quantity: item.quantity, unitPrice: item.unitPrice, total: item.total })));
     await Payment.create({ order: order._id, user: req.user._id, provider: paymentMethod, method: paymentMethod, amount: total, transactionId: txid.trim(), status: 'pending' });
     await CartItem.deleteMany({ cart: cart._id });

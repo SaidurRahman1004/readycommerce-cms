@@ -7,7 +7,7 @@ const Order = require('../models/Order');
 const { createOrder, cancelOrder, getMyOrder } = require('../controllers/orderController');
 
 const router = express.Router();
-const orderSchema = Joi.object({ addressId: Joi.string().required(), paymentMethod: Joi.string().valid('bkash', 'nagad').required(), txid: Joi.string().trim().min(4).max(120).required() });
+const orderSchema = Joi.object({ addressId: Joi.string().required(), paymentMethod: Joi.string().valid('bkash', 'nagad').required(), txid: Joi.string().trim().min(4).max(120).required(), couponCode: Joi.string().trim().max(40).allow('') });
 router.use(cookieParser(), authMiddleware);
 router.post('/', validate(orderSchema), createOrder);
 router.put('/:id/cancel', cancelOrder);
