@@ -112,3 +112,9 @@ The Admin Dashboard must not begin until Phase 12's Storefront Production Gate p
 - [x] Shipping quote API: Dhaka 60 BDT, outside Dhaka 120 BDT.
 - [x] Dynamic checkout subtotal plus shipping total with responsive loading/error states.
 - [ ] Server-side checkout total revalidation, address update/delete, tax/VAT, and idempotent order creation.
+
+## Phase 7–8 Delivery Update (2026-09-05)
+
+- Phase 6 Address + Shipping + Checkout: COMPLETED for the current scope.
+- Phase 7 Manual Payment (bKash/Nagad TxID capture): COMPLETED for pending-verification submission.
+- Phase 8 Order Creation: IN PROGRESS; secure order creation, authoritative totals, payment record, cart conversion and success redirect are implemented. Lifecycle transitions, payment verification and customer order APIs remain pending.

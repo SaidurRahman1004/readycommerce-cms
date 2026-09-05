@@ -74,8 +74,9 @@ export default function CheckoutClient() {
     const result = schema.safeParse(values);
     if (!result.success) { reportErrors(result.error); return; }
     if (!cart?.items.length) { toast.error(t('summary.empty')); return; }
+    if (!selectedAddress) { toast.error(t('errors.required')); return; }
     setOrderLoading(true);
-    try { const created = await orderService.create({ ...values, items: cart.items, shippingCost: shipping }); window.localStorage.setItem('readycommerce_last_order_id', created.orderId); clearCart(); toast.success(t('success')); router.push('/success'); } catch { toast.error(authT('errors.generic')); } finally { setOrderLoading(false); }
+    try { const created = await orderService.create({ addressId: selectedAddress, paymentMethod: values.payment, txid: values.txid }); window.localStorage.setItem('readycommerce_last_order_id', created.data.orderId); clearCart(); toast.success(t('success')); router.push(`/success?orderId=${encodeURIComponent(created.data.orderId)}`); } catch { toast.error(authT('errors.generic')); } finally { setOrderLoading(false); }
   }
   const input = (key: string) => `mt-2.5 min-h-[52px] w-full rounded-xl border bg-background px-5 text-[15px] outline-none transition focus:border-primary focus:ring-4 focus:ring-primary-subtle ${errors[key] ? 'border-rose-400' : 'border-border'}`;
   const addressFields: Array<[keyof Values, string]> = [['name', 'fields.name'], ['phone', 'fields.phone'], ['address', 'fields.address'], ['city', 'fields.city'], ['postal', 'fields.postal']];
