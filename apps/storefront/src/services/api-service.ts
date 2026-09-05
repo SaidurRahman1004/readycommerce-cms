@@ -17,6 +17,13 @@ export const catalogService = {
   product: async (id: string) => request<{success: boolean; data: CatalogProduct}>(`/products/${encodeURIComponent(id)}`),
   categories: async () => request<{success: boolean; data: CatalogCategory[]}>('/categories'),
 };
+export type ServerCart = {id: string; items: Array<{id: string; productId: string; variantId?: string; quantity: number; price: number; name: string; image?: string; sku?: string}>; subtotal: number; total: number; currency: string};
+export const cartService = {
+  get: async () => request<{success: boolean; data: ServerCart}>('/cart'),
+  add: async (productId: string, quantity: number, variantId?: string) => request<{success: boolean; data: ServerCart}>('/cart/add', {method: 'POST', body: JSON.stringify({productId, quantity, variantId})}),
+  update: async (productId: string, quantity: number, variantId?: string) => request<{success: boolean; data: ServerCart}>('/cart/update', {method: 'PUT', body: JSON.stringify({productId, quantity, variantId})}),
+  remove: async (productId: string, variantId?: string) => request<{success: boolean; data: ServerCart}>('/cart/remove', {method: 'DELETE', body: JSON.stringify({productId, variantId})}),
+};
 
 export type AuthPayload = {name?: string; email: string; password: string};
 export type CheckoutPayload = {name: string; email: string; phone: string; address: string; city: string; postal: string; payment: string; txid: string; items: unknown[]};

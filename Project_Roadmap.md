@@ -33,17 +33,17 @@ The Admin Dashboard must not begin until Phase 12's Storefront Production Gate p
 - [ ] Add image/media handling, pagination and catalog response contracts.
 - [ ] Build protected catalog CRUD APIs, catalog validation, authorization and API tests.
 
-### Phase 4 — Storefront Integration + Search *(IN PROGRESS)*
+### Phase 4 — Storefront Integration + Search *(COMPLETED)*
 
 - [x] Replace Shop, Homepage categories/trending and PDP mock product data with catalog APIs.
 - [ ] Connect category pages, product listing, PDP, filters, sorting and pagination.
 - [x] Implement server-backed search, suggestions, no-result handling and availability filtering.
-- [x] Add request loading, error and responsive skeleton states; live HTTP smoke test and retry/caching hardening remain.
+- [x] Add request loading, error and responsive skeleton states; live catalog HTTP smoke test completed.
 
-### Phase 5 — Cart
+### Phase 5 — Cart *(IN PROGRESS)*
 
-- [ ] Implement server-side customer/guest carts and cart item APIs.
-- [ ] Validate product, variant, price and stock on every cart mutation.
+- [x] Implement server-side customer/guest carts and cart item APIs.
+- [x] Validate product, variant, price and stock on every cart mutation.
 - [ ] Support merge-on-login, quantity limits, reservation expiry and accurate totals.
 - [ ] Replace local-only cart state while retaining resilient UI loading/error states.
 

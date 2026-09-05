@@ -1,0 +1,11 @@
+const express = require('express');
+const cookieParser = require('cookie-parser');
+const optionalAuth = require('../middlewares/optionalAuth');
+const { getCart, addToCart, updateCart, removeFromCart } = require('../controllers/cartController');
+const router = express.Router();
+router.use(cookieParser(), optionalAuth);
+router.get('/', getCart);
+router.post('/add', addToCart);
+router.put('/update', updateCart);
+router.delete('/remove', removeFromCart);
+module.exports = router;
