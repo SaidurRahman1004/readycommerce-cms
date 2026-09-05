@@ -5,3 +5,5 @@
 body { margin: 0; background: var(--background); color: var(--foreground); font-family: Arial, sans-serif; }
 button, a, input, textarea, select { -webkit-tap-highlight-color: transparent; }
 button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary) 35%, transparent); outline-offset: 3px; }
+.status-pending { background: #fff7ed; color: #c2410c; } .status-confirmed, .status-processing { background: #eff6ff; color: #1d4ed8; } .status-shipped { background: #f5f3ff; color: #6d28d9; } .status-delivered { background: #ecfdf5; color: #047857; } .status-cancelled, .status-failed { background: #fff1f2; color: #be123c; } .status-returned, .status-refunded { background: #f1f5f9; color: #475569; }
+.status-bar-pending { background: #f59e0b; } .status-bar-confirmed, .status-bar-processing { background: #3b82f6; } .status-bar-shipped { background: #8b5cf6; } .status-bar-delivered { background: #10b981; } .status-bar-cancelled, .status-bar-failed { background: #f43f5e; } .status-bar-returned, .status-bar-refunded { background: #64748b; }

@@ -133,6 +133,15 @@ The Admin Dashboard must not begin until Phase 12's Storefront Production Gate p
 - [ ] Add real admin authentication UX, dashboard data APIs and management modules in the next Phase 12 increments.
 - Quality gate: dashboard/storefront production builds passed; unauthenticated admin access returned 401. Live admin login, customer-role denial, database-backed module APIs and visual device testing remain pending.
 
+## Phase 12B Admin Overview / Command Center (2026-09-05)
+
+- [x] Added protected `GET /api/admin/overview?range=7|30` using the existing HttpOnly JWT and `admin` authorization middleware.
+- [x] Added real order, paid-revenue, customer, product, payment, recent-order and inventory aggregation/query data.
+- [x] Added responsive Command Center KPI cards, revenue trend, order-status breakdown, recent orders and low-stock sections with loading, empty and retryable error states.
+- [x] Added bilingual dashboard copy, status badges, mobile-safe table overflow and disabled order-action foundation until an admin order-details API exists.
+- Phase 12B verification: DB ping, admin session success, customer rejection (403), unauthenticated rejection (401), overview response and password-hash checks passed. Visual browser/device verification remains pending.
+- [ ] Next: implement protected Orders management APIs/UI; then Products and Inventory management.
+
 ## Phase 8-9 Delivery Update (2026-09-05)
 
 - Phase 8 Order Placement: COMPLETED for secure creation and cart conversion; lifecycle transitions and payment verification remain future work.
