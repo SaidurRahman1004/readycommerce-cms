@@ -104,6 +104,14 @@ The Admin Dashboard must not begin until Phase 12's Storefront Production Gate p
 - [x] Real profile read/update, order history, address book, pending-order cancellation, printable invoice and product reviews.
 - [ ] Future commerce extensions: order tracking, returns/refunds, verified-purchase review eligibility, moderation, notifications and invoice download storage.
 
+## Phase 12 Dashboard Transition (2026-09-05)
+
+- Branch: `dashboard-all` (isolated from the stable storefront line).
+- [x] Initialized `apps/dashboard` with Next.js App Router, TypeScript and Tailwind CSS.
+- [x] Added responsive premium dashboard shell with sidebar navigation and top header.
+- [x] Added foundational Welcome Admin overview page.
+- [ ] Add real admin authentication/authorization, dashboard data APIs and management modules only after the storefront production gate.
+
 ## Phase 10–11 Delivery Update (2026-09-05)
 
 - Phase 10 Commerce Enhancements: COMPLETED for coupon validation and seeded promotional codes.

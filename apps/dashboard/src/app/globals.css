@@ -1,0 +1,5 @@
+@import "tailwindcss";
+@theme { --color-background: var(--background); --color-foreground: var(--foreground); --color-primary: var(--primary); --color-muted: var(--muted); --color-border: var(--border); }
+:root { --background: #f6f8fb; --foreground: #11202d; --primary: #00a982; --muted: #eef4f3; --border: #dce8e5; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--background); color: var(--foreground); font-family: Arial, sans-serif; }

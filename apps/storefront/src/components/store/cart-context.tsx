@@ -26,7 +26,7 @@ export function CartProvider({children}: {children: React.ReactNode}) {
   const toggleWishlist = (productId: string) => setWishlist((current) => current.includes(productId) ? current.filter((id) => id !== productId) : [...current, productId]);
   const count = items.reduce((total, item) => total + item.quantity, 0);
   const subtotal = items.reduce((total, item) => total + (item.price ?? 0) * item.quantity, 0);
-  const value = useMemo(() => ({items, count, subtotal, wishlist, isOpen, pendingItem, addItem, updateQuantity, removeItem, clearCart: () => setItems([]), toggleWishlist, isWishlisted: (productId: string) => wishlist.includes(productId), openCart: () => setIsOpen(true), closeCart: () => setIsOpen(false)}), [items, count, subtotal, wishlist, isOpen, pendingItem]);
+  const value = useMemo(() => ({items, count, subtotal, wishlist, isOpen, pendingItem, addItem, updateQuantity, removeItem, clearCart: () => setItems([]), toggleWishlist, isWishlisted: (productId: string) => wishlist.includes(productId), openCart: () => setIsOpen(true), closeCart: () => setIsOpen(false)}), [items, count, subtotal, wishlist, isOpen, pendingItem, addItem, updateQuantity, removeItem]);
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
 

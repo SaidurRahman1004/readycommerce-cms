@@ -5,7 +5,6 @@ import {useEffect, useState} from 'react';
 import {useTranslations} from 'next-intl';
 import {Link} from '@/i18n/routing';
 import {catalogService, CatalogCategory, CatalogProduct} from '@/services/api-service';
-import {useCart} from './cart-context';
 import CatalogCard from './catalog-card';
 
 function Skeleton() { return <div className="animate-pulse rounded-[24px] bg-slate-100"><div className="aspect-[4/5] rounded-[24px] bg-slate-200/50" /><div className="p-4"><div className="mt-2 h-4 w-1/3 rounded bg-slate-200/50" /><div className="mt-3 h-5 w-3/4 rounded bg-slate-200/50" /></div></div>; }

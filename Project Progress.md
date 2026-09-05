@@ -63,6 +63,8 @@ ReadyCommerce CMS - A premium, self-hosted commerce platform for lifestyle busin
 
 ## Changelog
 
+* **[2026-09-05]**: **[Dashboard Branch & Foundation]**: Created and switched to the isolated `dashboard-all` branch. Audited the storefront/backend, corrected storefront lint issues and preserved pre-existing auth UI changes. Initialized `apps/dashboard` with a responsive Tailwind App Router shell, sidebar navigation, top header and Welcome Admin page. No dashboard business logic was added.
+
 * **[2026-09-05]**: **[Phase 10–11 Storefront Lock]**: Added Coupon model/API with seeded `WELCOME10` and `RITUAL500` codes, responsive promo validation in the cart drawer, bilingual Privacy Policy/Terms/Contact pages, global legal footer links, root SEO metadata, and branded 404 handling. Production legal approval, structured SEO data, analytics, formal accessibility and E2E audit remain future hardening work.
 
 * **[2026-09-05]**: **[Phase 9 Finalization]**: Added pending-order cancellation with ownership/status guards, printable customer invoice route, real product review listing/submission, duplicate-review protection, and automatic product rating/review-count recalculation. Customer Portal order, profile and address flows now use backend APIs; tracking, returns/refunds and moderation remain future extensions.

@@ -1,11 +1,8 @@
 'use client';
 
-import Image from 'next/image';
 import {useEffect, useState} from 'react';
 import {useTranslations} from 'next-intl';
-import {Link} from '@/i18n/routing';
 import {catalogService, CatalogCategory, CatalogProduct} from '@/services/api-service';
-import {useCart} from './cart-context';
 import CatalogCard from './catalog-card';
 
 type Filters = {category: string; minPrice: string; maxPrice: string};
