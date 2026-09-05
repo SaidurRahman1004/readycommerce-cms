@@ -63,6 +63,8 @@ ReadyCommerce CMS - A premium, self-hosted commerce platform for lifestyle busin
 
 ## Changelog
 
+* **[2026-09-05]**: **[Phase 9 Finalization]**: Added pending-order cancellation with ownership/status guards, printable customer invoice route, real product review listing/submission, duplicate-review protection, and automatic product rating/review-count recalculation. Customer Portal order, profile and address flows now use backend APIs; tracking, returns/refunds and moderation remain future extensions.
+
 * **[2026-09-05]**: **[Phase 9 Customer Portal Integration]**: Replaced portal mocks with protected real APIs for user profile read/update, newest-first user-scoped order history, and address listing/creation. Added real status/total rendering, profile loading/update feedback, responsive address management, and bilingual service boundaries. Tracking, cancellation, returns/refunds, reviews, notifications, and invoices remain pending.
 * **[2026-09-03]**: Initialized monorepo infrastructure.
 * **[2026-09-03]**: Initialized Next.js storefront app in `/apps/storefront` with Tailwind CSS, TypeScript, and ESLint. Configured as part of the monorepo workspace.

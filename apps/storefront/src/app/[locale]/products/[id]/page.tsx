@@ -1,3 +1,3 @@
 import ProductDetail from '@/components/store/product-detail';
-
-export default async function ProductPage({params}: {params: Promise<{id: string}>}) { return <ProductDetail productId={(await params).id} />; }
+import ProductReviews from '@/components/store/product-reviews';
+export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) { const { id } = await params; return <><ProductDetail productId={id} /><ProductReviews productId={id} /></>; }

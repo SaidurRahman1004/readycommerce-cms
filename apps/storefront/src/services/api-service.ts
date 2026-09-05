@@ -42,7 +42,11 @@ export const authService = {
 
 export const orderService = {
   create: async (payload: CheckoutPayload) => request<{success: boolean; data: {orderId: string; orderNumber: string; total: number; status: string}}>('/orders', {method: 'POST', body: JSON.stringify(payload)}),
-  myOrders: async () => request<{success: boolean; data: CustomerOrder[]}>('/orders/myorders')
+  myOrders: async () => request<{success: boolean; data: CustomerOrder[]}>('/orders/myorders'),
+  cancel: async (id: string) => request<{success: boolean; data: {orderId: string; status: string}}>(`/orders/${encodeURIComponent(id)}/cancel`, {method: 'PUT'})
+  ,details: async (id: string) => request<{success: boolean; data: CustomerOrder & {shippingAddress: {recipientName: string; phone: string; addressLine1: string; city: string; postalCode: string}; items: Array<{productName: string; quantity: number; unitPrice: number; total: number}>}}>(`/orders/${encodeURIComponent(id)}`)
 };
 export type CustomerOrder = { _id: string; orderNumber: string; status: string; paymentStatus: string; subtotal: number; shipping: number; total: number; createdAt: string };
 export const userService = { profile: async () => request<{success: boolean; user: AuthUser}>('/users/profile'), updateProfile: async (payload: {firstName: string; lastName: string; phone: string}) => request<{success: boolean; user: AuthUser}>('/users/profile', {method: 'PUT', body: JSON.stringify(payload)}) };
+export type ProductReview = { _id: string; rating: number; title?: string; body: string; createdAt: string; user?: { firstName: string; lastName: string } };
+export const reviewService = { list: async (productId: string) => request<{success: boolean; data: ProductReview[]}>(`/reviews/${encodeURIComponent(productId)}`), create: async (payload: {productId: string; rating: number; title?: string; body: string}) => request<{success: boolean; data: ProductReview}>('/reviews', {method: 'POST', body: JSON.stringify(payload)}) };

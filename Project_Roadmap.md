@@ -98,6 +98,12 @@ The Admin Dashboard must not begin until Phase 12's Storefront Production Gate p
 
 ## Immediate Next Steps
 
+## Phase 9 Final Delivery Update (2026-09-05)
+
+- Phase 9 Customer Portal: COMPLETED for the current customer-facing scope.
+- [x] Real profile read/update, order history, address book, pending-order cancellation, printable invoice and product reviews.
+- [ ] Future commerce extensions: order tracking, returns/refunds, verified-purchase review eligibility, moderation, notifications and invoice download storage.
+
 ## Phase 8-9 Delivery Update (2026-09-05)
 
 - Phase 8 Order Placement: COMPLETED for secure creation and cart conversion; lifecycle transitions and payment verification remain future work.

@@ -1,0 +1,11 @@
+const express = require('express');
+const Joi = require('joi');
+const cookieParser = require('cookie-parser');
+const validate = require('../middlewares/validate');
+const { authMiddleware } = require('../middlewares/authMiddleware');
+const { listReviews, createReview } = require('../controllers/reviewController');
+const router = express.Router();
+const reviewSchema = Joi.object({ productId: Joi.string().required(), rating: Joi.number().integer().min(1).max(5).required(), title: Joi.string().trim().max(120).allow(''), body: Joi.string().trim().min(3).max(2000).required() });
+router.get('/:productId', listReviews);
+router.post('/', cookieParser(), authMiddleware, validate(reviewSchema), createReview);
+module.exports = router;

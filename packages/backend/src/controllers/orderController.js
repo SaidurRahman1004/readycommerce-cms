@@ -10,6 +10,17 @@ const Payment = require('../models/Payment');
 const { AppError } = require('../middlewares/errorHandler');
 const { getShippingCost } = require('../utils/shipping');
 
+const cancelOrder = async (req, res, next) => {
+  try {
+    const order = await Order.findOne({ _id: req.params.id, user: req.user._id });
+    if (!order) return next(new AppError('Order not found.', 404, 'ORDER_NOT_FOUND'));
+    if (order.status !== 'pending') return next(new AppError('Only pending orders can be cancelled.', 409, 'ORDER_NOT_CANCELLABLE'));
+    order.status = 'cancelled'; order.cancelledAt = new Date(); await order.save();
+    return res.json({ success: true, data: { orderId: order._id, status: order.status } });
+  } catch (error) { return next(error); }
+};
+const getMyOrder = async (req, res, next) => { try { const order = await Order.findOne({ _id: req.params.id, user: req.user._id }).lean(); if (!order) return next(new AppError('Order not found.', 404, 'ORDER_NOT_FOUND')); const items = await OrderItem.find({ order: order._id }).lean(); return res.json({ success: true, data: { ...order, items } }); } catch (error) { return next(error); } };
+
 const createOrder = async (req, res, next) => {
   try {
     const { addressId, paymentMethod, txid } = req.body;
@@ -53,4 +64,4 @@ const createOrder = async (req, res, next) => {
   }
 };
 
-module.exports = { createOrder };
+module.exports = { createOrder, cancelOrder, getMyOrder };
