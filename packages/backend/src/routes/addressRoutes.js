@@ -1,0 +1,12 @@
+const express = require('express');
+const Joi = require('joi');
+const cookieParser = require('cookie-parser');
+const validate = require('../middlewares/validate');
+const {authMiddleware} = require('../middlewares/authMiddleware');
+const {listAddresses, createAddress} = require('../controllers/addressController');
+const router = express.Router();
+const addressSchema = Joi.object({type: Joi.string().valid('shipping','billing').default('shipping'), label: Joi.string().trim().max(40).default('Home'), recipientName: Joi.string().trim().min(2).max(120).required(), phone: Joi.string().trim().min(7).max(25).required(), addressLine1: Joi.string().trim().min(3).max(200).required(), addressLine2: Joi.string().trim().max(200).allow(''), city: Joi.string().trim().min(2).max(80).required(), state: Joi.string().trim().max(80).allow(''), postalCode: Joi.string().trim().max(20).required(), country: Joi.string().trim().default('Bangladesh'), isDefault: Joi.boolean().default(false)});
+router.use(cookieParser(), authMiddleware);
+router.get('/', listAddresses);
+router.post('/', validate(addressSchema), createAddress);
+module.exports = router;

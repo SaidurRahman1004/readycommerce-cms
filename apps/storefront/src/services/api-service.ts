@@ -24,9 +24,12 @@ export const cartService = {
   update: async (productId: string, quantity: number, variantId?: string) => request<{success: boolean; data: ServerCart}>('/cart/update', {method: 'PUT', body: JSON.stringify({productId, quantity, variantId})}),
   remove: async (productId: string, variantId?: string) => request<{success: boolean; data: ServerCart}>('/cart/remove', {method: 'DELETE', body: JSON.stringify({productId, variantId})}),
 };
+export type CustomerAddress = { _id: string; type: string; label: string; recipientName: string; phone: string; addressLine1: string; addressLine2?: string; city: string; state?: string; postalCode: string; country: string; isDefault: boolean };
+export const addressService = { list: async () => request<{success: boolean; data: CustomerAddress[]}>('/addresses'), create: async (payload: Omit<CustomerAddress, '_id' | 'isDefault'> & {isDefault?: boolean}) => request<{success: boolean; data: CustomerAddress}>('/addresses', {method: 'POST', body: JSON.stringify(payload)}) };
+export const shippingService = { quote: async (city: string) => request<{success: boolean; data: {city: string; cost: number; currency: string}}>(`/shipping/quote?city=${encodeURIComponent(city)}`) };
 
 export type AuthPayload = {name?: string; email: string; password: string};
-export type CheckoutPayload = {name: string; email: string; phone: string; address: string; city: string; postal: string; payment: string; txid: string; items: unknown[]};
+export type CheckoutPayload = {name: string; email: string; phone: string; address: string; city: string; postal: string; payment: string; txid: string; items: unknown[]; shippingCost?: number};
 
 async function mockRequest<T>(result: T): Promise<T> {
   await wait(1000);

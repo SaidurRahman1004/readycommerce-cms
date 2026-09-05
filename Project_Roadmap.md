@@ -102,3 +102,13 @@ The Admin Dashboard must not begin until Phase 12's Storefront Production Gate p
 2. Add backend environment validation and automated model/API tests.
 3. Implement Phase 2 authentication and protected-route APIs.
 4. Connect the existing Storefront service layer to the first real auth endpoints.
+
+## Phase 6 Delivery Update (2026-09-05)
+
+- Phase 5 Cart: COMPLETED for the current server-cart scope.
+- Phase 6 Address + Shipping + Checkout: IN PROGRESS.
+- [x] Protected address listing and creation APIs.
+- [x] Checkout saved-address selection and validated address save flow.
+- [x] Shipping quote API: Dhaka 60 BDT, outside Dhaka 120 BDT.
+- [x] Dynamic checkout subtotal plus shipping total with responsive loading/error states.
+- [ ] Server-side checkout total revalidation, address update/delete, tax/VAT, and idempotent order creation.
