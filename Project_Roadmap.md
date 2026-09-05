@@ -104,6 +104,15 @@ The Admin Dashboard must not begin until Phase 12's Storefront Production Gate p
 - [x] Real profile read/update, order history, address book, pending-order cancellation, printable invoice and product reviews.
 - [ ] Future commerce extensions: order tracking, returns/refunds, verified-purchase review eligibility, moderation, notifications and invoice download storage.
 
+## Phase 10–11 Delivery Update (2026-09-05)
+
+- Phase 10 Commerce Enhancements: COMPLETED for coupon validation and seeded promotional codes.
+- Phase 11 Legal + SEO + Performance + Accessibility: COMPLETED for the current storefront foundation.
+- [x] Coupon model, validation API, `WELCOME10` and `RITUAL500` seed data, and responsive cart promo UI.
+- [x] Bilingual Privacy Policy, Terms and Contact pages with global footer links.
+- [x] Root metadata, branded 404 route, responsive legal layout and print-safe customer surfaces.
+- [ ] Production legal review, richer SEO structured data, analytics/performance budgets and formal accessibility/E2E audit.
+
 ## Phase 8-9 Delivery Update (2026-09-05)
 
 - Phase 8 Order Placement: COMPLETED for secure creation and cart conversion; lifecycle transitions and payment verification remain future work.

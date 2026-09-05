@@ -5,6 +5,7 @@ const Category = require('./models/Category');
 const Product = require('./models/Product');
 const ProductVariant = require('./models/ProductVariant');
 const Inventory = require('./models/Inventory');
+const Coupon = require('./models/Coupon');
 
 dotenv.config();
 const categories = [
@@ -34,6 +35,9 @@ const seed = async () => {
     for (const size of item.size) { const sku = `${item.slug.toUpperCase().replace(/-/g, '_')}_${size.toUpperCase()}`; const variant = await ProductVariant.findOneAndUpdate({ sku }, { product: product._id, sku, name: size, size, color: item.category === 'skincare' ? 'cream' : 'amber', scent: item.category === 'perfume' ? 'woody' : 'fresh', price: item.basePrice, isActive: true }, { upsert: true, new: true, setDefaultsOnInsert: true }); await Inventory.findOneAndUpdate({ variant: variant._id }, { variant: variant._id, quantity: 24, reservedQuantity: 0, trackInventory: true }, { upsert: true, new: true, setDefaultsOnInsert: true }); }
   }
   console.log(`Products inserted: ${products.length}`);
+  await Coupon.findOneAndUpdate({ code: 'WELCOME10' }, { code: 'WELCOME10', description: 'Welcome discount', discountType: 'percent', discountValue: 10, maxDiscountAmount: 1000, minOrderAmount: 1000, startsAt: new Date(0), expiresAt: new Date('2099-12-31'), isActive: true }, { upsert: true, new: true, setDefaultsOnInsert: true });
+  await Coupon.findOneAndUpdate({ code: 'RITUAL500' }, { code: 'RITUAL500', description: 'Flat welcome saving', discountType: 'fixed', discountValue: 500, minOrderAmount: 5000, startsAt: new Date(0), expiresAt: new Date('2099-12-31'), isActive: true }, { upsert: true, new: true, setDefaultsOnInsert: true });
+  console.log('Coupons inserted: 2');
   console.log('Catalog seed complete. Closing database connection...');
   await mongoose.disconnect();
   console.log('Exiting seeder');

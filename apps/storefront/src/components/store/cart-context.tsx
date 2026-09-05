@@ -4,7 +4,7 @@ import {createContext, useContext, useEffect, useMemo, useRef, useState} from 'r
 import toast from 'react-hot-toast';
 import {cartService} from '@/services/api-service';
 
-export type CartLine = {productId: string; quantity: number; price?: number; name?: string; image?: string};
+export type CartLine = {productId: string; variantId?: string; quantity: number; price?: number; name?: string; image?: string};
 type CartContextValue = {items: CartLine[]; count: number; subtotal: number; wishlist: string[]; isOpen: boolean; pendingItem: string | null; addItem: (productId?: string, quantity?: number, product?: {price: number; name: string; image: string}, variantId?: string) => Promise<void>; updateQuantity: (productId: string, quantity: number, variantId?: string) => Promise<void>; removeItem: (productId: string, variantId?: string) => Promise<void>; clearCart: () => void; toggleWishlist: (productId: string) => void; isWishlisted: (productId: string) => boolean; openCart: () => void; closeCart: () => void};
 const CartContext = createContext<CartContextValue | null>(null);
 const readCart = (raw: string | null): CartLine[] => { try { const parsed: unknown = raw ? JSON.parse(raw) : []; return Array.isArray(parsed) ? parsed.filter((item): item is CartLine => Boolean(item) && typeof item === 'object' && typeof (item as CartLine).productId === 'string' && Number.isInteger((item as CartLine).quantity) && (item as CartLine).quantity > 0) : []; } catch { return []; } };
@@ -16,7 +16,7 @@ export function CartProvider({children}: {children: React.ReactNode}) {
   const hydrated = useRef(false);
   const [isOpen, setIsOpen] = useState(false); const [pendingItem, setPendingItem] = useState<string | null>(null);
   useEffect(() => { const timer = window.setTimeout(() => { setItems(readCart(window.localStorage.getItem('readycommerce_cart'))); setWishlist(readWishlist(window.localStorage.getItem('readycommerce_wishlist'))); hydrated.current = true; }, 0); return () => window.clearTimeout(timer); }, []);
-  useEffect(() => { const timer = window.setTimeout(() => { cartService.get().then((result) => { setItems(result.data.items.map((item) => ({productId: item.productId, quantity: item.quantity, price: item.price, name: item.name, image: item.image}))); hydrated.current = true; }).catch(() => undefined); }, 0); return () => window.clearTimeout(timer); }, []);
+  useEffect(() => { const timer = window.setTimeout(() => { cartService.get().then((result) => { setItems(result.data.items.map((item) => ({productId: item.productId, variantId: item.variantId, quantity: item.quantity, price: item.price, name: item.name, image: item.image}))); hydrated.current = true; }).catch(() => undefined); }, 0); return () => window.clearTimeout(timer); }, []);
   useEffect(() => { if (hydrated.current) window.localStorage.setItem('readycommerce_cart', JSON.stringify(items)); }, [items]);
   useEffect(() => { if (hydrated.current) window.localStorage.setItem('readycommerce_wishlist', JSON.stringify(wishlist)); }, [wishlist]);
   const applyServerCart = (data: {items: CartLine[]}) => setItems(data.items);
