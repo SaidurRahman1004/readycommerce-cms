@@ -142,6 +142,15 @@ The Admin Dashboard must not begin until Phase 12's Storefront Production Gate p
 - Phase 12B verification: DB ping, admin session success, customer rejection (403), unauthenticated rejection (401), overview response and password-hash checks passed. Visual browser/device verification remains pending.
 - [ ] Next: implement protected Orders management APIs/UI; then Products and Inventory management.
 
+## Phase 12C Admin Orders Management (2026-09-05)
+
+- [x] Added admin-protected order listing with pagination, newest-first sorting, status/payment filtering and search.
+- [x] Added admin order details with customer, delivery address, item variants, authoritative order pricing and payment TxID.
+- [x] Added secure fulfillment status transition endpoint and manual payment verification/rejection endpoint using existing schema enums.
+- [x] Added responsive bilingual Orders list and operational detail UI with skeletons, empty/error states and toast feedback.
+- [ ] Browser viewport verification, production admin credentials and deeper order audit/logging remain pending.
+- [ ] Next: Products and Inventory Management.
+
 ## Phase 8-9 Delivery Update (2026-09-05)
 
 - Phase 8 Order Placement: COMPLETED for secure creation and cart conversion; lifecycle transitions and payment verification remain future work.
