@@ -1,0 +1,4 @@
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
+async function request<T>(path: string, options: RequestInit = {}): Promise<T> { const response = await fetch(`${API_URL}${path}`, { ...options, credentials: 'include', headers: { 'Content-Type': 'application/json', ...(options.headers || {}) } }); const body = await response.json().catch(() => ({})); if (!response.ok) throw new Error(body?.error?.message || 'Request failed.'); return body as T; }
+export type StoreSettings={storeName:string;contactEmail:string;supportPhone:string;currency:'BDT'|'USD';insideDhakaRate:number;outsideDhakaRate:number};
+export const settingsService={get:()=>request<{success:boolean;data:StoreSettings}>('/admin/settings'),save:(data:StoreSettings)=>request<{success:boolean;data:StoreSettings}>('/admin/settings',{method:'PUT',body:JSON.stringify(data)})};

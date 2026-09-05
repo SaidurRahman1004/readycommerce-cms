@@ -183,6 +183,14 @@ The Admin Dashboard must not begin until Phase 12's Storefront Production Gate p
 - [ ] Category Edit modal UI and Customer Directory status toggle UI remain pending; customer status API foundation is complete.
 - [ ] Broader CMS localization and visual browser verification remain pending.
 
+## Phase 12H Store Settings & UI Completion (2026-09-05)
+
+- [x] Added reusable Category Edit modal connected to the admin update API with validation, loading state and toast feedback.
+- [x] Added Customer Active/Inactive control on customer details, protected by the existing admin status API.
+- [x] Added singleton StoreSettings model and admin-protected GET/PUT settings API for store identity, contact, currency and shipping rates.
+- [x] Added responsive dashboard Store Settings form with validation and save feedback.
+- [ ] Visual browser/device verification and full settings localization remain pending.
+
 ## Phase 8-9 Delivery Update (2026-09-05)
 
 - Phase 8 Order Placement: COMPLETED for secure creation and cart conversion; lifecycle transitions and payment verification remain future work.
