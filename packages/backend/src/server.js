@@ -15,16 +15,21 @@ const userRoutes = require('./routes/userRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const couponRoutes = require('./routes/couponRoutes');
 const adminRoutes = require('./routes/adminRoutes');
-const StoreSettings = require('./models/StoreSettings');
 const { getShippingCost } = require('./utils/shipping');
+const StoreSettings = require('./models/StoreSettings');
 
 dotenv.config();
 
 const app = express();
 
 app.use(helmet());
-const allowedOrigins = (process.env.FRONTEND_ORIGIN || 'http://localhost:3000').split(',').map((origin) => origin.trim());
-app.use(cors({ origin: (origin, callback) => (!origin || allowedOrigins.includes(origin) ? callback(null, true) : callback(new Error('Origin not allowed'))), credentials: true }));
+const allowedOrigins = (process.env.FRONTEND_ORIGIN || 'http://localhost:3000,http://localhost:3001').split(',').map((origin) => origin.trim());
+app.use(cors({ origin: (origin, callback) => {
+  if (!origin || process.env.NODE_ENV !== 'production' || allowedOrigins.includes(origin)) {
+    return callback(null, true);
+  }
+  return callback(new Error('Origin not allowed'));
+}, credentials: true }));
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use(rateLimit({ windowMs: 15 * 60 * 1000, limit: 100, standardHeaders: true, legacyHeaders: false }));
 app.use(express.json());
@@ -46,8 +51,8 @@ app.use('/api/admin', adminRoutes);
 app.get('/api/shipping/quote', (req, res) => {
   const city = typeof req.query.city === 'string' ? req.query.city : '';
   res.json({ success: true, data: { city, cost: getShippingCost(city), currency: 'BDT' } });
-app.get('/api/settings/shipping', async (req, res, next) => { try { const settings = await StoreSettings.findOne({ key: 'store' }).select('insideDhakaRate outsideDhakaRate currency').lean(); const city = typeof req.query.city === 'string' ? req.query.city : ''; const dhaka = city.trim().toLowerCase() === 'dhaka'; res.json({ success: true, data: { city, insideDhakaRate: settings?.insideDhakaRate ?? 60, outsideDhakaRate: settings?.outsideDhakaRate ?? 120, cost: dhaka ? (settings?.insideDhakaRate ?? 60) : (settings?.outsideDhakaRate ?? 120), currency: settings?.currency || 'BDT' } }); } catch (e) { next(e); } });
 });
+app.get('/api/settings/shipping', async (req, res, next) => { try { const settings = await StoreSettings.findOne({ key: 'store' }).select('insideDhakaRate outsideDhakaRate currency').lean(); const city = typeof req.query.city === 'string' ? req.query.city : ''; const dhaka = city.trim().toLowerCase() === 'dhaka'; res.json({ success: true, data: { city, insideDhakaRate: settings?.insideDhakaRate ?? 60, outsideDhakaRate: settings?.outsideDhakaRate ?? 120, cost: dhaka ? (settings?.insideDhakaRate ?? 60) : (settings?.outsideDhakaRate ?? 120), currency: settings?.currency || 'BDT' } }); } catch (e) { next(e); } });
 
 const PORT = process.env.PORT || 5000;
 
