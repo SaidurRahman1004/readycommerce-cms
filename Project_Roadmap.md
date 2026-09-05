@@ -203,7 +203,7 @@ The Admin Dashboard must not begin until Phase 12's Storefront Production Gate p
 - [x] Verified dashboard access uses the secure `rc_access` HttpOnly cookie through the `/api` proxy with credentialed requests.
 - [x] Confirmed the lockout is role-based: only users with `role: admin` pass the server-side admin authorization guard.
 - [x] Added the safe `make-admin` database utility and npm command for promoting an existing account.
-- [ ] Merge into `main` remains pending until the Phase 12J fix is committed and branch checks pass.
+- [x] Phase 12J fix committed, `dashboard-all` pushed, fast-forward merged into `main`, and `main` pushed successfully.
 
 ## Phase 8-9 Delivery Update (2026-09-05)
 
