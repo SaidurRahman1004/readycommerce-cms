@@ -3,3 +3,5 @@
 :root { --background: #f6f8fb; --foreground: #11202d; --primary: #00a982; --muted: #eef4f3; --border: #dce8e5; }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--background); color: var(--foreground); font-family: Arial, sans-serif; }
+button, a, input, textarea, select { -webkit-tap-highlight-color: transparent; }
+button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary) 35%, transparent); outline-offset: 3px; }

@@ -1,6 +1,6 @@
 'use client';
 
-import {createContext, useContext, useEffect, useMemo, useRef, useState} from 'react';
+import {createContext, useCallback, useContext, useEffect, useMemo, useRef, useState} from 'react';
 import toast from 'react-hot-toast';
 import {cartService} from '@/services/api-service';
 
@@ -20,9 +20,9 @@ export function CartProvider({children}: {children: React.ReactNode}) {
   useEffect(() => { if (hydrated.current) window.localStorage.setItem('readycommerce_cart', JSON.stringify(items)); }, [items]);
   useEffect(() => { if (hydrated.current) window.localStorage.setItem('readycommerce_wishlist', JSON.stringify(wishlist)); }, [wishlist]);
   const applyServerCart = (data: {items: CartLine[]}) => setItems(data.items);
-  const addItem = async (productId = 'noir-07', quantity = 1, product?: {price: number; name: string; image: string}, variantId?: string) => {setPendingItem(productId); try {const result = await cartService.add(productId, quantity, variantId); applyServerCart(result.data);} catch (error: unknown) {toast.error(error instanceof Error ? error.message : 'Unable to add this item.');} finally {setPendingItem(null);}};
-  const updateQuantity = async (productId: string, quantity: number, variantId?: string) => {setPendingItem(productId); try {const result = await cartService.update(productId, quantity, variantId); applyServerCart(result.data);} catch (error: unknown) {toast.error(error instanceof Error ? error.message : 'Unable to update cart.');} finally {setPendingItem(null);}};
-  const removeItem = async (productId: string, variantId?: string) => {setPendingItem(productId); try {const result = await cartService.remove(productId, variantId); applyServerCart(result.data);} catch (error: unknown) {toast.error(error instanceof Error ? error.message : 'Unable to remove item.');} finally {setPendingItem(null);}};
+  const addItem = useCallback(async (productId = 'noir-07', quantity = 1, product?: {price: number; name: string; image: string}, variantId?: string) => {setPendingItem(productId); try {const result = await cartService.add(productId, quantity, variantId); applyServerCart(result.data);} catch (error: unknown) {toast.error(error instanceof Error ? error.message : 'Unable to add this item.');} finally {setPendingItem(null);}}, []);
+  const updateQuantity = useCallback(async (productId: string, quantity: number, variantId?: string) => {setPendingItem(productId); try {const result = await cartService.update(productId, quantity, variantId); applyServerCart(result.data);} catch (error: unknown) {toast.error(error instanceof Error ? error.message : 'Unable to update cart.');} finally {setPendingItem(null);}}, []);
+  const removeItem = useCallback(async (productId: string, variantId?: string) => {setPendingItem(productId); try {const result = await cartService.remove(productId, variantId); applyServerCart(result.data);} catch (error: unknown) {toast.error(error instanceof Error ? error.message : 'Unable to remove item.');} finally {setPendingItem(null);}}, []);
   const toggleWishlist = (productId: string) => setWishlist((current) => current.includes(productId) ? current.filter((id) => id !== productId) : [...current, productId]);
   const count = items.reduce((total, item) => total + item.quantity, 0);
   const subtotal = items.reduce((total, item) => total + (item.price ?? 0) * item.quantity, 0);

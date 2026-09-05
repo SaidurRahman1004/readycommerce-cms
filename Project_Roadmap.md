@@ -111,6 +111,7 @@ The Admin Dashboard must not begin until Phase 12's Storefront Production Gate p
 - [x] Added responsive premium dashboard shell with sidebar navigation and top header.
 - [x] Added foundational Welcome Admin overview page.
 - [ ] Add real admin authentication/authorization, dashboard data APIs and management modules only after the storefront production gate.
+- Phase 12A foundation quality gate: dashboard build/lint passed; unauthenticated admin access returns 401; real admin login and module APIs remain pending.
 
 ## Phase 10–11 Delivery Update (2026-09-05)
 
@@ -120,6 +121,17 @@ The Admin Dashboard must not begin until Phase 12's Storefront Production Gate p
 - [x] Bilingual Privacy Policy, Terms and Contact pages with global footer links.
 - [x] Root metadata, branded 404 route, responsive legal layout and print-safe customer surfaces.
 - [ ] Production legal review, richer SEO structured data, analytics/performance budgets and formal accessibility/E2E audit.
+
+## Phase 12A Dashboard Foundation (2026-09-05)
+
+- Branch: `dashboard-all` (isolated from the stable storefront line).
+- [x] Initialized and hardened `apps/dashboard` with Next.js App Router, TypeScript and Tailwind CSS.
+- [x] Added responsive premium shell with desktop sidebar, mobile drawer, top header, language toggle, user and notification foundations.
+- [x] Added reusable breadcrumbs, page-header, skeleton, empty, error and confirmation-dialog primitives plus route loading/error/not-found states.
+- [x] Added server-protected `/api/admin/access` boundary and admin-only dashboard session gate; unauthenticated access is rejected before dashboard content is shown.
+- [x] Added a no-fake-data Welcome Admin overview foundation.
+- [ ] Add real admin authentication UX, dashboard data APIs and management modules in the next Phase 12 increments.
+- Quality gate: dashboard/storefront production builds passed; unauthenticated admin access returned 401. Live admin login, customer-role denial, database-backed module APIs and visual device testing remain pending.
 
 ## Phase 8-9 Delivery Update (2026-09-05)
 

@@ -14,6 +14,7 @@ const orderRoutes = require('./routes/orderRoutes');
 const userRoutes = require('./routes/userRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const couponRoutes = require('./routes/couponRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 const { getShippingCost } = require('./utils/shipping');
 
 dotenv.config();
@@ -39,6 +40,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/coupons', couponRoutes);
+app.use('/api/admin', adminRoutes);
 app.get('/api/shipping/quote', (req, res) => {
   const city = typeof req.query.city === 'string' ? req.query.city : '';
   res.json({ success: true, data: { city, cost: getShippingCost(city), currency: 'BDT' } });

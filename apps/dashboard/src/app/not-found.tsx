@@ -1,0 +1,2 @@
+import Link from 'next/link';
+export default function NotFound() { return <main className="flex min-h-[60vh] flex-col items-center justify-center text-center"><p className="text-xs font-bold uppercase tracking-[0.25em] text-primary">ReadyCommerce</p><h1 className="mt-4 text-5xl font-bold">404</h1><p className="mt-3 text-sm text-slate-500">This dashboard page could not be found.</p><Link href="/" className="mt-7 rounded-xl bg-primary px-5 py-3 text-sm font-bold text-white">Return to overview</Link></main>; }

@@ -1,0 +1,2 @@
+'use client';
+export default function ErrorPage({ reset }: { error: Error & { digest?: string }; reset: () => void }) { return <main className="flex min-h-[60vh] flex-col items-center justify-center text-center"><h1 className="text-2xl font-bold">Something went wrong</h1><p className="mt-3 text-sm text-slate-500">The dashboard could not load this view.</p><button type="button" onClick={() => reset()} className="mt-6 rounded-xl bg-primary px-5 py-3 text-sm font-bold text-white">Try again</button></main>; }
