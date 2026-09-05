@@ -151,6 +151,14 @@ The Admin Dashboard must not begin until Phase 12's Storefront Production Gate p
 - [ ] Browser viewport verification, production admin credentials and deeper order audit/logging remain pending.
 - [ ] Next: Products and Inventory Management.
 
+## Phase 12D Products & Inventory Management (2026-09-05)
+
+- [x] Added admin-protected product list/create/update/archive APIs with search, pagination, category data and variant inventory population.
+- [x] Added admin-protected inventory list and safe stock adjustment APIs using reserved-stock guards and restock timestamps.
+- [x] Added responsive bilingual-ready Products table, product editor, Inventory table, loading/empty/error states and toast feedback.
+- [x] Real MongoDB admin API verification passed for unauthorized rejection and authorized products/inventory access.
+- [ ] Category management, image upload/media library, audit-history collection, richer variant editing and visual browser verification remain pending.
+
 ## Phase 8-9 Delivery Update (2026-09-05)
 
 - Phase 8 Order Placement: COMPLETED for secure creation and cart conversion; lifecycle transitions and payment verification remain future work.
