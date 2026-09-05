@@ -1,4 +1,4 @@
-const dotenv = require('dotenv');
+require('./config/env');
 const mongoose = require('mongoose');
 const connectDB = require('./config/db');
 const Category = require('./models/Category');
@@ -7,7 +7,6 @@ const ProductVariant = require('./models/ProductVariant');
 const Inventory = require('./models/Inventory');
 const Coupon = require('./models/Coupon');
 
-dotenv.config();
 const categories = [
   { name: 'Perfume', slug: 'perfume', sortOrder: 1, image: 'https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&w=700&q=88', description: 'Signature scents for everyday rituals.' },
   { name: 'Skincare', slug: 'skincare', sortOrder: 2, image: 'https://images.unsplash.com/photo-1556229010-6c3f2c9ca5f8?auto=format&fit=crop&w=700&q=88', description: 'Refined formulas for luminous skin.' },

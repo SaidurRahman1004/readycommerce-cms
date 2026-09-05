@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('./src/config/env');
 const mongoose = require('mongoose');
 const connectDB = require('./src/config/db');
 const User = require('./src/models/User');
@@ -9,7 +9,11 @@ if (!email || !email.includes('@')) { console.error('Usage: node make-admin.js u
 (async () => {
   try {
     await connectDB();
-    const user = await User.findOneAndUpdate({ email }, { role: 'admin', isActive: true }, { new: true }).select('email role isActive');
+    const user = await User.findOneAndUpdate(
+      { email },
+      { role: 'admin', isActive: true },
+      { returnDocument: 'after' },
+    ).select('email role isActive');
     if (!user) { console.error(`No user found for ${email}`); process.exitCode = 1; return; }
     console.log(`Admin access granted: ${user.email} (${user.role})`);
     process.exitCode = 0;
