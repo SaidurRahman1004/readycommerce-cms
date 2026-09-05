@@ -1,4 +1,5 @@
 const dotenv = require('dotenv');
+const mongoose = require('mongoose');
 const connectDB = require('./config/db');
 const Category = require('./models/Category');
 const Product = require('./models/Product');
@@ -23,13 +24,19 @@ const products = [
 ];
 
 const seed = async () => {
+  console.log('Connecting to MongoDB at 127.0.0.1...');
   await connectDB();
+  console.log('Database connected. Upserting categories...');
   const categoryDocs = {}; for (const category of categories) categoryDocs[category.slug] = await Category.findOneAndUpdate({ slug: category.slug }, { ...category, isActive: true }, { upsert: true, new: true, setDefaultsOnInsert: true });
+  console.log(`Categories inserted: ${categories.length}`);
   for (const item of products) {
     const product = await Product.findOneAndUpdate({ slug: item.slug }, { name: item.name, slug: item.slug, category: categoryDocs[item.category]._id, basePrice: item.basePrice, currency: 'BDT', description: item.description, shortDescription: item.description, images: [item.image], status: 'active', isFeatured: true }, { upsert: true, new: true, setDefaultsOnInsert: true });
     for (const size of item.size) { const sku = `${item.slug.toUpperCase().replace(/-/g, '_')}_${size.toUpperCase()}`; const variant = await ProductVariant.findOneAndUpdate({ sku }, { product: product._id, sku, name: size, size, color: item.category === 'skincare' ? 'cream' : 'amber', scent: item.category === 'perfume' ? 'woody' : 'fresh', price: item.basePrice, isActive: true }, { upsert: true, new: true, setDefaultsOnInsert: true }); await Inventory.findOneAndUpdate({ variant: variant._id }, { variant: variant._id, quantity: 24, reservedQuantity: 0, trackInventory: true }, { upsert: true, new: true, setDefaultsOnInsert: true }); }
   }
-  console.log(`Catalog seed complete: ${products.length} products, ${categories.length} categories.`);
-  process.exitCode = 0;
+  console.log(`Products inserted: ${products.length}`);
+  console.log('Catalog seed complete. Closing database connection...');
+  await mongoose.disconnect();
+  console.log('Exiting seeder');
+  process.exit(0);
 };
-seed().catch((error) => { console.error(`Catalog seed failed: ${error.message}`); process.exitCode = 1; });
+seed().catch(async (error) => { console.error(`Catalog seed failed: ${error.message}`); try { await mongoose.disconnect(); } catch (disconnectError) { console.error(`Disconnect failed: ${disconnectError.message}`); } process.exit(1); });
