@@ -167,6 +167,14 @@ The Admin Dashboard must not begin until Phase 12's Storefront Production Gate p
 - [x] Added responsive category and customer management screens with loading, empty/error states and toast feedback.
 - [ ] Category edit modal, customer status mutation, richer search/pagination and visual browser verification remain pending.
 
+## Phase 12F Reviews & Coupons Management (2026-09-05)
+
+- [x] Added admin-protected review listing, approve/reject moderation and deletion APIs.
+- [x] Added admin-protected coupon listing, creation, update and safe deactivation APIs using existing Coupon enums/fields.
+- [x] Added responsive Reviews moderation, Coupons listing and New Coupon screens with loading, empty/error states and toast feedback.
+- [x] Added customer-status mutation service/API foundation and retained the Category update API for the next UI refinement.
+- [ ] Category edit modal and Customer Directory status toggle UI remain pending; visual browser verification also remains pending.
+
 ## Phase 8-9 Delivery Update (2026-09-05)
 
 - Phase 8 Order Placement: COMPLETED for secure creation and cart conversion; lifecycle transitions and payment verification remain future work.
