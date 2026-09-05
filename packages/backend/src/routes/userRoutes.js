@@ -1,0 +1,12 @@
+const express = require('express');
+const Joi = require('joi');
+const cookieParser = require('cookie-parser');
+const validate = require('../middlewares/validate');
+const { authMiddleware } = require('../middlewares/authMiddleware');
+const { getProfile, updateProfile } = require('../controllers/userController');
+const router = express.Router();
+const profileSchema = Joi.object({ firstName: Joi.string().trim().min(2).max(60).required(), lastName: Joi.string().trim().min(2).max(60).required(), phone: Joi.string().trim().max(25).allow('').required() });
+router.use(cookieParser(), authMiddleware);
+router.get('/profile', getProfile);
+router.put('/profile', validate(profileSchema), updateProfile);
+module.exports = router;

@@ -1,5 +1,3 @@
-const wait = (milliseconds: number) => new Promise<void>((resolve) => setTimeout(resolve, milliseconds));
-
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 export type AuthUser = {id: string; firstName: string; lastName: string; email: string; phone?: string; role: string; isActive: boolean; isEmailVerified: boolean; createdAt?: string};
 export type CatalogVariant = { _id: string; sku: string; name: string; size?: string; color?: string; price: number; stock: number | null };
@@ -31,11 +29,6 @@ export const shippingService = { quote: async (city: string) => request<{success
 export type AuthPayload = {name?: string; email: string; password: string};
 export type CheckoutPayload = {addressId: string; paymentMethod: 'bkash' | 'nagad'; txid: string};
 
-async function mockRequest<T>(result: T): Promise<T> {
-  await wait(1000);
-  return result;
-}
-
 export const authService = {
   login: async (payload: AuthPayload) => request<{success: boolean; user: AuthUser}>('/auth/login', {method: 'POST', body: JSON.stringify({email: payload.email, password: payload.password})}),
   register: async (payload: AuthPayload) => request<{success: boolean; user: AuthUser}>('/auth/register', {method: 'POST', body: JSON.stringify({name: payload.name, email: payload.email, password: payload.password})}),
@@ -47,17 +40,9 @@ export const authService = {
   logout: async () => request<{success: boolean}>('/auth/logout', {method: 'POST'})
 };
 
-export const accountService = {
-  updateProfile: async (payload: {firstName: string; lastName: string; phone: string}) => mockRequest({message: 'profile_updated', payload}),
-  listOrders: async () => mockRequest([
-    {id: 'RC-2409-1842', date: '09 Sep 2026', status: 'Delivered', total: 158, items: 2},
-    {id: 'RC-2408-0931', date: '27 Aug 2026', status: 'Shipped', total: 94, items: 1},
-    {id: 'RC-2407-7710', date: '14 Jul 2026', status: 'Processing', total: 136, items: 3}
-  ]),
-  saveAddress: async (payload: {label: string; line: string; city: string; postal: string}) => mockRequest({message: 'address_saved', payload}),
-  deleteAddress: async (id: string) => mockRequest({message: 'address_deleted', id})
-};
-
 export const orderService = {
-  create: async (payload: CheckoutPayload) => request<{success: boolean; data: {orderId: string; orderNumber: string; total: number; status: string}}>('/orders', {method: 'POST', body: JSON.stringify(payload)})
+  create: async (payload: CheckoutPayload) => request<{success: boolean; data: {orderId: string; orderNumber: string; total: number; status: string}}>('/orders', {method: 'POST', body: JSON.stringify(payload)}),
+  myOrders: async () => request<{success: boolean; data: CustomerOrder[]}>('/orders/myorders')
 };
+export type CustomerOrder = { _id: string; orderNumber: string; status: string; paymentStatus: string; subtotal: number; shipping: number; total: number; createdAt: string };
+export const userService = { profile: async () => request<{success: boolean; user: AuthUser}>('/users/profile'), updateProfile: async (payload: {firstName: string; lastName: string; phone: string}) => request<{success: boolean; user: AuthUser}>('/users/profile', {method: 'PUT', body: JSON.stringify(payload)}) };
