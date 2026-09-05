@@ -36,7 +36,7 @@ const getOverview = async (req, res, next) => {
         { $sort: { createdAt: -1 } }, { $limit: 8 },
         { $lookup: { from: 'users', localField: 'user', foreignField: '_id', as: 'customer' } },
         { $unwind: { path: '$customer', preserveNullAndEmptyArrays: true } },
-        { $project: { _id: 1, orderNumber: 1, totalAmount: 1, total: 1, status: 1, paymentStatus: 1, createdAt: 1, customerName: { $trim: { input: { $concat: [{ $ifNull: ['$customer.firstName', ''] }, ' ', { $ifNull: ['$customer.lastName', ''] }] } } }, customerEmail: 1 } },
+        { $project: { _id: 1, orderNumber: 1, totalAmount: 1, total: 1, status: 1, paymentStatus: 1, createdAt: 1, customerName: { $trim: { input: { $concat: [{ $ifNull: ['$customer.firstName', ''] }, ' ', { $ifNull: ['$customer.lastName', ''] }] } } } } },
       ]),
       Inventory.aggregate([
         { $match: { trackInventory: true } }, { $addFields: { availableQuantity: { $max: [0, { $subtract: ['$quantity', '$reservedQuantity'] }] } } },
@@ -58,7 +58,7 @@ const getOverview = async (req, res, next) => {
       customers: { total: customerCounts[0], newInPeriod: customerCounts[1] },
       products: { total: productCounts[0], active: productCounts[1], lowStock: lowStock.filter((item) => item.status === 'low_stock').length, outOfStock: lowStock.filter((item) => item.status === 'out_of_stock').length },
       payments: { byStatus: Object.fromEntries(PAYMENT_STATUSES.map((status) => [status, paymentMap[status] || 0])) },
-      recentOrders: recentOrders.map((order) => ({ ...order, customerName: order.customerName || order.customerEmail || 'Guest customer', amount: order.totalAmount ?? order.total })),
+      recentOrders: recentOrders.map((order) => ({ ...order, customerName: order.customerName || 'Guest customer', amount: order.totalAmount ?? order.total })),
       lowStock,
     } });
   } catch (error) { return next(error); }
