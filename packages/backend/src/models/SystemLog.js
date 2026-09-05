@@ -1,0 +1,2 @@
+const mongoose=require('mongoose');
+const schema=new mongoose.Schema({action:{type:String,required:true,trim:true,maxlength:120},admin:{type:mongoose.Schema.Types.ObjectId,ref:'User',required:true,index:true},targetModule:{type:String,required:true,index:true},targetId:{type:String},metadata:{type:mongoose.Schema.Types.Mixed}}, {timestamps:true}); schema.index({createdAt:-1}); module.exports=mongoose.models.SystemLog||mongoose.model('SystemLog',schema);

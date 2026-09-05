@@ -15,6 +15,7 @@ const userRoutes = require('./routes/userRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const couponRoutes = require('./routes/couponRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const StoreSettings = require('./models/StoreSettings');
 const { getShippingCost } = require('./utils/shipping');
 
 dotenv.config();
@@ -45,6 +46,7 @@ app.use('/api/admin', adminRoutes);
 app.get('/api/shipping/quote', (req, res) => {
   const city = typeof req.query.city === 'string' ? req.query.city : '';
   res.json({ success: true, data: { city, cost: getShippingCost(city), currency: 'BDT' } });
+app.get('/api/settings/shipping', async (req, res, next) => { try { const settings = await StoreSettings.findOne({ key: 'store' }).select('insideDhakaRate outsideDhakaRate currency').lean(); const city = typeof req.query.city === 'string' ? req.query.city : ''; const dhaka = city.trim().toLowerCase() === 'dhaka'; res.json({ success: true, data: { city, insideDhakaRate: settings?.insideDhakaRate ?? 60, outsideDhakaRate: settings?.outsideDhakaRate ?? 120, cost: dhaka ? (settings?.insideDhakaRate ?? 60) : (settings?.outsideDhakaRate ?? 120), currency: settings?.currency || 'BDT' } }); } catch (e) { next(e); } });
 });
 
 const PORT = process.env.PORT || 5000;

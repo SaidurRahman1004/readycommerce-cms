@@ -191,6 +191,13 @@ The Admin Dashboard must not begin until Phase 12's Storefront Production Gate p
 - [x] Added responsive dashboard Store Settings form with validation and save feedback.
 - [ ] Visual browser/device verification and full settings localization remain pending.
 
+## Phase 12I Storefront Integration, Returns & Audit Logs (2026-09-05)
+
+- [x] Storefront shipping quotes now read the persisted StoreSettings rates through a public, limited shipping endpoint.
+- [x] Added protected return/refund workflow endpoint with request, approval and refund state transitions.
+- [x] Added SystemLog persistence, automatic successful admin mutation logging and a read-only Audit Logs dashboard page.
+- [ ] External refund settlement, granular super-admin policy and visual browser verification remain pending.
+
 ## Phase 8-9 Delivery Update (2026-09-05)
 
 - Phase 8 Order Placement: COMPLETED for secure creation and cart conversion; lifecycle transitions and payment verification remain future work.
