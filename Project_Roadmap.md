@@ -198,6 +198,13 @@ The Admin Dashboard must not begin until Phase 12's Storefront Production Gate p
 - [x] Added SystemLog persistence, automatic successful admin mutation logging and a read-only Audit Logs dashboard page.
 - [ ] External refund settlement, granular super-admin policy and visual browser verification remain pending.
 
+## Phase 12J Admin Access & Branch Integration (2026-09-05)
+
+- [x] Verified dashboard access uses the secure `rc_access` HttpOnly cookie through the `/api` proxy with credentialed requests.
+- [x] Confirmed the lockout is role-based: only users with `role: admin` pass the server-side admin authorization guard.
+- [x] Added the safe `make-admin` database utility and npm command for promoting an existing account.
+- [ ] Merge into `main` remains pending until the Phase 12J fix is committed and branch checks pass.
+
 ## Phase 8-9 Delivery Update (2026-09-05)
 
 - Phase 8 Order Placement: COMPLETED for secure creation and cart conversion; lifecycle transitions and payment verification remain future work.
