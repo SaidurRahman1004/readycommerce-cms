@@ -11,7 +11,7 @@ if (!email || !email.includes('@')) { console.error('Usage: node make-admin.js u
     await connectDB();
     const user = await User.findOneAndUpdate(
       { email },
-      { role: 'admin', isActive: true },
+      { role: 'super-admin', isActive: true },
       { returnDocument: 'after' },
     ).select('email role isActive');
     if (!user) { console.error(`No user found for ${email}`); process.exitCode = 1; return; }

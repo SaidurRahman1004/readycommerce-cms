@@ -63,6 +63,8 @@ ReadyCommerce CMS - A premium, self-hosted commerce platform for lifestyle busin
 
 ## Changelog
 
+* **[2026-09-06]**: **[Phase 12K Team & Roles / RBAC]**: Added granular staff roles (`super-admin`, `manager`, `editor`, `support`) with backward-compatible legacy-admin normalization and API-level authorization across every admin module. Added super-admin-only Team CRUD APIs with safe DTOs, strong staff-password validation, immediate session revocation, self-access and last-super-admin protections, plus a responsive bilingual Team & Roles dashboard with create/edit/revoke workflows, skeleton/empty/error states and role-aware sidebar visibility. Migrated the active administrator to `super-admin`; live MongoDB RBAC E2E verification passed for allowed/denied routes, safe responses, role changes and access revocation.
+
 * **[2026-09-06]**: **[Phase 12K Admin Navigation Hardening]**: Replaced the Phase 12A sidebar placeholders with real routes for all completed admin modules and accessible bilingual coming-soon feedback for unfinished modules. Added route-aware active states, Lucide icons, responsive mobile drawer sizing, overlay/Escape dismissal, scroll locking and safer admin-access error handling. Dashboard and Storefront lint/build, backend syntax validation and explicit navigation mapping checks passed.
 
 * **[2026-09-05]**: **[Dashboard Branch & Foundation]**: Created and switched to the isolated `dashboard-all` branch. Audited the storefront/backend, corrected storefront lint issues and preserved pre-existing auth UI changes. Initialized `apps/dashboard` with a responsive Tailwind App Router shell, sidebar navigation, top header and Welcome Admin page. No dashboard business logic was added.
