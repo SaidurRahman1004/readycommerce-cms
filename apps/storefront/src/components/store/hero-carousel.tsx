@@ -6,7 +6,6 @@ import useEmblaCarousel from 'embla-carousel-react';
 import Autoplay from 'embla-carousel-autoplay';
 import {useTranslations} from 'next-intl';
 
-// Mock data (This will later come from the CMS dashboard)
 const heroSlides = [
   {
     id: 'slide-1',
@@ -30,6 +29,8 @@ const heroSlides = [
 
 export default function HeroCarousel() {
   const t = useTranslations('Storefront');
+  const [slides, setSlides] = useState(heroSlides);
+  useEffect(() => { const api = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'; fetch(`${api}/cms/homepage`).then((response) => response.ok ? response.json() : null).then((body) => { const remote = body?.data?.slides?.filter((slide: { image?: string; isActive?: boolean }) => slide.image && slide.isActive !== false); if (remote?.length) setSlides(remote.map((slide: { image: string; title?: string }, index: number) => ({ id: `cms-${index}`, image: slide.image, caption: slide.title || 'hero.caption', alt: 'hero.imageAlt' }))); }).catch(() => undefined); }, []);
   
   // Initialize Embla with loop and autoplay
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true }, [
@@ -62,7 +63,7 @@ export default function HeroCarousel() {
         {/* Container */}
         <div className="flex h-full w-full touch-pan-y">
           {/* Slides */}
-          {heroSlides.map((slide) => (
+          {slides.map((slide) => (
             <div key={slide.id} className="relative min-w-0 shrink-0 grow-0 basis-full h-full">
               <Image 
                 src={slide.image} 
@@ -88,7 +89,7 @@ export default function HeroCarousel() {
       
       {/* Custom Dots Indicators */}
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-2.5 z-10">
-        {heroSlides.map((_, index) => (
+        {slides.map((_, index) => (
           <button
             key={index}
             type="button"

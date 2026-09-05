@@ -6,6 +6,7 @@ const { listOrders, getOrder, updateStatus, updatePayment } = require('../contro
 const catalog = require('../controllers/adminCatalogController');
 const customer = require('../controllers/adminCustomerController');
 const moderation = require('../controllers/adminReviewCouponController');
+const cms = require('../controllers/adminCmsController');
 const router = express.Router();
 router.use(cookieParser(), authMiddleware, authorize('admin'));
 router.get('/overview', getOverview);
@@ -19,5 +20,6 @@ router.get('/categories', customer.listCategories); router.post('/categories', c
 router.get('/customers', customer.listCustomers); router.get('/customers/:id', customer.getCustomer); router.put('/customers/:id/status', customer.updateCustomerStatus);
 router.get('/reviews', moderation.listReviews); router.put('/reviews/:id/status', moderation.reviewStatus); router.delete('/reviews/:id', moderation.deleteReview);
 router.get('/coupons', moderation.listCoupons); router.post('/coupons', moderation.createCoupon); router.put('/coupons/:id', moderation.updateCoupon); router.delete('/coupons/:id', moderation.deleteCoupon);
+router.get('/cms/homepage', cms.get); router.put('/cms/homepage', cms.update);
 router.get('/access', (req, res) => res.json({ success: true, data: { authorized: true, user: { id: req.user._id, firstName: req.user.firstName, lastName: req.user.lastName, email: req.user.email, role: req.user.role } } }));
 module.exports = router;

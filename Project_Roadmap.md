@@ -175,6 +175,14 @@ The Admin Dashboard must not begin until Phase 12's Storefront Production Gate p
 - [x] Added customer-status mutation service/API foundation and retained the Category update API for the next UI refinement.
 - [ ] Category edit modal and Customer Directory status toggle UI remain pending; visual browser verification also remains pending.
 
+## Phase 12G Website CMS / Homepage Builder (2026-09-05)
+
+- [x] Added admin-protected homepage configuration API and public fallback-safe homepage configuration endpoint.
+- [x] Added Homepage Builder for hero slides, featured category selection and promotional banner settings.
+- [x] Connected the Storefront hero carousel to CMS slides while retaining existing defaults when CMS data is unavailable.
+- [ ] Category Edit modal UI and Customer Directory status toggle UI remain pending; customer status API foundation is complete.
+- [ ] Broader CMS localization and visual browser verification remain pending.
+
 ## Phase 8-9 Delivery Update (2026-09-05)
 
 - Phase 8 Order Placement: COMPLETED for secure creation and cart conversion; lifecycle transitions and payment verification remain future work.

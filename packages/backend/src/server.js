@@ -40,6 +40,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/coupons', couponRoutes);
+app.get('/api/cms/homepage', async (req,res,next) => { try { const HomepageConfig=require('./models/HomepageConfig'); const data=await HomepageConfig.findOne({key:'homepage'}).populate('featuredCategories','name slug image').lean(); return res.json({success:true,data:data||{slides:[],featuredCategories:[],promoEnabled:false}}); } catch(e) { return next(e); } });
 app.use('/api/admin', adminRoutes);
 app.get('/api/shipping/quote', (req, res) => {
   const city = typeof req.query.city === 'string' ? req.query.city : '';
