@@ -98,6 +98,15 @@ The Admin Dashboard must not begin until Phase 12's Storefront Production Gate p
 
 ## Immediate Next Steps
 
+## Phase 8-9 Delivery Update (2026-09-05)
+
+- Phase 8 Order Placement: COMPLETED for secure creation and cart conversion; lifecycle transitions and payment verification remain future work.
+- Phase 9 Customer Portal: IN PROGRESS.
+- [x] Protected `GET /api/orders/myorders`, newest-first and user-scoped.
+- [x] Protected `GET/PUT /api/users/profile` with Joi validation and safe user serialization.
+- [x] Account profile, real order history and real address-book service integration.
+- [ ] Order details/tracking, cancellation, returns/refunds, reviews, notifications and invoice downloads.
+
 1. Review and approve the Phase 1 schema contracts.
 2. Add backend environment validation and automated model/API tests.
 3. Implement Phase 2 authentication and protected-route APIs.

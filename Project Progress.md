@@ -62,6 +62,8 @@ ReadyCommerce CMS - A premium, self-hosted commerce platform for lifestyle busin
 - Wireframes and complete UI flow available via Google Stitch (Ready for implementation).
 
 ## Changelog
+
+* **[2026-09-05]**: **[Phase 9 Customer Portal Integration]**: Replaced portal mocks with protected real APIs for user profile read/update, newest-first user-scoped order history, and address listing/creation. Added real status/total rendering, profile loading/update feedback, responsive address management, and bilingual service boundaries. Tracking, cancellation, returns/refunds, reviews, notifications, and invoices remain pending.
 * **[2026-09-03]**: Initialized monorepo infrastructure.
 * **[2026-09-03]**: Initialized Next.js storefront app in `/apps/storefront` with Tailwind CSS, TypeScript, and ESLint. Configured as part of the monorepo workspace.
 * **[2026-09-03]**: Scaffolded backend engine, added Documentation (README & Roadmap), and prepared initial commit for GitHub.
