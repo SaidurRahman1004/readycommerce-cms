@@ -159,6 +159,14 @@ The Admin Dashboard must not begin until Phase 12's Storefront Production Gate p
 - [x] Real MongoDB admin API verification passed for unauthorized rejection and authorized products/inventory access.
 - [ ] Category management, image upload/media library, audit-history collection, richer variant editing and visual browser verification remain pending.
 
+## Phase 12E Categories & Customer Management (2026-09-05)
+
+- [x] Added admin-protected category CRUD/archive APIs with SEO slugs, parent-category support and active-product deletion protection.
+- [x] Added admin-protected customer directory/detail APIs with real order counts, paid lifetime spend, addresses and order history.
+- [x] Replaced manual Product Editor category IDs with a live authenticated category selector.
+- [x] Added responsive category and customer management screens with loading, empty/error states and toast feedback.
+- [ ] Category edit modal, customer status mutation, richer search/pagination and visual browser verification remain pending.
+
 ## Phase 8-9 Delivery Update (2026-09-05)
 
 - Phase 8 Order Placement: COMPLETED for secure creation and cart conversion; lifecycle transitions and payment verification remain future work.
