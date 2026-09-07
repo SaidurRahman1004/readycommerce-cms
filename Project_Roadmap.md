@@ -225,7 +225,8 @@ The Admin Dashboard must not begin until Phase 12's Storefront Production Gate p
 - [x] Added reusable `createNotification()` utility and connected new order creation to an operational alert.
 - [x] Added dynamic dashboard notification bell with unread badge, latest-five popover and responsive overflow handling.
 - [x] Added historical `/notifications` page with read highlighting, pagination, loading, empty and error states.
-- [ ] Inventory/return event producers, notification preferences and visual browser verification remain pending.
+- [x] Connected new-order, low-stock/inventory adjustment and return-request event producers to the notification utility.
+- [ ] Notification preferences and visual browser verification remain pending.
 
 ## Phase 12K Team & Roles / RBAC (2026-09-06)
 

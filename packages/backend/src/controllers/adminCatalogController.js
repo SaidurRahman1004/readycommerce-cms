@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const Product = require('../models/Product'); const ProductVariant = require('../models/ProductVariant'); const Category = require('../models/Category'); const Inventory = require('../models/Inventory');
+const Product = require('../models/Product'); const ProductVariant = require('../models/ProductVariant'); const Category = require('../models/Category'); const Inventory = require('../models/Inventory'); const { createNotification } = require('../utils/notifications');
 const { AppError } = require('../middlewares/errorHandler');
 const slugify = (value) => String(value).toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 const validateProduct = (body) => { if (!body.name || !body.category || !Number.isFinite(Number(body.basePrice))) return 'Name, category and base price are required.'; if (body.discountPrice !== undefined && body.discountPrice !== '' && Number(body.discountPrice) > Number(body.basePrice)) return 'Discount price cannot exceed base price.'; if (!mongoose.isValidObjectId(body.category)) return 'A valid category is required.'; return null; };

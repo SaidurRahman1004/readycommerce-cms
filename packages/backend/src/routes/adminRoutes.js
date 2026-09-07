@@ -13,6 +13,7 @@ const audit = require('../controllers/auditLogController');
 const refund = require('../controllers/adminRefundController');
 const teamRoutes = require('./adminTeamRoutes');
 const { getAnalytics } = require('../controllers/adminAnalyticsController');
+const { createNotification } = require('../utils/notifications');
 
 const router = express.Router();
 const SUPER_ADMIN = ['super-admin'];
@@ -53,7 +54,8 @@ router.post('/products', authorize(...CATALOG_ROLES), catalog.createProduct);
 router.put('/products/:id', authorize(...CATALOG_ROLES), catalog.updateProduct);
 router.delete('/products/:id', authorize(...CATALOG_ROLES), catalog.archiveProduct);
 router.get('/inventory', authorize(...CATALOG_ROLES), catalog.listInventory);
-router.put('/inventory/:id', authorize(...CATALOG_ROLES), catalog.updateInventory);
+const notifyLowStock = (req, res, next) => { res.on('finish', () => { const quantity = Number(req.body?.quantity); const threshold = Number(req.body?.lowStockThreshold ?? 5); if (res.statusCode < 400 && Number.isFinite(quantity) && quantity <= threshold) void createNotification({ type: 'inventory', title: quantity === 0 ? 'Product out of stock' : 'Low stock alert', message: `Inventory item ${req.params.id} has ${quantity} available.`, targetUrl: '/inventory' }).catch(() => {}); }); next(); };
+router.put('/inventory/:id', authorize(...CATALOG_ROLES), notifyLowStock, catalog.updateInventory);
 router.get('/categories', authorize(...CATALOG_ROLES), customer.listCategories);
 router.post('/categories', authorize(...CATALOG_ROLES), customer.createCategory);
 router.put('/categories/:id', authorize(...CATALOG_ROLES), customer.updateCategory);
