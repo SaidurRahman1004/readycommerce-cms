@@ -1,8 +1,8 @@
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const { authMiddleware, authorize, normalizeRole, STAFF_ROLES } = require('../middlewares/authMiddleware');
-const { getOverview } = require('../controllers/adminController');
-const { listOrders, getOrder, updateStatus, updatePayment } = require('../controllers/adminOrderController');
+const { getOverview, globalSearch } = require('../controllers/adminController');
+const { listOrders, getOrder, updateStatus, updatePayment, exportOrders, bulkUpdateStatus } = require('../controllers/adminOrderController');
 const catalog = require('../controllers/adminCatalogController');
 const customer = require('../controllers/adminCustomerController');
 const moderation = require('../controllers/adminReviewCouponController');
@@ -12,7 +12,7 @@ const auditLogger = require('../middlewares/auditLogger');
 const audit = require('../controllers/auditLogController');
 const refund = require('../controllers/adminRefundController');
 const teamRoutes = require('./adminTeamRoutes');
-const { getAnalytics } = require('../controllers/adminAnalyticsController');
+const { getAnalytics, exportAnalytics } = require('../controllers/adminAnalyticsController');
 const { createNotification } = require('../utils/notifications');
 
 const router = express.Router();
@@ -42,7 +42,12 @@ router.get('/access', (req, res) => res.json({
 }));
 router.get('/overview', getOverview);
 router.get('/analytics', authorize('super-admin', 'manager'), getAnalytics);
+router.get('/analytics/export', authorize('super-admin', 'manager'), exportAnalytics);
 
+router.get('/search', globalSearch);
+
+router.put('/orders/bulk-status', authorize(...ORDER_ROLES), bulkUpdateStatus);
+router.get('/orders/export', authorize(...ORDER_ROLES), exportOrders);
 router.get('/orders', authorize(...ORDER_ROLES), listOrders);
 router.get('/orders/:id', authorize(...ORDER_ROLES), getOrder);
 router.put('/orders/:id/status', authorize(...ORDER_ROLES), updateStatus);
@@ -53,6 +58,7 @@ router.get('/products', authorize(...CATALOG_ROLES), catalog.listProducts);
 router.post('/products', authorize(...CATALOG_ROLES), catalog.createProduct);
 router.put('/products/:id', authorize(...CATALOG_ROLES), catalog.updateProduct);
 router.delete('/products/:id', authorize(...CATALOG_ROLES), catalog.archiveProduct);
+router.put('/inventory/bulk-threshold', authorize(...CATALOG_ROLES), catalog.bulkUpdateInventoryThreshold);
 router.get('/inventory', authorize(...CATALOG_ROLES), catalog.listInventory);
 const notifyLowStock = (req, res, next) => { res.on('finish', () => { const quantity = Number(req.body?.quantity); const threshold = Number(req.body?.lowStockThreshold ?? 5); if (res.statusCode < 400 && Number.isFinite(quantity) && quantity <= threshold) void createNotification({ type: 'inventory', title: quantity === 0 ? 'Product out of stock' : 'Low stock alert', message: `Inventory item ${req.params.id} has ${quantity} available.`, targetUrl: '/inventory' }).catch(() => {}); }); next(); };
 router.put('/inventory/:id', authorize(...CATALOG_ROLES), notifyLowStock, catalog.updateInventory);

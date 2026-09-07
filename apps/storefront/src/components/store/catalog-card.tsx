@@ -24,7 +24,7 @@ export default function CatalogCard({product}: {product: CatalogProduct}) {
             FEATURED
           </span>
         )}
-        <button type="button" onClick={() => addItem(product._id, 1, cartProduct)} className="absolute bottom-3 left-3 right-3 flex min-h-[46px] items-center justify-center rounded-xl bg-white/90 text-sm font-bold tracking-tight text-slate-900 shadow-[0_4px_20px_-5px_rgba(0,0,0,0.15)] backdrop-blur-md transition-all duration-300 hover:bg-indigo-600 hover:text-white sm:translate-y-8 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100">
+        <button type="button" onClick={() => addItem(product._id, 1, cartProduct)} className="absolute bottom-3 left-3 right-3 flex min-h-[46px] items-center justify-center rounded-xl bg-white/90 text-sm font-bold tracking-tight text-slate-900 shadow-[0_4px_20px_-5px_rgba(0,0,0,0.15)] backdrop-blur-md transition-all duration-300 hover:bg-indigo-600 hover:text-white active:scale-95 sm:translate-y-8 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100">
           {t('products.addToCart')}
         </button>
       </div>
@@ -45,14 +45,14 @@ export default function CatalogCard({product}: {product: CatalogProduct}) {
           <div>
             {product.discountPrice ? (
               <div className="flex flex-col">
-                <p className="text-[12px] font-bold text-slate-400 line-through">৳{product.basePrice.toLocaleString()}</p>
-                <p className="text-[17px] font-extrabold text-red-600">৳{product.discountPrice.toLocaleString()}</p>
+                <p className="text-[12px] font-bold text-slate-400 line-through">&#2547;{product.basePrice.toLocaleString()}</p>
+                <p className="text-[17px] font-extrabold text-red-600">&#2547;{product.discountPrice.toLocaleString()}</p>
               </div>
             ) : (
-              <p className="text-[17px] font-extrabold text-foreground">৳{product.basePrice.toLocaleString()}</p>
+              <p className="text-[17px] font-extrabold text-foreground">&#2547;{product.basePrice.toLocaleString()}</p>
             )}
           </div>
-          <button type="button" onClick={() => addItem(product._id, 1, cartProduct)} className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary transition-colors hover:bg-primary hover:text-white sm:hidden" aria-label={t('products.addToCart')}>
+          <button type="button" onClick={() => addItem(product._id, 1, cartProduct)} className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary transition-all duration-200 hover:bg-primary hover:text-white active:scale-90 sm:hidden" aria-label={t('products.addToCart')}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4"><path d="M12 5v14M5 12h14" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </button>
         </div>

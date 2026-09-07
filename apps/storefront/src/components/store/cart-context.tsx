@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 import {cartService} from '@/services/api-service';
 
 export type CartLine = {productId: string; variantId?: string; quantity: number; price?: number; name?: string; image?: string};
-type CartContextValue = {items: CartLine[]; count: number; subtotal: number; wishlist: string[]; isOpen: boolean; pendingItem: string | null; addItem: (productId?: string, quantity?: number, product?: {price: number; name: string; image: string}, variantId?: string) => Promise<void>; updateQuantity: (productId: string, quantity: number, variantId?: string) => Promise<void>; removeItem: (productId: string, variantId?: string) => Promise<void>; clearCart: () => void; toggleWishlist: (productId: string) => void; isWishlisted: (productId: string) => boolean; openCart: () => void; closeCart: () => void};
+type CartContextValue = {items: CartLine[]; count: number; subtotal: number; wishlist: string[]; isOpen: boolean; pendingItem: string | null; addItem: (productId?: string, quantity?: number, product?: {price: number; name: string; image: string}, variantId?: string) => Promise<void>; updateQuantity: (productId: string, quantity: number, variantId?: string) => Promise<void>; removeItem: (productId: string, variantId?: string) => Promise<void>; clearCart: () => void; reloadCart: () => Promise<void>; toggleWishlist: (productId: string) => void; isWishlisted: (productId: string) => boolean; openCart: () => void; closeCart: () => void};
 const CartContext = createContext<CartContextValue | null>(null);
 const readCart = (raw: string | null): CartLine[] => { try { const parsed: unknown = raw ? JSON.parse(raw) : []; return Array.isArray(parsed) ? parsed.filter((item): item is CartLine => Boolean(item) && typeof item === 'object' && typeof (item as CartLine).productId === 'string' && Number.isInteger((item as CartLine).quantity) && (item as CartLine).quantity > 0) : []; } catch { return []; } };
 const readWishlist = (raw: string | null): string[] => { try { const parsed: unknown = raw ? JSON.parse(raw) : []; return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === 'string') : []; } catch { return []; } };
@@ -15,18 +15,36 @@ export function CartProvider({children}: {children: React.ReactNode}) {
   const [wishlist, setWishlist] = useState<string[]>([]);
   const hydrated = useRef(false);
   const [isOpen, setIsOpen] = useState(false); const [pendingItem, setPendingItem] = useState<string | null>(null);
+  
+  const reloadCart = useCallback(async () => {
+    try {
+      const result = await cartService.get();
+      setItems(result.data.items.map((item) => ({productId: item.productId, variantId: item.variantId, quantity: item.quantity, price: item.price, name: item.name, image: item.image})));
+      hydrated.current = true;
+    } catch {
+      // Ignore
+    }
+  }, []);
+
   useEffect(() => { const timer = window.setTimeout(() => { setItems(readCart(window.localStorage.getItem('readycommerce_cart'))); setWishlist(readWishlist(window.localStorage.getItem('readycommerce_wishlist'))); hydrated.current = true; }, 0); return () => window.clearTimeout(timer); }, []);
-  useEffect(() => { const timer = window.setTimeout(() => { cartService.get().then((result) => { setItems(result.data.items.map((item) => ({productId: item.productId, variantId: item.variantId, quantity: item.quantity, price: item.price, name: item.name, image: item.image}))); hydrated.current = true; }).catch(() => undefined); }, 0); return () => window.clearTimeout(timer); }, []);
+  useEffect(() => { const timer = window.setTimeout(() => { reloadCart(); }, 0); return () => window.clearTimeout(timer); }, [reloadCart]);
   useEffect(() => { if (hydrated.current) window.localStorage.setItem('readycommerce_cart', JSON.stringify(items)); }, [items]);
   useEffect(() => { if (hydrated.current) window.localStorage.setItem('readycommerce_wishlist', JSON.stringify(wishlist)); }, [wishlist]);
   const applyServerCart = (data: {items: CartLine[]}) => setItems(data.items);
-  const addItem = useCallback(async (productId = 'noir-07', quantity = 1, product?: {price: number; name: string; image: string}, variantId?: string) => {setPendingItem(productId); try {const result = await cartService.add(productId, quantity, variantId); applyServerCart(result.data);} catch (error: unknown) {toast.error(error instanceof Error ? error.message : 'Unable to add this item.');} finally {setPendingItem(null);}}, []);
+  const addItem = useCallback(async (productId = 'noir-07', quantity = 1, product?: {price: number; name: string; image: string}, variantId?: string) => {setPendingItem(productId); setIsOpen(true); try {const result = await cartService.add(productId, quantity, variantId); applyServerCart(result.data);} catch (error: unknown) {toast.error(error instanceof Error ? error.message : 'Unable to add this item.');} finally {setPendingItem(null);}}, []);
   const updateQuantity = useCallback(async (productId: string, quantity: number, variantId?: string) => {setPendingItem(productId); try {const result = await cartService.update(productId, quantity, variantId); applyServerCart(result.data);} catch (error: unknown) {toast.error(error instanceof Error ? error.message : 'Unable to update cart.');} finally {setPendingItem(null);}}, []);
   const removeItem = useCallback(async (productId: string, variantId?: string) => {setPendingItem(productId); try {const result = await cartService.remove(productId, variantId); applyServerCart(result.data);} catch (error: unknown) {toast.error(error instanceof Error ? error.message : 'Unable to remove item.');} finally {setPendingItem(null);}}, []);
-  const toggleWishlist = (productId: string) => setWishlist((current) => current.includes(productId) ? current.filter((id) => id !== productId) : [...current, productId]);
+  const toggleWishlist = (productId: string) => {
+    setWishlist((current) => {
+      const exists = current.includes(productId);
+      if (exists) toast.success('Removed from wishlist');
+      else toast.success('Added to wishlist');
+      return exists ? current.filter((id) => id !== productId) : [...current, productId];
+    });
+  };
   const count = items.reduce((total, item) => total + item.quantity, 0);
   const subtotal = items.reduce((total, item) => total + (item.price ?? 0) * item.quantity, 0);
-  const value = useMemo(() => ({items, count, subtotal, wishlist, isOpen, pendingItem, addItem, updateQuantity, removeItem, clearCart: () => setItems([]), toggleWishlist, isWishlisted: (productId: string) => wishlist.includes(productId), openCart: () => setIsOpen(true), closeCart: () => setIsOpen(false)}), [items, count, subtotal, wishlist, isOpen, pendingItem, addItem, updateQuantity, removeItem]);
+  const value = useMemo(() => ({items, count, subtotal, wishlist, isOpen, pendingItem, addItem, updateQuantity, removeItem, clearCart: () => setItems([]), reloadCart, toggleWishlist, isWishlisted: (productId: string) => wishlist.includes(productId), openCart: () => setIsOpen(true), closeCart: () => setIsOpen(false)}), [items, count, subtotal, wishlist, isOpen, pendingItem, addItem, updateQuantity, removeItem, reloadCart]);
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
 

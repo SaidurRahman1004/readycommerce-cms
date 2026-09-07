@@ -8,6 +8,7 @@ const orderSchema = new mongoose.Schema({
   subtotal: { type: Number, required: true, min: 0 }, discount: { type: Number, min: 0, default: 0 }, shipping: { type: Number, min: 0, default: 0 }, tax: { type: Number, min: 0, default: 0 }, total: { type: Number, required: true, min: 0 }, totalAmount: { type: Number, required: true, min: 0 },
   shippingAddress: { type: addressSnapshot, required: true }, billingAddress: addressSnapshot, shippingMethod: String, trackingNumber: String, carrier: String, notes: String,
   placedAt: { type: Date, default: Date.now }, paidAt: Date, deliveredAt: Date, cancelledAt: Date,
+  idempotencyKey: { type: String, unique: true, sparse: true, index: true }
 }, { timestamps: true });
 orderSchema.index({ user: 1, createdAt: -1 });
 module.exports = mongoose.models.Order || mongoose.model('Order', orderSchema);

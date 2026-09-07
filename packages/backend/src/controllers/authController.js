@@ -16,6 +16,8 @@ const issueSession = async (user, req, res) => {
   res.cookie(REFRESH_COOKIE, refreshToken, cookieOptions(refreshDays * 86400000, '/api/auth'));
 };
 
+const { mergeGuestCart } = require('./cartController');
+
 const register = async (req, res, next) => {
   try {
     const { name, email, password, firstName, lastName, phone } = req.body;
@@ -25,6 +27,13 @@ const register = async (req, res, next) => {
     const resolvedLastName = (lastName || name || '').trim().split(/\s+/).slice(1).join(' ') || resolvedFirstName;
     const user = await User.create({ firstName: resolvedFirstName, lastName: resolvedLastName, email: email.toLowerCase(), password, phone, role: 'customer' });
     await issueSession(user, req, res);
+
+    const guestSessionId = req.cookies?.['rc_cart_session'];
+    if (guestSessionId) {
+      await mergeGuestCart(guestSessionId, user._id);
+      res.clearCookie('rc_cart_session', { path: '/api/cart' });
+    }
+
     return res.status(201).json({ success: true, user: safeUser(user) });
   } catch (error) { if (error.code === 11000) return next(new AppError('An account with this email already exists.', 409, 'EMAIL_IN_USE')); return next(error); }
 };
@@ -37,6 +46,13 @@ const login = async (req, res, next) => {
     if (!user.isActive) return next(new AppError('This account is inactive.', 403, 'ACCOUNT_INACTIVE'));
     user.lastLoginAt = new Date(); await user.save();
     await issueSession(user, req, res);
+
+    const guestSessionId = req.cookies?.['rc_cart_session'];
+    if (guestSessionId) {
+      await mergeGuestCart(guestSessionId, user._id);
+      res.clearCookie('rc_cart_session', { path: '/api/cart' });
+    }
+
     return res.json({ success: true, user: safeUser(user) });
   } catch (error) { return next(error); }
 };

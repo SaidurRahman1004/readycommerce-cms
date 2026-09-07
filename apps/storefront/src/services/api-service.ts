@@ -28,7 +28,7 @@ export const shippingService = { quote: async (city: string) => request<{success
 export const couponService = { validate: async (code: string, orderAmount: number) => request<{success: boolean; data: {code: string; discount: number; discountType: string; discountValue: number}}>('/coupons/validate', {method: 'POST', body: JSON.stringify({code, orderAmount})}) };
 
 export type AuthPayload = {name?: string; email: string; password: string};
-export type CheckoutPayload = {addressId: string; paymentMethod: 'bkash' | 'nagad'; txid: string; couponCode?: string};
+export type CheckoutPayload = {addressId: string; paymentMethod: 'bkash' | 'nagad'; txid: string; couponCode?: string; idempotencyKey?: string};
 
 export const authService = {
   login: async (payload: AuthPayload) => request<{success: boolean; user: AuthUser}>('/auth/login', {method: 'POST', body: JSON.stringify({email: payload.email, password: payload.password})}),
@@ -42,7 +42,7 @@ export const authService = {
 };
 
 export const orderService = {
-  create: async (payload: CheckoutPayload) => request<{success: boolean; data: {orderId: string; orderNumber: string; total: number; status: string}}>('/orders', {method: 'POST', body: JSON.stringify(payload)}),
+  create: async (payload: CheckoutPayload) => request<{success: boolean; data: {orderId: string; orderNumber: string; total: number; status: string}}>('/orders', {method: 'POST', body: JSON.stringify(payload), headers: payload.idempotencyKey ? { 'x-idempotency-key': payload.idempotencyKey } : {}}),
   myOrders: async () => request<{success: boolean; data: CustomerOrder[]}>('/orders/myorders'),
   cancel: async (id: string) => request<{success: boolean; data: {orderId: string; status: string}}>(`/orders/${encodeURIComponent(id)}/cancel`, {method: 'PUT'})
   ,details: async (id: string) => request<{success: boolean; data: CustomerOrder & {shippingAddress: {recipientName: string; phone: string; addressLine1: string; city: string; postalCode: string}; items: Array<{productName: string; quantity: number; unitPrice: number; total: number}>}}>(`/orders/${encodeURIComponent(id)}`)
