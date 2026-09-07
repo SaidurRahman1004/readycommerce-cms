@@ -62,7 +62,7 @@ const navItems: NavItem[] = [
   { key: 'reviews', icon: Star, href: '/reviews', roles: ALL_STAFF },
   { key: 'coupons', icon: Percent, href: '/coupons', roles: CONTENT_ROLES },
   { key: 'cms', icon: Layout, href: '/cms', roles: ['super-admin', 'editor'] },
-  { key: 'media', icon: Image, roles: ['super-admin', 'editor'] },
+  { key: 'media', icon: Image, href: '/media-library', roles: ['super-admin', 'editor'] },
   { key: 'analytics', icon: BarChart3, href: '/analytics', roles: ['super-admin', 'manager'] },
   { key: 'returns', icon: RotateCcw, roles: ORDER_ROLES },
   { key: 'notifications', icon: Bell, roles: ALL_STAFF },

@@ -5,7 +5,8 @@ export type CatalogProduct = { _id: string; name: string; slug: string; shortDes
 export type CatalogCategory = {_id: string; name: string; slug: string; image?: string};
 class ApiError extends Error { status: number; code?: string; constructor(message: string, status: number, code?: string) { super(message); this.status = status; this.code = code; } }
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const response = await fetch(`${API_URL}${path}`, {...options, credentials: 'include', headers: {'Content-Type': 'application/json', ...(options.headers || {})}});
+  const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
+  const response = await fetch(`${API_URL}${path}`, {...options, credentials: 'include', headers: isFormData ? (options.headers || {}) : {'Content-Type': 'application/json', ...(options.headers || {})}});
   const body = await response.json().catch(() => ({}));
   if (!response.ok) throw new ApiError(body?.error?.message || 'Request failed.', response.status, body?.error?.code);
   return body as T;
@@ -91,4 +92,11 @@ export const adminTeamService = {
   create: (payload: CreateStaffPayload) => request<{ success: boolean; data: StaffMember }>('/admin/team', { method: 'POST', body: JSON.stringify(payload) }),
   update: (id: string, payload: { role?: StaffRole; isActive?: boolean }) => request<{ success: boolean; data: StaffMember }>(`/admin/team/${encodeURIComponent(id)}`, { method: 'PUT', body: JSON.stringify(payload) }),
   revoke: (id: string) => request<{ success: boolean; message: string; data: StaffMember }>(`/admin/team/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+};
+
+export type AdminMedia = { _id: string; filename: string; url: string; size: number; mimetype: string; createdAt: string };
+export const adminMediaService = {
+  list: () => request<{ success: boolean; data: AdminMedia[]; pagination: { page: number; limit: number; total: number; pages: number } }>('/admin/media'),
+  upload: (files: File[]) => { const body = new FormData(); files.forEach((file) => body.append('files', file)); return request<{ success: boolean; data: AdminMedia[] }>('/admin/media/upload', { method: 'POST', body, headers: {} }); },
+  remove: (id: string) => request<{ success: boolean }>(`/admin/media/${encodeURIComponent(id)}`, { method: 'DELETE' }),
 };

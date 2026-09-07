@@ -212,6 +212,13 @@ The Admin Dashboard must not begin until Phase 12's Storefront Production Gate p
 - [x] Added responsive bilingual-ready analytics visualizations with 7-day, 30-day and all-time filters.
 - [ ] Exportable reports, scheduled reports and visual browser verification remain pending.
 
+## Phase 12M Media Library & Asset Management (2026-09-07)
+
+- [x] Added secure admin media storage with JPEG, PNG and WebP MIME/extension validation and 5MB per-file limits.
+- [x] Added MongoDB media metadata, paginated listing, upload and filesystem-safe deletion APIs.
+- [x] Added protected static asset serving and a responsive Media Library with drag/drop upload, copy URL and delete actions.
+- [ ] Image transformations/CDN delivery, orphan-asset cleanup and visual browser verification remain pending.
+
 ## Phase 12K Team & Roles / RBAC (2026-09-06)
 
 - [x] Expanded the staff role model to `super-admin`, `manager`, `editor`, and `support`, retaining safe compatibility for legacy `admin` accounts.

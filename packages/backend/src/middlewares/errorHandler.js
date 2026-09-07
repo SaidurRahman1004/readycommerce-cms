@@ -12,8 +12,8 @@ const notFoundHandler = (req, res, next) => {
 };
 
 const errorHandler = (error, req, res, next) => {
-  const statusCode = error.statusCode || (error.name === 'ValidationError' ? 400 : 500);
-  const code = error.code || (error.name === 'ValidationError' ? 'VALIDATION_ERROR' : 'INTERNAL_ERROR');
+  const statusCode = error.statusCode || (error.name === 'ValidationError' || error.name === 'MulterError' ? 400 : 500);
+  const code = error.code || (error.name === 'ValidationError' ? 'VALIDATION_ERROR' : error.name === 'MulterError' ? 'UPLOAD_ERROR' : 'INTERNAL_ERROR');
   const details = error.name === 'ValidationError'
     ? Object.values(error.errors).map((item) => ({ field: item.path, message: item.message }))
     : undefined;
