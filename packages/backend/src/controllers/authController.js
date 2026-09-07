@@ -66,7 +66,9 @@ const forgotPassword = async (req, res, next) => {
       user.passwordResetTokenHash = hashToken(token);
       user.passwordResetExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
       await user.save({ validateBeforeSave: false });
-      console.log(`Password reset link (development only): ${process.env.FRONTEND_ORIGIN || 'http://localhost:3000'}/en/reset-password?token=${token}`);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log(`Password reset link (development only): ${process.env.FRONTEND_ORIGIN || 'http://localhost:3000'}/en/reset-password?token=${token}`);
+      }
     }
     return res.json({ success: true, message: 'If an account exists, a reset link has been sent.' });
   } catch (error) { return next(error); }
