@@ -13,18 +13,21 @@ export default function HomeCatalog() {
   const [categories, setCategories] = useState<CatalogCategory[]>([]);
   const [products, setProducts] = useState<CatalogProduct[]>([]);
   const [specialOffers, setSpecialOffers] = useState<CatalogProduct[]>([]);
+  const [newArrivals, setNewArrivals] = useState<CatalogProduct[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     Promise.all([
       catalogService.categories(),
       catalogService.products({sort: 'featured', limit: 4}),
-      catalogService.products({isSpecialOffer: true, limit: 4})
+      catalogService.products({isSpecialOffer: true, limit: 4}),
+      catalogService.products({sort: 'newest', limit: 4})
     ])
-    .then(([categoryResult, productResult, specialOffersResult]) => {
+    .then(([categoryResult, productResult, specialOffersResult, newArrivalsResult]) => {
       setCategories(categoryResult.data);
       setProducts(productResult.data);
       setSpecialOffers(specialOffersResult.data);
+      setNewArrivals(newArrivalsResult.data);
     })
     .catch(() => undefined)
     .finally(() => setLoading(false));
@@ -80,6 +83,27 @@ export default function HomeCatalog() {
           </div>
         </section>
       ) : null}
+
+      <section className="bg-background">
+        <div className="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:px-10 lg:py-28">
+          <div className="mb-12 flex items-end justify-between gap-5">
+            <div>
+              <p className="mb-4 text-[13px] font-bold uppercase tracking-[0.25em] text-primary">{t('newArrivals.eyebrow')}</p>
+              <h2 className="text-3xl font-bold tracking-tight sm:text-[40px]">{t('newArrivals.title')}</h2>
+            </div>
+            <Link href="/shop?sort=newest" className="text-[15px] font-semibold text-slate-500 transition-colors hover:text-primary">
+              {t('trending.viewAll')} <span aria-hidden="true">&rarr;</span>
+            </Link>
+          </div>
+          {loading ? (
+            <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">{[1,2,3,4].map((item) => <Skeleton key={item} />)}</div>
+          ) : (
+            <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
+              {newArrivals.map((product) => <CatalogCard key={product._id} product={product} />)}
+            </div>
+          )}
+        </div>
+      </section>
 
       <section className="border-t border-border bg-background">
         <div className="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:px-10 lg:py-28">
