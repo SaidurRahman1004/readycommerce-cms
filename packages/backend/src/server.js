@@ -15,6 +15,7 @@ const userRoutes = require('./routes/userRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const couponRoutes = require('./routes/couponRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const adminNotificationRoutes = require('./routes/adminNotificationRoutes');
 const adminMediaRoutes = require('./routes/adminMediaRoutes');
 const path = require('path');
 const { getShippingCost } = require('./utils/shipping');
@@ -48,6 +49,7 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/coupons', couponRoutes);
 app.get('/api/cms/homepage', async (req,res,next) => { try { const HomepageConfig=require('./models/HomepageConfig'); const data=await HomepageConfig.findOne({key:'homepage'}).populate('featuredCategories','name slug image').lean(); return res.json({success:true,data:data||{slides:[],featuredCategories:[],promoEnabled:false}}); } catch(e) { return next(e); } });
 app.use('/api/admin', adminRoutes);
+app.use('/api/admin/notifications', adminNotificationRoutes);
 app.use('/api/admin/media', adminMediaRoutes);
 app.use('/uploads', express.static(path.resolve(__dirname, '../public/uploads'), { index: false, maxAge: '1d' }));
 app.get('/api/shipping/quote', (req, res) => {

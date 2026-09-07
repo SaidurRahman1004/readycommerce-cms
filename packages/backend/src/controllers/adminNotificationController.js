@@ -1,0 +1,6 @@
+const mongoose=require('mongoose');const Notification=require('../models/Notification');const {AppError}=require('../middlewares/errorHandler');
+const list=async(req,res,next)=>{try{const page=Math.max(1,Number(req.query.page)||1);const limit=Math.min(50,Math.max(1,Number(req.query.limit)||20));const [data,total]=await Promise.all([Notification.find().sort({createdAt:-1}).skip((page-1)*limit).limit(limit).lean(),Notification.countDocuments()]);res.json({success:true,data,pagination:{page,limit,total,pages:Math.ceil(total/limit)}})}catch(e){next(e)}};
+const unreadCount=async(req,res,next)=>{try{res.json({success:true,data:{count:await Notification.countDocuments({isRead:false})}})}catch(e){next(e)}};
+const markRead=async(req,res,next)=>{try{if(!mongoose.isValidObjectId(req.params.id))return next(new AppError('Notification not found.',404,'NOTIFICATION_NOT_FOUND'));const item=await Notification.findByIdAndUpdate(req.params.id,{isRead:true},{new:true}).lean();if(!item)return next(new AppError('Notification not found.',404,'NOTIFICATION_NOT_FOUND'));res.json({success:true,data:item})}catch(e){next(e)}};
+const markAllRead=async(req,res,next)=>{try{const result=await Notification.updateMany({isRead:false},{$set:{isRead:true}});res.json({success:true,data:{updated:result.modifiedCount}})}catch(e){next(e)}};
+module.exports={list,unreadCount,markRead,markAllRead};

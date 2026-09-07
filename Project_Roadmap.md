@@ -219,6 +219,14 @@ The Admin Dashboard must not begin until Phase 12's Storefront Production Gate p
 - [x] Added protected static asset serving and a responsive Media Library with drag/drop upload, copy URL and delete actions.
 - [ ] Image transformations/CDN delivery, orphan-asset cleanup and visual browser verification remain pending.
 
+## Phase 12N Notifications & Operational Alerts (2026-09-07)
+
+- [x] Added protected notification model, list, unread-count, mark-read and mark-all-read APIs for super-admins and managers.
+- [x] Added reusable `createNotification()` utility and connected new order creation to an operational alert.
+- [x] Added dynamic dashboard notification bell with unread badge, latest-five popover and responsive overflow handling.
+- [x] Added historical `/notifications` page with read highlighting, pagination, loading, empty and error states.
+- [ ] Inventory/return event producers, notification preferences and visual browser verification remain pending.
+
 ## Phase 12K Team & Roles / RBAC (2026-09-06)
 
 - [x] Expanded the staff role model to `super-admin`, `manager`, `editor`, and `support`, retaining safe compatibility for legacy `admin` accounts.

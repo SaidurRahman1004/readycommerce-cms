@@ -10,6 +10,7 @@ const Payment = require('../models/Payment');
 const Coupon = require('../models/Coupon');
 const { AppError } = require('../middlewares/errorHandler');
 const { getShippingCost } = require('../utils/shipping');
+const { createNotification } = require('../utils/notifications');
 
 const cancelOrder = async (req, res, next) => {
   try {
@@ -60,6 +61,7 @@ const createOrder = async (req, res, next) => {
     await Payment.create({ order: order._id, user: req.user._id, provider: paymentMethod, method: paymentMethod, amount: total, transactionId: txid.trim(), status: 'pending' });
     await CartItem.deleteMany({ cart: cart._id });
     cart.status = 'converted'; cart.subtotal = 0; cart.shipping = 0; cart.tax = 0; cart.total = 0; await cart.save();
+    await createNotification({ type: 'order', title: 'New order received', message: `${order.orderNumber} is waiting for review.`, targetUrl: `/orders/${order._id}` });
     return res.status(201).json({ success: true, data: { orderId: order._id, orderNumber: order.orderNumber, total: order.total, status: order.status } });
   } catch (error) {
     if (error?.code === 11000) return next(new AppError('This transaction ID has already been submitted.', 409, 'DUPLICATE_TRANSACTION'));

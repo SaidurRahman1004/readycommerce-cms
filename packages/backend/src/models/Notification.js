@@ -1,0 +1,2 @@
+const mongoose=require('mongoose');
+const schema=new mongoose.Schema({title:{type:String,required:true,trim:true,maxlength:160},message:{type:String,required:true,trim:true,maxlength:500},type:{type:String,enum:['order','inventory','system'],required:true,index:true},isRead:{type:Boolean,default:false,index:true},targetUrl:{type:String,trim:true,maxlength:300}},{timestamps:true});schema.index({createdAt:-1});module.exports=mongoose.models.Notification||mongoose.model('Notification',schema);

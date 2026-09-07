@@ -100,3 +100,10 @@ export const adminMediaService = {
   upload: (files: File[]) => { const body = new FormData(); files.forEach((file) => body.append('files', file)); return request<{ success: boolean; data: AdminMedia[] }>('/admin/media/upload', { method: 'POST', body, headers: {} }); },
   remove: (id: string) => request<{ success: boolean }>(`/admin/media/${encodeURIComponent(id)}`, { method: 'DELETE' }),
 };
+export type AdminNotification = { _id: string; title: string; message: string; type: 'order'|'inventory'|'system'; isRead: boolean; targetUrl?: string; createdAt: string };
+export const adminNotificationService = {
+  list: (limit = 20, page = 1) => request<{success:boolean;data:AdminNotification[];pagination:{page:number;limit:number;total:number;pages:number}}>(`/admin/notifications?limit=${limit}&page=${page}`),
+  unreadCount: () => request<{success:boolean;data:{count:number}}>('/admin/notifications/unread-count'),
+  markRead: (id:string) => request<{success:boolean;data:AdminNotification}>(`/admin/notifications/${encodeURIComponent(id)}/read`,{method:'PUT'}),
+  markAllRead: () => request<{success:boolean;data:{updated:number}}>('/admin/notifications/read-all',{method:'PUT'}),
+};
