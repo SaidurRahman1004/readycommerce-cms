@@ -12,6 +12,7 @@ const auditLogger = require('../middlewares/auditLogger');
 const audit = require('../controllers/auditLogController');
 const refund = require('../controllers/adminRefundController');
 const teamRoutes = require('./adminTeamRoutes');
+const { getAnalytics } = require('../controllers/adminAnalyticsController');
 
 const router = express.Router();
 const SUPER_ADMIN = ['super-admin'];
@@ -39,6 +40,7 @@ router.get('/access', (req, res) => res.json({
   },
 }));
 router.get('/overview', getOverview);
+router.get('/analytics', authorize('super-admin', 'manager'), getAnalytics);
 
 router.get('/orders', authorize(...ORDER_ROLES), listOrders);
 router.get('/orders/:id', authorize(...ORDER_ROLES), getOrder);

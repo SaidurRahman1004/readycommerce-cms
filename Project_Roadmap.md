@@ -205,6 +205,13 @@ The Admin Dashboard must not begin until Phase 12's Storefront Production Gate p
 - [x] Added the safe `make-admin` database utility and npm command for promoting an existing account.
 - [x] Phase 12J fix committed, `dashboard-all` pushed, fast-forward merged into `main`, and `main` pushed successfully.
 
+## Phase 12L Analytics & Reports (2026-09-07)
+
+- [x] Added a server-side, role-protected analytics API for super-admins and managers.
+- [x] Added real paid-order revenue/order trends, top-selling products, category sales and customer-growth aggregations.
+- [x] Added responsive bilingual-ready analytics visualizations with 7-day, 30-day and all-time filters.
+- [ ] Exportable reports, scheduled reports and visual browser verification remain pending.
+
 ## Phase 12K Team & Roles / RBAC (2026-09-06)
 
 - [x] Expanded the staff role model to `super-admin`, `manager`, `editor`, and `support`, retaining safe compatibility for legacy `admin` accounts.
