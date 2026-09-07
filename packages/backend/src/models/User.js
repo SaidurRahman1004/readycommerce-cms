@@ -7,7 +7,12 @@ const userSchema = new mongoose.Schema({
   email: { type: String, trim: true, lowercase: true, required: true, unique: true, index: true },
   phone: { type: String, trim: true, maxlength: 25 },
   password: { type: String, required: true, minlength: 8, select: false },
-  role: { type: String, enum: ['customer', 'admin', 'manager'], default: 'customer', index: true },
+  role: {
+    type: String,
+    enum: ['customer', 'admin', 'super-admin', 'manager', 'editor', 'support'],
+    default: 'customer',
+    index: true,
+  },
   isActive: { type: Boolean, default: true, index: true },
   isEmailVerified: { type: Boolean, default: false },
   lastLoginAt: Date,

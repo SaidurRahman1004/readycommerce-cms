@@ -63,3 +63,30 @@ export type AdminCategory = { _id: string; name: string; slug: string; descripti
 export type AdminCustomer = { _id: string; name: string; firstName: string; lastName: string; email: string; phone?: string; isActive: boolean; isEmailVerified: boolean; createdAt: string; totalOrders: number; totalSpend: number };
 export const adminDirectoryService = { categories: () => request<{success:boolean;data:AdminCategory[]}>('/admin/categories'), createCategory: (payload: Record<string,unknown>) => request<{success:boolean;data:AdminCategory}>('/admin/categories',{method:'POST',body:JSON.stringify(payload)}), updateCategory: (id:string,payload:Record<string,unknown>) => request<{success:boolean;data:AdminCategory}>(`/admin/categories/${id}`,{method:'PUT',body:JSON.stringify(payload)}), deleteCategory: (id:string) => request<{success:boolean}>(`/admin/categories/${id}`,{method:'DELETE'}), customers: () => request<{success:boolean;data:AdminCustomer[]}>('/admin/customers'), customer: (id:string) => request<{success:boolean;data:AdminCustomer & {addresses:Array<Record<string,string>>;orders:Array<{_id:string;orderNumber:string;status:string;paymentStatus:string;totalAmount:number;createdAt:string}>}}>(`/admin/customers/${id}`), customerStatus:(id:string,isActive:boolean)=>request(`/admin/customers/${id}/status`,{method:'PUT',body:JSON.stringify({isActive})}) };
 export type AdminReview={_id:string;product?:{name:string};user?:{firstName:string;lastName:string};rating:number;body:string;status:string;createdAt:string};export type AdminCoupon={_id:string;code:string;discountType:string;discountValue:number;expiresAt:string;isActive:boolean;usedCount:number};export const adminPromoService={reviews:()=>request<{success:boolean;data:AdminReview[]}>('/admin/reviews'),reviewStatus:(id:string,status:string)=>request('/admin/reviews/'+id+'/status',{method:'PUT',body:JSON.stringify({status})}),deleteReview:(id:string)=>request('/admin/reviews/'+id,{method:'DELETE'}),coupons:()=>request<{success:boolean;data:AdminCoupon[]}>('/admin/coupons'),createCoupon:(payload:Record<string,unknown>)=>request('/admin/coupons',{method:'POST',body:JSON.stringify(payload)}),deleteCoupon:(id:string)=>request('/admin/coupons/'+id,{method:'DELETE'})};
+
+export type StaffRole = 'super-admin' | 'manager' | 'editor' | 'support';
+export type StaffMember = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  name: string;
+  email: string;
+  role: StaffRole;
+  isActive: boolean;
+  lastLoginAt?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+export type CreateStaffPayload = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  role: StaffRole;
+};
+export const adminTeamService = {
+  list: () => request<{ success: boolean; data: StaffMember[]; meta: { currentUserId: string } }>('/admin/team'),
+  create: (payload: CreateStaffPayload) => request<{ success: boolean; data: StaffMember }>('/admin/team', { method: 'POST', body: JSON.stringify(payload) }),
+  update: (id: string, payload: { role?: StaffRole; isActive?: boolean }) => request<{ success: boolean; data: StaffMember }>(`/admin/team/${encodeURIComponent(id)}`, { method: 'PUT', body: JSON.stringify(payload) }),
+  revoke: (id: string) => request<{ success: boolean; message: string; data: StaffMember }>(`/admin/team/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+};

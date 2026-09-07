@@ -1,6 +1,6 @@
+require('./config/env');
 const express = require('express');
 const cors = require('cors');
-const dotenv = require('dotenv');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
@@ -17,8 +17,6 @@ const couponRoutes = require('./routes/couponRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const { getShippingCost } = require('./utils/shipping');
 const StoreSettings = require('./models/StoreSettings');
-
-dotenv.config();
 
 const app = express();
 

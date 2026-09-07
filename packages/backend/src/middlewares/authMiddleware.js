@@ -2,6 +2,9 @@ const User = require('../models/User');
 const { AppError } = require('./errorHandler');
 const { verifyAccessToken } = require('../utils/tokens');
 
+const STAFF_ROLES = Object.freeze(['super-admin', 'manager', 'editor', 'support']);
+const normalizeRole = (role) => (role === 'admin' ? 'super-admin' : role);
+
 const authMiddleware = async (req, res, next) => {
   try {
     const token = req.cookies?.rc_access;
@@ -14,5 +17,13 @@ const authMiddleware = async (req, res, next) => {
   } catch (error) { return next(new AppError('Authentication required.', 401, 'UNAUTHORIZED')); }
 };
 
-const authorize = (...roles) => (req, res, next) => (req.user && roles.includes(req.user.role) ? next() : next(new AppError('You are not allowed to access this resource.', 403, 'FORBIDDEN')));
-module.exports = { authMiddleware, authorize };
+const authorize = (...roles) => {
+  const allowedRoles = roles.map(normalizeRole);
+  return (req, res, next) => (
+    req.user && allowedRoles.includes(normalizeRole(req.user.role))
+      ? next()
+      : next(new AppError('You are not allowed to access this resource.', 403, 'FORBIDDEN'))
+  );
+};
+
+module.exports = { authMiddleware, authorize, normalizeRole, STAFF_ROLES };

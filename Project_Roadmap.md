@@ -205,6 +205,17 @@ The Admin Dashboard must not begin until Phase 12's Storefront Production Gate p
 - [x] Added the safe `make-admin` database utility and npm command for promoting an existing account.
 - [x] Phase 12J fix committed, `dashboard-all` pushed, fast-forward merged into `main`, and `main` pushed successfully.
 
+## Phase 12K Team & Roles / RBAC (2026-09-06)
+
+- [x] Expanded the staff role model to `super-admin`, `manager`, `editor`, and `support`, retaining safe compatibility for legacy `admin` accounts.
+- [x] Enforced role-specific authorization at every admin API boundary for orders, catalog, customers, reviews, promotions, CMS, settings, audit logs, and team management.
+- [x] Added super-admin-only Team list/create/update/revoke APIs with explicit safe response fields and strong input/password validation.
+- [x] Added self-demotion, self-deactivation, self-deletion, and last-active-super-admin protections; role/status changes revoke active database sessions.
+- [x] Added the responsive bilingual `/team-&-roles` interface with staff metrics, desktop/mobile views, create/edit modal, confirmation flow, skeletons, empty/error states, and toast feedback.
+- [x] Added role-aware dashboard navigation and authenticated administrator identity display.
+- [x] Verified live MongoDB RBAC behavior: support order access, editor catalog access, restricted Settings/Team access, safe staff DTOs, role updates, self-delete rejection, and access revocation.
+- [ ] Future hardening: custom per-user permission overrides, invitation-email delivery, enforced first-login password reset, MFA, and formal automated authorization regression tests.
+
 ## Phase 8-9 Delivery Update (2026-09-05)
 
 - Phase 8 Order Placement: COMPLETED for secure creation and cart conversion; lifecycle transitions and payment verification remain future work.
