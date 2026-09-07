@@ -21,4 +21,36 @@ const getCart = async (req, res, next) => { try { const cart = await findOrCreat
 const addToCart = async (req, res, next) => { try { const { productId, variantId, quantity = 1 } = req.body; const amount = Number(quantity); if (!Number.isInteger(amount) || amount < 1) return next(new AppError('Quantity must be a positive integer.', 400, 'INVALID_QUANTITY')); const product = await Product.findOne({ _id: productId, status: 'active' }).lean(); if (!product) return next(new AppError('Product not found.', 404, 'PRODUCT_NOT_FOUND')); const variant = variantId ? await ProductVariant.findOne({ _id: variantId, product: product._id, isActive: true }).lean() : await ProductVariant.findOne({ product: product._id, isActive: true }).lean(); if (!variant) return next(new AppError('Product variant not found.', 404, 'VARIANT_NOT_FOUND')); const inventory = await Inventory.findOne({ variant: variant._id }).lean(); const available = inventory?.trackInventory === false ? Number.MAX_SAFE_INTEGER : Math.max(0, (inventory?.quantity || 0) - (inventory?.reservedQuantity || 0)); const cart = await findOrCreate(req, res); const item = await CartItem.findOne({ cart: cart._id, product: product._id, variant: variant._id }); const nextQuantity = (item?.quantity || 0) + amount; if (nextQuantity > available) return next(new AppError(`Only ${available} item(s) available.`, 409, 'INSUFFICIENT_STOCK')); if (item) { item.quantity = nextQuantity; item.unitPrice = variant.price; item.productName = product.name; item.sku = variant.sku; item.imageSnapshot = product.images?.[0]; await item.save(); } else await CartItem.create({ cart: cart._id, product: product._id, variant: variant._id, quantity: amount, unitPrice: variant.price, productName: product.name, sku: variant.sku, imageSnapshot: product.images?.[0] }); await recalculate(cart); return res.status(201).json({ success: true, data: await serialize(cart) }); } catch (error) { return next(error); } };
 const updateCart = async (req, res, next) => { try { const { productId, variantId, quantity } = req.body; const amount = Number(quantity); const cart = await findOrCreate(req, res); const item = await CartItem.findOne({ cart: cart._id, product: productId, ...(variantId ? { variant: variantId } : {}) }); if (!item) return next(new AppError('Cart item not found.', 404, 'CART_ITEM_NOT_FOUND')); if (!Number.isInteger(amount) || amount < 1) { await item.deleteOne(); await recalculate(cart); return res.json({ success: true, data: await serialize(cart) }); } const inventory = await Inventory.findOne({ variant: item.variant }).lean(); const available = inventory?.trackInventory === false ? Number.MAX_SAFE_INTEGER : Math.max(0, (inventory?.quantity || 0) - (inventory?.reservedQuantity || 0)); if (amount > available) return next(new AppError(`Only ${available} item(s) available.`, 409, 'INSUFFICIENT_STOCK')); const variant = await ProductVariant.findById(item.variant).select('price').lean(); item.quantity = amount; item.unitPrice = variant?.price ?? item.unitPrice; await item.save(); await recalculate(cart); return res.json({ success: true, data: await serialize(cart) }); } catch (error) { return next(error); } };
 const removeFromCart = async (req, res, next) => { try { const cart = await findOrCreate(req, res); await CartItem.deleteOne({ cart: cart._id, product: req.body.productId, ...(req.body.variantId ? { variant: req.body.variantId } : {}) }); await recalculate(cart); return res.json({ success: true, data: await serialize(cart) }); } catch (error) { return next(error); } };
-module.exports = { getCart, addToCart, updateCart, removeFromCart };
+const mergeGuestCart = async (sessionId, userId) => {
+  const guestCart = await Cart.findOne({ sessionId, status: 'active' });
+  if (!guestCart) return;
+
+  const userCart = await Cart.findOne({ user: userId, status: 'active' });
+
+  if (!userCart) {
+    // Just assign the guest cart to the user
+    guestCart.user = userId;
+    guestCart.sessionId = undefined;
+    await guestCart.save();
+    return;
+  }
+
+  // Merge items from guestCart into userCart
+  const guestItems = await CartItem.find({ cart: guestCart._id });
+  for (const gItem of guestItems) {
+    const existing = await CartItem.findOne({ cart: userCart._id, product: gItem.product, variant: gItem.variant });
+    if (existing) {
+      existing.quantity += gItem.quantity;
+      await existing.save();
+    } else {
+      gItem.cart = userCart._id;
+      await gItem.save();
+    }
+  }
+
+  await CartItem.deleteMany({ cart: guestCart._id });
+  await Cart.deleteOne({ _id: guestCart._id });
+  await recalculate(userCart);
+};
+
+module.exports = { getCart, addToCart, updateCart, removeFromCart, mergeGuestCart };

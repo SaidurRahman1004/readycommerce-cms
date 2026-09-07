@@ -52,9 +52,13 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/admin/notifications', adminNotificationRoutes);
 app.use('/api/admin/media', adminMediaRoutes);
 app.use('/uploads', express.static(path.resolve(__dirname, '../public/uploads'), { index: false, maxAge: '1d' }));
-app.get('/api/shipping/quote', (req, res) => {
-  const city = typeof req.query.city === 'string' ? req.query.city : '';
-  res.json({ success: true, data: { city, cost: getShippingCost(city), currency: 'BDT' } });
+app.get('/api/shipping/quote', async (req, res, next) => {
+  try {
+    const city = typeof req.query.city === 'string' ? req.query.city : '';
+    res.json({ success: true, data: { city, cost: await getShippingCost(city), currency: 'BDT' } });
+  } catch (e) {
+    next(e);
+  }
 });
 app.get('/api/settings/shipping', async (req, res, next) => { try { const settings = await StoreSettings.findOne({ key: 'store' }).select('insideDhakaRate outsideDhakaRate currency').lean(); const city = typeof req.query.city === 'string' ? req.query.city : ''; const dhaka = city.trim().toLowerCase() === 'dhaka'; res.json({ success: true, data: { city, insideDhakaRate: settings?.insideDhakaRate ?? 60, outsideDhakaRate: settings?.outsideDhakaRate ?? 120, cost: dhaka ? (settings?.insideDhakaRate ?? 60) : (settings?.outsideDhakaRate ?? 120), currency: settings?.currency || 'BDT' } }); } catch (e) { next(e); } });
 
@@ -63,9 +67,11 @@ const PORT = process.env.PORT || 5000;
 const startServer = async () => {
   try {
     await connectDB();
-    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+    const logger = require('./utils/logger');
+    app.listen(PORT, () => logger.info(`Server running on port ${PORT}`));
   } catch (error) {
-    console.error(`Unable to start server: ${error.message}`);
+    const logger = require('./utils/logger');
+    logger.error(`Unable to start server: ${error.message}`);
     process.exitCode = 1;
   }
 };

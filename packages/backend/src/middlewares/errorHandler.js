@@ -1,3 +1,5 @@
+const logger = require('../utils/logger');
+
 class AppError extends Error {
   constructor(message, statusCode = 500, code = 'INTERNAL_ERROR') {
     super(message);
@@ -18,7 +20,10 @@ const errorHandler = (error, req, res, next) => {
     ? Object.values(error.errors).map((item) => ({ field: item.path, message: item.message }))
     : undefined;
 
-  if (statusCode >= 500) console.error(error);
+  if (statusCode >= 500) {
+    logger.error('Unhandled Server Error', { error: error.message, stack: error.stack, url: req.originalUrl, method: req.method, body: req.body });
+  }
+
   res.status(statusCode).json({ success: false, error: { code, message: statusCode >= 500 ? 'Internal server error' : error.message, details } });
 };
 

@@ -38,4 +38,30 @@ const getAnalytics = async (req, res, next) => {
   } catch (error) { return next(error); }
 };
 
-module.exports = { getAnalytics };
+const exportAnalytics = async (req, res, next) => {
+  try {
+    const { Parser } = require('json2csv');
+    const requested = String(req.query.range || '30').toLowerCase();
+    if (!['7', '30', 'all'].includes(requested)) return next(new AppError('Invalid analytics range.', 400, 'INVALID_RANGE'));
+    const now = new Date();
+    const start = requested === 'all' ? null : new Date(now.getTime() - (Number(requested) - 1) * 86400000);
+    if (start) start.setHours(0, 0, 0, 0);
+    
+    // We will export the "trend" data (Daily Revenue & Orders) as it's the most standard analytics export.
+    const orderMatch = { paymentStatus: 'paid', ...(start ? { createdAt: { $gte: start } } : {}) };
+    const trend = await Order.aggregate([
+      { $match: orderMatch },
+      { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }, revenue: { $sum: '$totalAmount' }, orders: { $sum: 1 } } },
+      { $sort: { _id: 1 } },
+    ]);
+    
+    const data = trend.map((row) => ({ Date: row._id, Revenue: row.revenue, Orders: row.orders }));
+    const parser = new Parser({ fields: ['Date', 'Revenue', 'Orders'] });
+    const csv = parser.parse(data);
+    res.header('Content-Type', 'text/csv');
+    res.attachment(`analytics-trend-export-${new Date().toISOString().slice(0,10)}.csv`);
+    return res.send(csv);
+  } catch (error) { return next(error); }
+};
+
+module.exports = { getAnalytics, exportAnalytics };

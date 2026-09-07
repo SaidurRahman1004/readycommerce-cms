@@ -64,4 +64,38 @@ const getOverview = async (req, res, next) => {
   } catch (error) { return next(error); }
 };
 
-module.exports = { getOverview };
+const globalSearch = async (req, res, next) => {
+  try {
+    const q = req.query.q?.trim();
+    if (!q || q.length < 2) return res.json({ success: true, data: { users: [], orders: [], products: [] } });
+
+    const regex = new RegExp(q, 'i');
+
+    const [users, orders, products] = await Promise.all([
+      User.find({
+        role: 'customer',
+        $or: [{ firstName: regex }, { lastName: regex }, { email: regex }, { phone: regex }]
+      }).select('_id firstName lastName email').limit(5).lean(),
+      Order.find({
+        orderNumber: regex
+      }).select('_id orderNumber status totalAmount createdAt').limit(5).lean(),
+      Product.find({
+        status: { $ne: 'archived' },
+        $or: [{ name: regex }, { slug: regex }]
+      }).select('_id name slug images').limit(5).lean()
+    ]);
+
+    return res.json({
+      success: true,
+      data: {
+        users: users.map(u => ({ id: u._id, title: `${u.firstName || ''} ${u.lastName || ''}`.trim(), subtitle: u.email })),
+        orders: orders.map(o => ({ id: o._id, title: o.orderNumber, subtitle: `${o.status} • $${o.totalAmount || 0}` })),
+        products: products.map(p => ({ id: p._id, title: p.name, subtitle: p.slug, image: p.images?.[0] }))
+      }
+    });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+module.exports = { getOverview, globalSearch };

@@ -26,6 +26,15 @@ const getMyOrder = async (req, res, next) => { try { const order = await Order.f
 const createOrder = async (req, res, next) => {
   try {
     const { addressId, paymentMethod, txid, couponCode } = req.body;
+    const idempotencyKey = req.headers['x-idempotency-key'] || req.body.idempotencyKey;
+    
+    if (idempotencyKey) {
+      const existingOrder = await Order.findOne({ idempotencyKey, user: req.user._id }).lean();
+      if (existingOrder) {
+        return res.status(200).json({ success: true, data: { orderId: existingOrder._id, orderNumber: existingOrder.orderNumber, total: existingOrder.total, status: existingOrder.status, isDuplicate: true } });
+      }
+    }
+
     if (!mongoose.isValidObjectId(addressId)) return next(new AppError('A valid shipping address is required.', 400, 'INVALID_ADDRESS'));
 
     const address = await Address.findOne({ _id: addressId, user: req.user._id, type: 'shipping' }).lean();
@@ -53,10 +62,10 @@ const createOrder = async (req, res, next) => {
 
     let discount = 0;
     if (couponCode) { const coupon = await Coupon.findOne({ code: String(couponCode).trim().toUpperCase(), isActive: true, startsAt: { $lte: new Date() }, expiresAt: { $gt: new Date() } }).lean(); if (!coupon || subtotal < coupon.minOrderAmount) return next(new AppError('Coupon is invalid or no longer applicable.', 400, 'INVALID_COUPON')); discount = coupon.discountType === 'percent' ? subtotal * coupon.discountValue / 100 : coupon.discountValue; if (coupon.maxDiscountAmount) discount = Math.min(discount, coupon.maxDiscountAmount); discount = Math.min(subtotal, discount); }
-    const shipping = getShippingCost(address.city);
+    const shipping = await getShippingCost(address.city);
     const total = subtotal - discount + shipping;
     const orderNumber = `RC-${Date.now().toString(36).toUpperCase()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
-    const order = await Order.create({ orderNumber, user: req.user._id, email: req.user.email, status: 'pending', paymentStatus: 'pending', subtotal, discount, shipping, total, totalAmount: total, shippingAddress: address, shippingMethod: 'standard' });
+    const order = await Order.create({ orderNumber, user: req.user._id, email: req.user.email, status: 'pending', paymentStatus: 'pending', subtotal, discount, shipping, total, totalAmount: total, shippingAddress: address, shippingMethod: 'standard', idempotencyKey });
     await OrderItem.insertMany(verifiedItems.map((item) => ({ order: order._id, product: item.product, variant: item.variant, productName: item.productName, sku: item.sku, quantity: item.quantity, unitPrice: item.unitPrice, total: item.total })));
     await Payment.create({ order: order._id, user: req.user._id, provider: paymentMethod, method: paymentMethod, amount: total, transactionId: txid.trim(), status: 'pending' });
     await CartItem.deleteMany({ cart: cart._id });
@@ -64,7 +73,7 @@ const createOrder = async (req, res, next) => {
     void createNotification({ type: 'order', title: 'New order received', message: `${order.orderNumber} is waiting for review.`, targetUrl: `/orders/${order._id}` }).catch(() => {});
     return res.status(201).json({ success: true, data: { orderId: order._id, orderNumber: order.orderNumber, total: order.total, status: order.status } });
   } catch (error) {
-    if (error?.code === 11000) return next(new AppError('This transaction ID has already been submitted.', 409, 'DUPLICATE_TRANSACTION'));
+    if (error?.code === 11000) return next(new AppError('This transaction ID or request has already been submitted.', 409, 'DUPLICATE_TRANSACTION'));
     return next(error);
   }
 };
