@@ -74,21 +74,24 @@ export default function ProductDetail({ productId }: { productId: string }) {
           <p className="mt-8 text-3xl font-bold">৳{price.toLocaleString()}</p>
           <p className="mt-6 max-w-lg text-[16px] leading-relaxed text-muted-foreground">{product.description || product.shortDescription}</p>
           
-          <div className={`mt-8 flex items-center gap-3 rounded-xl border px-4 py-3 text-sm ${stock > 0 && stock <= 5 ? 'border-amber-200 bg-amber-50' : 'border-border bg-surface'}`}>
-            <span className={`h-2.5 w-2.5 rounded-full ${stock > 0 && stock <= 5 ? 'bg-amber-500 animate-pulse' : stock > 0 ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-            <span className={`font-semibold ${stock > 0 && stock <= 5 ? 'text-amber-700' : ''}`}>
-              {stock > 0 && stock <= 5 ? `🔥 Only ${stock} left in stock - order soon!` : stock > 5 ? '✅ In Stock - Ready to Ship' : t13('outOfStock')}
+          <div className={`mt-8 flex items-center gap-3 rounded-xl border px-4 py-3 text-[15px] ${stock > 0 && stock <= 5 ? 'border-amber-200 bg-amber-50' : stock > 5 ? 'border-emerald-200 bg-emerald-50' : 'border-border bg-surface'}`}>
+            <span className={`font-semibold ${stock > 0 && stock <= 5 ? 'text-amber-700' : stock > 5 ? 'text-emerald-700' : 'text-muted-foreground'}`}>
+              {stock > 0 && stock <= 5 ? `🔥 High demand! Only ${stock} items left - order soon` : stock > 5 ? '🟢 In Stock - Ships within 24 hours' : '🔴 Out of Stock'}
             </span>
           </div>
 
           <div className="mt-8">
             <p className="text-[14px] font-bold">{t('pdp.size')}</p>
             <div className="mt-4 flex flex-wrap gap-3">
-              {product.variants.map((item) => (
-                <button type="button" key={item._id} disabled={!item.stock} onClick={() => setVariant(item._id)} className={`rounded-full border px-5 py-3 text-[14px] font-bold disabled:cursor-not-allowed disabled:opacity-40 ${variant === item._id ? 'border-primary bg-primary text-white' : 'border-border text-muted-foreground'}`}>
-                  {item.name}
-                </button>
-              ))}
+              {product.variants.map((item) => {
+                const isOutOfStock = !item.stock || item.stock === 0;
+                return (
+                  <button type="button" key={item._id} onClick={() => setVariant(item._id)} className={`relative overflow-hidden rounded-full border px-5 py-3 text-[14px] font-bold transition-all ${variant === item._id ? 'border-primary bg-primary text-white' : 'border-border text-foreground hover:bg-surface'} ${isOutOfStock ? 'opacity-60 !bg-surface/50 !text-muted-foreground' : ''}`}>
+                    {item.name}
+                    {isOutOfStock && <span className="absolute left-0 top-1/2 block h-[1.5px] w-full -rotate-12 bg-muted-foreground/60" aria-hidden="true" />}
+                  </button>
+                );
+              })}
             </div>
           </div>
           
