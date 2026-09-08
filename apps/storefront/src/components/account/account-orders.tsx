@@ -40,7 +40,7 @@ export default function AccountOrders() {
 
   const cancel = async (id: string) => {
     setCancelling(id);
-    try { await orderService.cancel(id); setOrders((current) => current.map((order) => order._id === id ? { ...order, status: 'cancelled' } : order)); toast.success(t('orders.viewed')); }
+    try { await orderService.cancel(id); setOrders((current) => current.map((order) => order._id === id ? { ...order, status: 'cancelled' } : order)); toast.success(t13('status.cancelled')); }
     catch { toast.error(t('errors.generic')); }
     finally { setCancelling(''); }
   };
