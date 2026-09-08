@@ -1,7 +1,33 @@
 'use client';
+
 import { FormEvent, useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import toast from 'react-hot-toast';
 import { reviewService, ProductReview } from '@/services/api-service';
 import { useAuth } from '@/components/auth/auth-context';
-export default function ProductReviews({ productId }: { productId: string }) { const t = useTranslations('Storefront'); const { user, loading: authLoading } = useAuth(); const [reviews, setReviews] = useState<ProductReview[]>([]); const [rating, setRating] = useState(5); const [body, setBody] = useState(''); const [submitting, setSubmitting] = useState(false); useEffect(() => { reviewService.list(productId).then((result) => setReviews(result.data)).catch(() => toast.error(t('shop.empty'))); }, [productId, t]); async function submit(event: FormEvent) { event.preventDefault(); if (body.trim().length < 3) { toast.error(t('shop.empty')); return; } setSubmitting(true); try { const result = await reviewService.create({ productId, rating, body }); setReviews((current) => [result.data, ...current]); setBody(''); toast.success(t('products.addToCart')); } catch { toast.error(t('shop.empty')); } finally { setSubmitting(false); } } return <section className="mx-auto max-w-7xl px-5 pb-24 sm:px-8 lg:px-10"><div className="border-t border-border pt-12"><h2 className="text-2xl font-bold">{t('pdp.reviews')}</h2>{!reviews.length && <p className="mt-5 text-sm text-muted-foreground">{t('shop.empty')}</p>}<div className="mt-6 grid gap-4 md:grid-cols-2">{reviews.map((review) => <article key={review._id} className="rounded-2xl border border-border bg-surface p-5"><div className="text-amber-500">{'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}</div><p className="mt-3 text-sm leading-6 text-muted-foreground">{review.body}</p><p className="mt-4 text-xs font-bold">{review.user?.firstName || 'Customer'}</p></article>)}</div>{!authLoading && user && <form onSubmit={submit} className="mt-10 max-w-xl rounded-2xl border border-border bg-surface p-6"><h3 className="text-lg font-bold">{t('pdp.description.title')}</h3><div className="mt-4 flex gap-2" aria-label={t('pdp.rating')}>{[1, 2, 3, 4, 5].map((value) => <button type="button" key={value} onClick={() => setRating(value)} className={value <= rating ? 'text-amber-500' : 'text-muted-foreground'}>★</button>)}</div><textarea value={body} onChange={(event) => setBody(event.target.value)} className="mt-4 min-h-32 w-full rounded-xl border border-border bg-background p-4 outline-none focus:ring-4 focus:ring-primary-subtle" required /><button type="submit" disabled={submitting} className="mt-4 min-h-12 rounded-xl bg-primary px-6 font-bold text-white disabled:opacity-50">{submitting ? '…' : t('products.addToCart')}</button></form>}</div></section>; }
+
+export default function ProductReviews({ productId }: { productId: string }) {
+  const t = useTranslations('Storefront');
+  const { user, loading: authLoading } = useAuth();
+  const [reviews, setReviews] = useState<ProductReview[]>([]);
+  const [rating, setRating] = useState(5);
+  const [body, setBody] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => { reviewService.list(productId).then((result) => setReviews(result.data)).catch(() => toast.error(t('reviews.loadError'))); }, [productId, t]);
+
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    if (body.trim().length < 3) { toast.error(t('reviews.validation')); return; }
+    setSubmitting(true);
+    try { const result = await reviewService.create({ productId, rating, body }); setReviews((current) => [result.data, ...current]); setBody(''); toast.success(t('reviews.success')); }
+    catch { toast.error(t('reviews.error')); }
+    finally { setSubmitting(false); }
+  }
+
+  return <section className="mx-auto max-w-7xl px-5 pb-24 sm:px-8 lg:px-10"><div className="border-t border-border pt-12"><h2 className="text-2xl font-bold">{t('pdp.reviews')}</h2>
+    {!reviews.length && <p className="mt-5 text-sm text-muted-foreground">{t('reviews.empty')}</p>}
+    <div className="mt-6 grid gap-4 md:grid-cols-2">{reviews.map((review) => <article key={review._id} className="rounded-2xl border border-border bg-surface p-5"><div className="text-amber-500" aria-label={`${review.rating} out of 5 stars`}>{'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}</div><p className="mt-3 text-sm leading-6 text-muted-foreground">{review.body}</p><p className="mt-4 flex items-center gap-2 text-xs font-bold">{review.user?.firstName || t('reviews.customer')}{review.isVerifiedPurchase && <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-bold text-emerald-700"><span aria-hidden="true">✓</span>{t('reviews.verifiedPurchase')}</span>}</p></article>)}</div>
+    {!authLoading && user && <form onSubmit={submit} className="mt-10 max-w-xl rounded-2xl border border-border bg-surface p-6"><h3 className="text-lg font-bold">{t('reviews.write')}</h3><div className="mt-4 flex gap-2" aria-label={t('pdp.rating')}>{[1, 2, 3, 4, 5].map((value) => <button type="button" key={value} onClick={() => setRating(value)} className={value <= rating ? 'text-amber-500' : 'text-muted-foreground'} aria-label={`${value} stars`}>★</button>)}</div><textarea value={body} onChange={(event) => setBody(event.target.value)} placeholder={t('reviews.placeholder')} className="mt-4 min-h-32 w-full rounded-xl border border-border bg-background p-4 outline-none focus:ring-4 focus:ring-primary-subtle" required /><button type="submit" disabled={submitting} className="mt-4 min-h-12 rounded-xl bg-primary px-6 font-bold text-white disabled:opacity-50">{submitting ? t('reviews.submitting') : t('reviews.submit')}</button></form>}
+  </div></section>;
+}
