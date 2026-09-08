@@ -4,11 +4,15 @@
   "private": true,
   "scripts": {
     "dev": "npm run dev --workspace=apps/storefront",
+    "dev:dashboard": "npm run dev --workspace=apps/dashboard",
     "dev:backend": "npm run dev --workspace=packages/backend",
-    "dev:all": "npm run dev --workspaces --if-present"
+    "dev:all": "concurrently \"npm run dev\" \"npm run dev:dashboard\" \"npm run dev:backend\""
   },
   "workspaces": [
     "apps/*",
     "packages/*"
-  ]
+  ],
+  "devDependencies": {
+    "concurrently": "^10.0.5"
+  }
 }
