@@ -11,7 +11,6 @@ import {
   Gift,
   Heart,
   Sparkles,
-  HelpCircle,
   LucideIcon,
 } from 'lucide-react';
 
@@ -100,12 +99,12 @@ export default function CampaignBenefits({
             {specifications.map((spec, idx) => (
               <div
                 key={idx}
-                className="flex items-center justify-between py-2.5 sm:border-b sm:border-border/40"
+                className="flex min-w-0 flex-col items-start gap-1 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:border-b sm:border-border/40"
               >
                 <span className="text-xs sm:text-sm font-semibold text-muted-foreground pr-2">
                   {spec.name}
                 </span>
-                <span className="text-right text-xs sm:text-sm font-bold text-foreground">
+                <span className="max-w-full break-words text-left text-xs font-bold text-foreground sm:text-right sm:text-sm">
                   {spec.value}
                 </span>
               </div>

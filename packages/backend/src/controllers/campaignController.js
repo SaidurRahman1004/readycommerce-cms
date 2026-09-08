@@ -14,6 +14,11 @@ const computeLiveStatus = (campaign, now = new Date()) => {
   const expiryTime = new Date(campaign.expiresAt).getTime();
   const currentTime = now.getTime();
 
+  // Fail closed for legacy or malformed records instead of treating them as live.
+  if (!Number.isFinite(startTime) || !Number.isFinite(expiryTime) || expiryTime <= startTime) {
+    return 'expired';
+  }
+
   if (currentTime < startTime) {
     return 'scheduled';
   }
@@ -236,14 +241,24 @@ const getPreviewCampaign = async (req, res, next) => {
 const trackCampaignAction = async (req, res, next) => {
   try {
     const { slug } = req.params;
-    const { action } = req.body;
+    const { action, actionType } = req.body;
+    const requestedAction = action || actionType;
 
-    if (!['click', 'conversion'].includes(action)) {
+    const fieldMap = {
+      view: 'analytics.views',
+      click: 'analytics.clicks',
+      cta_click: 'analytics.clicks',
+      add_to_cart: 'analytics.clicks',
+      checkout: 'analytics.conversions',
+      conversion: 'analytics.conversions',
+    };
+    const field = fieldMap[requestedAction];
+    if (!field) {
       return next(new AppError('Invalid tracking action.', 400, 'INVALID_ACTION'));
     }
 
-    const field = action === 'click' ? 'analytics.clicks' : 'analytics.conversions';
-    await Campaign.updateOne({ slug }, { $inc: { [field]: 1 } });
+    const result = await Campaign.updateOne({ slug }, { $inc: { [field]: 1 } });
+    if (!result.matchedCount) return next(new AppError('Campaign not found.', 404, 'CAMPAIGN_NOT_FOUND'));
 
     return res.json({ success: true, message: 'Event tracked.' });
   } catch (error) {

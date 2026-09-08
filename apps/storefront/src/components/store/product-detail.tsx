@@ -34,13 +34,14 @@ export default function ProductDetail({ productId }: { productId: string }) {
   const [leadSubscribed, setLeadSubscribed] = useState(false);
 
   useEffect(() => {
-    if (user?.email && !notifyEmail) {
-      setNotifyEmail(user.email);
-    }
+    if (!user?.email || notifyEmail) return;
+    const timer = window.setTimeout(() => setNotifyEmail(user.email), 0);
+    return () => window.clearTimeout(timer);
   }, [user?.email, notifyEmail]);
 
   useEffect(() => {
-    setLeadSubscribed(false);
+    const timer = window.setTimeout(() => setLeadSubscribed(false), 0);
+    return () => window.clearTimeout(timer);
   }, [variant]);
 
   useEffect(() => {
@@ -77,8 +78,8 @@ export default function ProductDetail({ productId }: { productId: string }) {
       });
       toast.success(response?.message || "We'll notify you!");
       setLeadSubscribed(true);
-    } catch (err: any) {
-      toast.error(err?.message || 'Failed to submit restock notification. Please try again.');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to submit restock notification. Please try again.');
     } finally {
       setSubmittingLead(false);
     }

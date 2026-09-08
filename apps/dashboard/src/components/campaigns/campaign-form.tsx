@@ -57,11 +57,13 @@ export default function CampaignForm({ initialData, mode, campaignId }: Campaign
     }
   };
 
-  const defaultStart = new Date();
-  const defaultEnd = new Date(Date.now() + 7 * 86400000); // 7 days later
+  const [defaultSchedule] = useState(() => {
+    const start = new Date();
+    return { start, end: new Date(start.getTime() + 7 * 86400000) };
+  });
 
-  const [startsAt, setStartsAt] = useState(formatDatetimeLocal(initialData?.startsAt) || formatDatetimeLocal(defaultStart.toISOString()));
-  const [expiresAt, setExpiresAt] = useState(formatDatetimeLocal(initialData?.expiresAt) || formatDatetimeLocal(defaultEnd.toISOString()));
+  const [startsAt, setStartsAt] = useState(formatDatetimeLocal(initialData?.startsAt) || formatDatetimeLocal(defaultSchedule.start.toISOString()));
+  const [expiresAt, setExpiresAt] = useState(formatDatetimeLocal(initialData?.expiresAt) || formatDatetimeLocal(defaultSchedule.end.toISOString()));
   const [showCountdown, setShowCountdown] = useState(initialData?.showCountdown !== false);
   const [onExpiryAction, setOnExpiryAction] = useState(initialData?.onExpiryAction || 'show_expired_page');
 
@@ -570,7 +572,7 @@ export default function CampaignForm({ initialData, mode, campaignId }: Campaign
 
           <div className="space-y-3">
             {benefits.map((b, i) => (
-              <div key={i} className="flex items-center gap-3 rounded-2xl border border-border bg-slate-50/50 p-3">
+              <div key={i} className="flex flex-col items-stretch gap-3 rounded-2xl border border-border bg-slate-50/50 p-3 sm:flex-row sm:items-center">
                 <input
                   type="text"
                   value={b.title}
@@ -580,7 +582,7 @@ export default function CampaignForm({ initialData, mode, campaignId }: Campaign
                     setBenefits(next);
                   }}
                   placeholder="Benefit Title (e.g. 100% Genuine)"
-                  className="h-10 flex-1 rounded-xl border border-border bg-white px-3 text-xs font-bold outline-none"
+                  className="h-10 w-full flex-1 rounded-xl border border-border bg-white px-3 text-xs font-bold outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 sm:w-auto"
                 />
                 <input
                   type="text"
@@ -591,12 +593,12 @@ export default function CampaignForm({ initialData, mode, campaignId }: Campaign
                     setBenefits(next);
                   }}
                   placeholder="Short explanation"
-                  className="h-10 flex-1 rounded-xl border border-border bg-white px-3 text-xs outline-none"
+                  className="h-10 w-full flex-1 rounded-xl border border-border bg-white px-3 text-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 sm:w-auto"
                 />
                 <button
                   type="button"
                   onClick={() => handleRemoveBenefit(i)}
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-rose-500 hover:bg-rose-50"
+                className="flex h-10 w-full shrink-0 items-center justify-center rounded-xl text-rose-500 hover:bg-rose-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 sm:h-9 sm:w-9"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
@@ -620,7 +622,7 @@ export default function CampaignForm({ initialData, mode, campaignId }: Campaign
 
           <div className="space-y-3">
             {specifications.map((s, i) => (
-              <div key={i} className="flex items-center gap-3 rounded-2xl border border-border bg-slate-50/50 p-3">
+              <div key={i} className="flex flex-col items-stretch gap-3 rounded-2xl border border-border bg-slate-50/50 p-3 sm:flex-row sm:items-center">
                 <input
                   type="text"
                   value={s.label}
@@ -630,7 +632,7 @@ export default function CampaignForm({ initialData, mode, campaignId }: Campaign
                     setSpecifications(next);
                   }}
                   placeholder="Label (e.g. Warranty)"
-                  className="h-10 w-1/3 rounded-xl border border-border bg-white px-3 text-xs font-bold outline-none"
+                  className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs font-bold outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 sm:w-1/3"
                 />
                 <input
                   type="text"
@@ -641,12 +643,12 @@ export default function CampaignForm({ initialData, mode, campaignId }: Campaign
                     setSpecifications(next);
                   }}
                   placeholder="Value (e.g. 1 Year Replacement)"
-                  className="h-10 flex-1 rounded-xl border border-border bg-white px-3 text-xs outline-none"
+                  className="h-10 w-full flex-1 rounded-xl border border-border bg-white px-3 text-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 sm:w-auto"
                 />
                 <button
                   type="button"
                   onClick={() => handleRemoveSpec(i)}
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-rose-500 hover:bg-rose-50"
+                className="flex h-10 w-full shrink-0 items-center justify-center rounded-xl text-rose-500 hover:bg-rose-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 sm:h-9 sm:w-9"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>

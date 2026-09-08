@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useTranslations } from 'next-intl';
 import toast from 'react-hot-toast';
 import { useCart } from '@/components/store/cart-context';
 import { leadService, campaignService } from '@/services/api-service';
@@ -46,7 +45,6 @@ export default function CampaignOfferBox({
   isExpired = false,
 }: CampaignOfferBoxProps) {
   const router = useRouter();
-  const t = useTranslations('Storefront');
   const { addItem } = useCart();
 
   // Find first in-stock variant or first variant
@@ -121,8 +119,8 @@ export default function CampaignOfferBox({
       });
       toast.success(res?.message || 'We will alert you as soon as this item restocks!');
       setLeadSubscribed(true);
-    } catch (err: any) {
-      toast.error(err?.message || 'Failed to register notification.');
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : 'Failed to register notification.');
     } finally {
       setSubmittingLead(false);
     }

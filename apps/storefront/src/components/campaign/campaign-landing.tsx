@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Star, Shield, Eye, Flame } from 'lucide-react';
+import { Shield, Eye, Flame } from 'lucide-react';
 import { PublicCampaignData, campaignService } from '@/services/api-service';
 import CampaignGallery from './campaign-gallery';
 import CampaignCountdown from './campaign-countdown';
@@ -20,6 +20,7 @@ interface CampaignLandingProps {
 
 export default function CampaignLanding({ campaign, locale }: CampaignLandingProps) {
   const [isLiveExpired, setIsLiveExpired] = useState(campaign.status === 'expired');
+  const handleExpire = useCallback(() => setIsLiveExpired(true), []);
 
   // Track campaign page view once mounted
   useEffect(() => {
@@ -45,16 +46,18 @@ export default function CampaignLanding({ campaign, locale }: CampaignLandingPro
   }
 
   const primaryImage = campaign.bannerImage || campaign.galleryImages?.[0] || '/placeholder.png';
-  const stars = Math.round(campaign.product.ratingAverage || 5);
+  const rating = Number.isFinite(campaign.product.ratingAverage) ? Math.max(0, Math.min(5, campaign.product.ratingAverage)) : 0;
+  const stars = Math.round(rating);
+  const reviewCount = Math.max(0, campaign.product.reviewCount || 0);
 
   return (
     <main className="min-h-screen bg-background pb-28 text-foreground selection:bg-primary selection:text-white">
       {/* Preview Mode Notification Banner */}
       {campaign.isPreview && (
-        <div className="sticky top-0 z-50 flex items-center justify-between border-b border-amber-500/40 bg-amber-500/90 px-4 py-2.5 text-xs sm:text-sm font-bold text-amber-950 shadow-md backdrop-blur-md">
-          <div className="flex items-center gap-2">
+        <div className="sticky top-0 z-50 flex flex-wrap items-center justify-between gap-2 border-b border-amber-500/40 bg-amber-500/90 px-4 py-2.5 text-xs font-bold text-amber-950 shadow-md backdrop-blur-md sm:text-sm">
+          <div className="flex min-w-0 items-start gap-2">
             <Eye className="h-4 w-4 shrink-0" />
-            <span>
+            <span className="break-words">
               <strong>PREVIEW MODE:</strong> This campaign is currently in draft or scheduled state. You are viewing live admin preview.
             </span>
           </div>
@@ -94,10 +97,10 @@ export default function CampaignLanding({ campaign, locale }: CampaignLandingPro
                 {'★'.repeat(stars)}{'☆'.repeat(Math.max(0, 5 - stars))}
               </div>
               <span className="font-bold text-foreground">
-                {campaign.product.ratingAverage ? campaign.product.ratingAverage.toFixed(1) : '5.0'}
+                {rating.toFixed(1)}
               </span>
               <span className="text-muted-foreground">
-                ({campaign.product.reviewCount || 24} reviews)
+                ({reviewCount} reviews)
               </span>
             </div>
 
@@ -141,7 +144,7 @@ export default function CampaignLanding({ campaign, locale }: CampaignLandingPro
                 expiresAt={campaign.expiresAt}
                 serverTime={campaign.serverTime}
                 title="⚡ Limited-Time Promotional Pricing Ends In"
-                onExpire={() => setIsLiveExpired(true)}
+                onExpire={handleExpire}
                 variant="card"
               />
             )}

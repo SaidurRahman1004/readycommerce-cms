@@ -78,10 +78,10 @@ export default function CampaignStickyBar({
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border/80 bg-background/95 p-3 sm:p-4 shadow-[0_-8px_30px_rgba(0,0,0,0.12)] backdrop-blur-xl transition-all duration-300 animate-in slide-in-from-bottom">
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 sm:gap-4">
         {/* Left: Product summary & price */}
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-border bg-surface sm:h-14 sm:w-14">
+        <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
+          <div className="relative hidden h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-border bg-surface sm:block sm:h-14 sm:w-14">
             <Image
               src={thumbnail || '/placeholder.png'}
               alt={productName}
@@ -92,7 +92,7 @@ export default function CampaignStickyBar({
           </div>
 
           <div className="min-w-0">
-            <h4 className="truncate text-xs sm:text-sm font-bold text-foreground">
+            <h4 className="max-w-[42vw] truncate text-xs font-bold text-foreground sm:max-w-none sm:text-sm">
               {productName}
             </h4>
             <div className="flex items-baseline gap-2 mt-0.5">
@@ -126,7 +126,7 @@ export default function CampaignStickyBar({
               type="button"
               onClick={handleQuickBuy}
               disabled={isOrdering}
-              className="flex h-11 sm:h-12 items-center justify-center gap-2 rounded-xl bg-primary px-5 sm:px-8 text-xs sm:text-sm font-black text-white shadow-md transition-all hover:bg-primary/90 active:scale-95 disabled:opacity-50"
+              className="flex h-11 items-center justify-center gap-1.5 rounded-xl bg-primary px-3 text-xs font-black text-white shadow-md transition-all hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 active:scale-95 disabled:opacity-50 sm:h-12 sm:gap-2 sm:px-8 sm:text-sm"
             >
               {isOrdering ? (
                 <Loader2 className="h-4 w-4 animate-spin" />

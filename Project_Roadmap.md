@@ -305,6 +305,17 @@ The Admin Dashboard must not begin until Phase 12's Storefront Production Gate p
 - [x] Fixed the protected `/orders/myorders` route precedence bug discovered during the related-flow scan.
 - [ ] Complete live MongoDB wishlist E2E, logout/login multi-device conflict testing and visual browser/device verification.
 
+## Phase 17 Staging QA — Campaign Deep Audit & UI Polish (2026-09-08)
+
+- [x] Audited Campaign landing components, gallery, offer box, benefits/specifications, countdown, sticky CTA, dashboard campaign forms, and campaign tracking APIs.
+- [x] Fixed mobile/tablet wrapping and overflow risks in preview banners, sticky purchase bar, specifications, and dynamic dashboard benefit/spec rows.
+- [x] Added safer focus-visible states and stabilized countdown expiry callbacks/animation cleanup.
+- [x] Removed fabricated `5.0` / `24 reviews` campaign fallback values; campaign social proof now reflects authoritative product rating data.
+- [x] Aligned frontend campaign tracking actions with backend analytics fields and added not-found handling for invalid tracking slugs.
+- [x] Added fail-closed handling for malformed campaign schedule dates.
+- [x] Storefront lint and production build passed; Dashboard production build passed; backend campaign syntax checks passed.
+- [ ] Browser/device screenshot verification, live campaign analytics verification, and staging payment/order QA remain pending.
+
 ## Local Network Development Reliability (2026-09-08)
 
 - [x] Added `allowedDevOrigins` to the Storefront and Dashboard Next.js development configurations for localhost, loopback, the current LAN host, and `.local` hostnames.

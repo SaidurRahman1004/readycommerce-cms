@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { Clock, Flame } from 'lucide-react';
 
 interface CampaignCountdownProps {
@@ -34,6 +34,7 @@ export default function CampaignCountdown({
     seconds: 0,
     total: 0,
   });
+  const clockOffsetRef = useRef(0);
 
   // Calculate target timestamp
   const targetMs = useMemo(() => {
@@ -42,17 +43,13 @@ export default function CampaignCountdown({
   }, [expiresAt]);
 
   // Initial offset calculation using serverTime to eliminate client clock skew
-  const clockOffsetMs = useMemo(() => {
-    if (!serverTime) return 0;
-    return new Date(serverTime).getTime() - Date.now();
-  }, [serverTime]);
-
   useEffect(() => {
-    setMounted(true);
-    if (!targetMs) return;
+    const mountFrame = window.requestAnimationFrame(() => setMounted(true));
+    clockOffsetRef.current = serverTime ? new Date(serverTime).getTime() - Date.now() : 0;
+    if (!targetMs) return () => window.cancelAnimationFrame(mountFrame);
 
     const calculateTime = () => {
-      const now = Date.now() + clockOffsetMs;
+      const now = Date.now() + clockOffsetRef.current;
       const difference = targetMs - now;
 
       if (difference <= 0) {
@@ -80,8 +77,11 @@ export default function CampaignCountdown({
       }
     }, 1000);
 
-    return () => clearInterval(interval);
-  }, [targetMs, clockOffsetMs, onExpire]);
+    return () => {
+      clearInterval(interval);
+      window.cancelAnimationFrame(mountFrame);
+    };
+  }, [targetMs, serverTime, onExpire]);
 
   if (!expiresAt || !targetMs) {
     return null;

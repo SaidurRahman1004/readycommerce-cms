@@ -64,7 +64,7 @@ export const userService = { profile: async () => request<{success: boolean; use
 export type ProductReview = { _id: string; rating: number; title?: string; body: string; createdAt: string; isVerifiedPurchase?: boolean; user?: { firstName: string; lastName: string } };
 export const reviewService = { list: async (productId: string) => request<{success: boolean; data: ProductReview[]}>(`/reviews/${encodeURIComponent(productId)}`), create: async (payload: {productId: string; rating: number; title?: string; body: string}) => request<{success: boolean; data: ProductReview}>('/reviews', {method: 'POST', body: JSON.stringify(payload)}) };
 export type RestockLeadPayload = { email: string; productId: string; variantId?: string | null };
-export type RestockLeadResponse = { success: boolean; message: string; alreadySubscribed?: boolean; data?: any };
+export type RestockLeadResponse = { success: boolean; message: string; alreadySubscribed?: boolean; data?: unknown };
 export const leadService = {
   notifyRestock: async (payload: RestockLeadPayload) =>
     request<RestockLeadResponse>('/leads/restock', {
@@ -128,10 +128,9 @@ export const campaignService = {
     request<{ success: boolean; data: PublicCampaignData }>(`/campaigns/${encodeURIComponent(slug)}`, options),
   getPreview: async (slug: string, token: string, options?: ApiRequestInit) =>
     request<{ success: boolean; data: PublicCampaignData }>(`/campaigns/${encodeURIComponent(slug)}/preview?token=${encodeURIComponent(token)}`, options),
-  trackAction: async (slug: string, actionType: 'view' | 'cta_click' | 'add_to_cart' | 'checkout', metadata?: Record<string, any>) =>
+  trackAction: async (slug: string, actionType: 'view' | 'cta_click' | 'add_to_cart' | 'checkout', metadata?: Record<string, unknown>) =>
     request<{ success: boolean }>(`/campaigns/${encodeURIComponent(slug)}/track`, {
       method: 'POST',
       body: JSON.stringify({ actionType, metadata }),
     }),
 };
-
