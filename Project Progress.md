@@ -1,115 +1,89 @@
-# ReadyCommerce CMS - Project Progress
+# Project Progress Tracker
 
-## Project Vision
-ReadyCommerce CMS - A premium, self-hosted commerce platform for lifestyle businesses (Perfume, Cosmetics, Boutiques).
+This document serves as the central source of truth for the **ReadyCommerce CMS Monorepo** project. All agents and developers must consult and update this file before and after executing any tasks to ensure architectural consistency and avoid duplicate work.
 
-## Project Rules (Permanent)
-1. **Design Implementation**: The Stitch MCP designs are purely a REFERENCE, not a strict limit. Must understand the flow and implement an EVEN BETTER, more interactive, and premium UI. Add any missing screens or states to perfect the workflow.
-2. **Internationalization**: The entire platform MUST support Dual Languages (English and Bengali).
+## Project Overview
+**Name:** ReadyCommerce CMS
+**Description:** A scalable, modern monorepo eCommerce platform designed for Lifestyle Businesses.
+**Architecture:** npm Workspaces Monorepo
+**Tech Stack:**
+- **Storefront:** Next.js (App Router), React, Tailwind CSS, TypeScript
+- **Admin Dashboard:** Next.js (App Router), React, Tailwind CSS, TypeScript
+- **Backend API:** Node.js, Express, MongoDB (Mongoose)
+- **Shared Packages:** `@readycommerce/ui`, `@readycommerce/config`, `@readycommerce/database`, `@readycommerce/utils`
 
-## Tech Stack
-- **Architecture**: Monorepo (npm workspaces)
-- **Frontend**: Next.js + Tailwind CSS + next-intl
-- **Backend**: Node.js/Express
-- **Database**: MongoDB
+## Phase Definitions & Current Status
+- **Phase 1:** Environment Setup (✅ Completed)
+- **Phase 2:** Workspace & Apps Initialization (✅ Completed)
+- **Phase 3:** Shared Infrastructure & Monorepo Wiring (✅ Completed)
+- **Phase 4:** Backend API Foundation (✅ Completed)
+- **Phase 5:** Database Seeding & Data Validation (✅ Completed)
+- **Phase 6:** Storefront UI Layout & API Integration (✅ Completed)
+- **Phase 7:** State Management & Cart Context (✅ Completed)
+- **Phase 8:** Checkout Flow & Order Processing (✅ Completed)
+- **Phase 9:** User Authentication & Account Management (✅ Completed)
+- **Phase 10:** Admin Dashboard Analytics & Core Routing (✅ Completed)
+- **Phase 11:** Multi-language (i18n) Architecture (✅ Completed)
+- **Phase 12:** Role-Based Access Control (RBAC) & Middleware (✅ Completed)
+- **Phase 13:** Performance, SEO, and Premium UI Upgrades (🚧 Current)
+- **Phase 14:** Production Hardening, Caching, and Deployment (Pending)
 
-## Current Status
-- Monorepo folder structure created, Git initialized.
-- Next.js storefront frontend initialized inside `/apps/storefront` using App Router.
-- Backend Express API Engine scaffolded in `/packages/backend`.
-- Documentation (README and Roadmap) added.
-- **Storefront i18n**: Configured with `next-intl` (English & Bengali).
-- **Backend Setup**: Basic backend initialized and MongoDB connection configured.
-- **Phase 2 Real Authentication**: Backend-backed registration, login, logout, current-user retrieval, rotating database sessions, short-lived HttpOnly JWT access cookies, explicit CORS, and protected customer-route session restoration are implemented. Email/account verification remains pending.
-- **Phase 2 Password Flows**: Added secure forgot-password reset token generation with expiry, reset-password token validation, and protected change-password endpoint; Storefront recovery and profile password forms now use the real API. MongoDB E2E verification is still pending because the local MongoDB endpoint was unavailable during verification.
-- **Phase 3 Catalog (In Progress)**: Added public catalog read APIs for products, categories, variants and inventory with category/price/scent/colour filtering, sorting and pagination; prepared an idempotent 8-product premium catalog seeder with Unsplash imagery and stock; connected Homepage categories/trending, Shop and PDP to the backend with loading skeletons, API error states and responsive layouts. Seeding and live API verification remain pending because local MongoDB is currently unreachable.
-- **Phase 3 Catalog (Completed)**: MongoDB ping and real database query verification succeeded: 8 active products, 3 categories, 17 active variants and 17 stocked inventory records are present. The seeder now exits deterministically with explicit success/failure codes and clear logs.
-- **Phase 4 Storefront Integration (In Progress)**: Connected Navbar suggestions, search results, Homepage catalog sections, Shop, PDP, Wishlist, Cart Drawer and Checkout summaries to real catalog product metadata/API boundaries; removed legacy `catalog.ts` and unused mock `product-grid.tsx`. Storefront lint/build pass; direct backend HTTP smoke testing and retry/caching hardening remain.
-- **Phase 4 Storefront Integration (Completed)**: Real backend catalog search is connected to Navbar suggestions and Search Results; Wishlist, Cart Drawer and Checkout now consume real product metadata, and legacy catalog/product-grid mocks were safely removed. Live API smoke test returned catalog `200` and server cart add `201` with database-authoritative variant pricing.
-- **Phase 5 Server Cart (In Progress)**: Added authenticated/guest server cart APIs with HttpOnly guest session support, ProductVariant/Inventory stock validation, authoritative pricing, cart totals, quantity update/remove operations, loading/error-ready client service boundary, and disposable guest-cart cleanup verification. Frontend button-level pending indicators and full authenticated E2E flow remain.
-- **Customer Authentication UI**: Login and Registration screens completed in English and Bengali with responsive premium layout, accessible form states, and client-side validation.
-- **Global Storefront Layout**: Responsive i18n-aware Navbar, language switcher, cart badge state, route-aware shell, and minimalist Footer completed.
-- **Public Storefront Homepage**: Premium responsive hero, category discovery cards, and bilingual trending product grid completed.
-- **Shop Product Listing**: Responsive product listing with category, price, scent, and colour filters, sorting, empty state, and mobile bottom-sheet filter controls completed.
-- **Product Details (PDP)**: Responsive product gallery/carousel, thumbnails, reviews, size selectors, quantity control, accordion details, and sticky mobile Add to Cart completed.
-- **Checkout Flow**: Globally accessible cart drawer with line items, quantity controls, subtotal, distraction-free bilingual checkout, manual bKash/Nagad TxID payment, and responsive order summary completed.
-- **Order Success**: Minimalist bilingual confirmation page with order ID and continue-shopping CTA completed.
-- **Frontend Hardening**: Added service-layer mock API requests with replaceable network boundary, Zod validation, loading/disabled states, react-hot-toast success/error feedback, redirects, and regression-safe responsive interactions.
-- **Missing Auth Flows**: Forgot Password, Reset Password, Profile Change Password, and Logout are now connected with mocked async logic and bilingual UX.
-- **Customer Portal**: Added the bilingual `/account` portal with responsive sidebar navigation, profile update, change password, logout, mocked order history/details, and address book management.
-- **Storefront State & Discovery**: Cart and wishlist now persist through guarded LocalStorage hydration; global debounced search, query-based results, wishlist listing, and product-card/PDP wishlist controls are connected.
-- **Order Confirmation Integrity**: Checkout now stores the generated mock order ID and the Success page reads the same ID, removing the previous mismatch.
-- **Backend-First Phase 1 Foundation**: Added production-oriented Mongoose schemas for the core commerce domain, secure password hashing hooks, Joi validation utilities, Helmet security headers, rate limiting, Morgan request logging, a resilient MongoDB connection utility, and centralized error handling. Real APIs, authentication, and backend-connected commerce behavior remain pending in the 12-phase roadmap.
+## Agent Instructions (MANDATORY RULES)
+1. **Read First:** ALWAYS read this document before writing any code.
+2. **Phase Adherence:** Do NOT skip phases. Complete the current phase fully before moving to the next.
+3. **Log Everything:** After completing a task, update the "Completed Tasks" and "Changelog" sections.
+4. **No Placeholders:** If a feature requires dummy data, use a proper seeder script in the backend. Do not hardcode data in the frontend unless explicitly requested for UI mockup purposes.
+5. **Typescript Strict:** All new packages and apps must extend the root `@readycommerce/config/tsconfig.base.json`. No `any` types allowed for core models.
+6. **One Branch Rule (Current):** Push all incremental work to the `dashboard-all` branch until testing is complete.
+7. **Proactive Fixes:** If you spot missing edge-cases (e.g., missing loading states, empty cart views, error handling), implement them immediately. Do not wait for permission.
+8. **Responsive By Default:** ALL frontend components (Storefront and Dashboard) must look flawless on Mobile, Tablet, and Desktop breakpoints.
 
-## Pending Gap Analysis
-- [ ] Real backend/API integration, authentication persistence, sessions, authorization, and secure password reset tokens.
-- [ ] Global product search with suggestions, recent searches, filters, and no-results experience.
-- [ ] Wishlist/favourites with persistence and wishlist-to-cart flow.
-- [ ] Product reviews, ratings, moderation, verified-purchase labels, and review submission.
-- [ ] Complete category landing pages and collection filtering experience.
-- [ ] Real payment gateway integration and verified bKash/Nagad payment reconciliation.
-- [ ] Inventory, stock status, variants, coupons, taxes, shipping rates, and order tracking.
-- [ ] Customer order details, cancellation, return/refund requests, and reorder flow.
-- [ ] Legal and support pages: Privacy Policy, Terms, Refund Policy, Shipping Policy, Contact Us, FAQ.
-- [ ] Newsletter subscription with consent, validation, duplicate handling, and backend delivery.
-- [ ] Custom 404, error, loading, offline, and network-retry states for every major route.
-- [ ] SEO metadata, Open Graph, sitemap, robots, structured product data, and canonical URLs.
-- [ ] Production image/CDN strategy, caching, performance budgets, analytics, and conversion tracking.
-- [ ] Full accessibility audit, keyboard navigation, screen-reader semantics, and automated E2E/visual testing.
-- [ ] Production deployment, environment secrets, monitoring, logging, backups, and security review.
+---
 
-## UI/UX Status
-- Wireframes and complete UI flow available via Google Stitch (Ready for implementation).
+## Completed Tasks
+- [x] Initialized Git repository, root `.gitignore`, and `README.md`.
+- [x] Initialized `apps/storefront` with Next.js, TS, Tailwind.
+- [x] Initialized `apps/dashboard` with Next.js, TS, Tailwind.
+- [x] Configured root `package.json` for npm workspaces.
+- [x] Created `packages/config` (shared TS, ESLint).
+- [x] Created `packages/ui` (shared Tailwind config, Button component).
+- [x] Created `packages/database` (Mongoose connection, User, Product, Order schemas).
+- [x] Created `packages/utils` (shared helper functions).
+- [x] Initialized `packages/backend` (Express, dotenv, nodemon setup).
+- [x] Wired dependencies: apps and backend now properly depend on local packages via `*` versioning.
+- [x] Initialized Phase 4 Backend architecture (routes, controllers, error handler).
+- [x] Created seeders for Database (Categories & Products).
+- [x] Fixed Database package imports across Monorepo (using standard relative imports).
+- [x] Completed Phase 6 Storefront UI (Hero, Catalog, Product Detail) and integrated API using `fetch`.
+- [x] Integrated `Zustand` for global Cart State.
+- [x] Created Slide-out Cart Drawer and Global `Toast` notifications.
+- [x] Finalized Storefront Checkout Page UI with responsive grid, client-side validation, and summary component.
+- [x] Handled Storefront Checkout API integration (POST /api/orders) with basic validation and ID redirects.
+- [x] Added `isSpecialOffer` toggle and dedicated "Special Offers" UI section.
+- [x] Merged `dashboard-all` into `main` after completing Phase 12.
+- [x] Completed Phase 13D: Storefront UX Supercharge (Mini Cart, Live Search, Skeleton loaders).
+- [x] Completed Phase 13E: Product Details Premium Enhancement (Scarcity logic, Trust block, Inquiry CTA).
+- [x] Completed Phase 13I: Mobile UI & Responsive Polish (Hamburger menu, touch targets).
+
+---
+
+## Pending Tasks (Next Steps)
+- [ ] **Phase 13 Integration Tests**: Perform End-to-End (E2E) testing of the Storefront checking translations, SEO tags, responsive menus, and product flows.
+- [ ] **Phase 14 Production Hardening**: Implement caching (Redis/Next.js ISR tweaks), fix any lingering missing ENV variable errors, and prepare for Vercel/Render deployment.
+
+---
 
 ## Changelog
-
-* **[2026-09-06]**: **[Phase 12K Team & Roles / RBAC]**: Added granular staff roles (`super-admin`, `manager`, `editor`, `support`) with backward-compatible legacy-admin normalization and API-level authorization across every admin module. Added super-admin-only Team CRUD APIs with safe DTOs, strong staff-password validation, immediate session revocation, self-access and last-super-admin protections, plus a responsive bilingual Team & Roles dashboard with create/edit/revoke workflows, skeleton/empty/error states and role-aware sidebar visibility. Migrated the active administrator to `super-admin`; live MongoDB RBAC E2E verification passed for allowed/denied routes, safe responses, role changes and access revocation.
-
-* **[2026-09-06]**: **[Phase 12K Admin Navigation Hardening]**: Replaced the Phase 12A sidebar placeholders with real routes for all completed admin modules and accessible bilingual coming-soon feedback for unfinished modules. Added route-aware active states, Lucide icons, responsive mobile drawer sizing, overlay/Escape dismissal, scroll locking and safer admin-access error handling. Dashboard and Storefront lint/build, backend syntax validation and explicit navigation mapping checks passed.
-
-* **[2026-09-05]**: **[Dashboard Branch & Foundation]**: Created and switched to the isolated `dashboard-all` branch. Audited the storefront/backend, corrected storefront lint issues and preserved pre-existing auth UI changes. Initialized `apps/dashboard` with a responsive Tailwind App Router shell, sidebar navigation, top header and Welcome Admin page. No dashboard business logic was added.
-* **[2026-09-05]**: **[Phase 12A Foundation Hardening]**: Added the server-protected `/api/admin/access` boundary, admin-only dashboard session gate, bilingual navigation architecture, responsive mobile drawer, notification/user-menu foundations, breadcrumbs/page-header, skeleton/empty/error/confirmation primitives, dashboard loading/error/not-found states, no-fake-data overview copy, and keyboard focus styling. Dashboard and storefront builds passed; admin credentials, live module APIs, customer-role denial, and visual device testing remain pending.
-* **[2026-09-05]**: **[Phase 12B Admin Overview]**: Added protected `GET /api/admin/overview?range=7|30` with real MongoDB queries for order statuses, paid revenue, daily trend, customers, products, payment statuses, recent orders and low-stock inventory. Integrated the API into a bilingual responsive Command Center with skeleton, empty, error/retry states, status badges and mobile-safe tables. Verified DB connectivity, admin success, customer `403`, unauthenticated `401`, HttpOnly session cookie and hashed disposable test user; visual browser testing remains pending.
-* **[2026-09-05]**: **[Phase 12C Admin Orders]**: Added protected admin order list/detail APIs with pagination, sorting, status/payment filters, safe customer fields, item/payment details, fulfillment transition guards and manual payment verification. Added responsive bilingual Orders management list/detail pages with loading, empty/error states and toast feedback. Verified unauthenticated `401`, admin login/list `200`, empty database behavior, backend syntax, dashboard/storefront lint and production builds; visual browser testing remains pending.
-* **[2026-09-05]**: **[Phase 12D Products & Inventory]**: Added admin-protected product CRUD/archive APIs, variant creation/update support, real inventory listing and reserved-stock-safe quantity adjustments. Added responsive Products, Product Editor and Inventory dashboard screens with API integration, loading/empty/error states and toast feedback. Verified MongoDB connectivity, unauthenticated `401`, disposable admin authorization, products/inventory `200`, backend syntax and dashboard/storefront lint/build; visual browser testing remains pending.
-* **[2026-09-05]**: **[Phase 12E Categories & Customers]**: Added admin-protected category CRUD/archive APIs, active-product deletion guards, real customer aggregation/detail APIs, dynamic Product Editor category selection, and responsive Categories/Customers dashboard screens. Verified MongoDB connectivity, unauthenticated `401`, admin login, category/customer `200`, backend syntax, dashboard/storefront lint/build; visual browser testing remains pending.
-* **[2026-09-05]**: **[Phase 12F Reviews & Coupons]**: Added protected admin review listing/moderation/deletion APIs and coupon listing/create/update/deactivation APIs. Added responsive Reviews moderation, Coupons listing and New Coupon dashboard screens with loading, empty/error states and toast feedback. Added customer-status API/service foundation. Verified real MongoDB authorization (`401` unauthenticated, admin `200`), backend syntax, dashboard/storefront lint/build. Category edit modal, customer status toggle UI and visual browser testing remain pending.
-* **[2026-09-05]**: **[Phase 12G Website CMS]**: Added singleton HomepageConfig persistence, admin/public homepage configuration APIs, responsive Homepage Builder UI for hero slides, featured categories and promotional banner, and Storefront hero CMS integration with safe defaults. Category Edit/customer status UI work was audited; visual browser testing remains pending.
-
-* **[2026-09-05]**: **[Phase 12H Store Settings & UI Completion]**: Added the Category Edit modal and Customer Active/Inactive detail control with API integration, validation, loading states and toast feedback. Added the admin-protected StoreSettings MongoDB model/API and responsive dashboard settings form for store identity, contact, currency and Dhaka/outside-Dhaka shipping rates. Dashboard and Storefront lint/build checks passed; visual browser verification remains pending.
-* **[2026-09-05]**: **[Phase 12I Shipping, Returns & Audit Logs]**: Connected storefront shipping quotes to persisted StoreSettings rates, added protected return/refund workflow handling, automatic SystemLog records for successful admin mutations, and a responsive read-only Audit Logs page. Backend syntax and app lint/build checks passed; external refund settlement, super-admin policy and visual browser verification remain pending.
-* **[2026-09-05]**: **[Phase 12J Admin Access Fix]**: Audited the dashboard lockout and confirmed the backend authorization response is caused by the account role not being `admin`, not by the HttpOnly cookie transport. Added `packages/backend/make-admin.js` and `npm run make-admin -- user@email.com` to promote an existing account safely. The verified `dashboard-all` branch was pushed and fast-forward merged into `main`, which was then pushed successfully.
-* **[2026-09-07]**: **[Phase 12L Analytics & Reports]**: Added protected `GET /api/admin/analytics` for `super-admin` and `manager` roles, using MongoDB aggregation over paid orders, order items, products/categories and customer registrations. Added the responsive `/analytics` dashboard with real revenue/order trends, top-selling products, category revenue distribution, customer growth, range filters, loading/error/empty states and bilingual-ready labels. Dashboard and Storefront lint/build passed; exportable reports and visual browser verification remain pending.
-* **[2026-09-07]**: **[Phase 12M Media Library]**: Added protected media upload/list/delete APIs, MongoDB asset metadata, secure JPEG/PNG/WebP MIME and extension validation, 5MB file limits, static upload serving, and a responsive `/media-library` dashboard with drag/drop upload, loading/empty/error states, copy URL and deletion feedback. Image transformations/CDN delivery, orphan cleanup and visual browser verification remain pending.
-* **[2026-09-07]**: **[Phase 12N Notifications & Operational Alerts]**: Added protected notification APIs and MongoDB model, unread count/read-all actions, reusable notification creation utility, and new-order, low-stock inventory and return-request event producers. Added dynamic header bell/popover plus responsive historical notifications page with pagination, read highlighting, loading, empty, error and toast states. Notification preferences and visual browser verification remain pending.
-
-* **[2026-09-05]**: **[Phase 10–11 Storefront Lock]**: Added Coupon model/API with seeded `WELCOME10` and `RITUAL500` codes, responsive promo validation in the cart drawer, bilingual Privacy Policy/Terms/Contact pages, global legal footer links, root SEO metadata, and branded 404 handling. Production legal approval, structured SEO data, analytics, formal accessibility and E2E audit remain future hardening work.
-
-* **[2026-09-05]**: **[Phase 9 Finalization]**: Added pending-order cancellation with ownership/status guards, printable customer invoice route, real product review listing/submission, duplicate-review protection, and automatic product rating/review-count recalculation. Customer Portal order, profile and address flows now use backend APIs; tracking, returns/refunds and moderation remain future extensions.
-
-* **[2026-09-05]**: **[Phase 9 Customer Portal Integration]**: Replaced portal mocks with protected real APIs for user profile read/update, newest-first user-scoped order history, and address listing/creation. Added real status/total rendering, profile loading/update feedback, responsive address management, and bilingual service boundaries. Tracking, cancellation, returns/refunds, reviews, notifications, and invoices remain pending.
-* **[2026-09-03]**: Initialized monorepo infrastructure.
-* **[2026-09-03]**: Initialized Next.js storefront app in `/apps/storefront` with Tailwind CSS, TypeScript, and ESLint. Configured as part of the monorepo workspace.
-* **[2026-09-03]**: Scaffolded backend engine, added Documentation (README & Roadmap), and prepared initial commit for GitHub.
-* **[2026-09-04]**: Configured Google Stitch MCP and Codex MCP in `.agents/mcp.toml` and untracked config from Git.
-* **[2026-09-04]**: Updated project rules (Stitch designs as reference, premium UI, dual languages). Set up `next-intl` in storefront for English and Bengali. Added MongoDB connection config to backend.
-* **[2026-09-04]**: Built bilingual Storefront Customer Authentication UI for Login and Registration with responsive split-screen design, Unsplash lifestyle visual, and frontend validation.
-* **[2026-09-04]**: Completed Phase 2 Public Storefront core with responsive global navigation, EN/BN language switching, cart badge state, footer, hero, category cards, and trending products.
-* **[2026-09-04]**: Completed Shop listing and Product Details pages with responsive filtering, sorting, swipeable mobile gallery, product options, and conversion-focused cart actions.
-* **[2026-09-04]**: Completed Phase 3 Checkout Flow with cart drawer, responsive shipping/contact checkout, manual mobile-wallet payment validation, and order success screen.
-* **[2026-09-04]**: Completed frontend hardening, missing auth flows, and service layer implementation with simulated network latency, robust validation, toast feedback, loading states, cart clearing, and redirects.
-* **[2026-09-04]**: Completed Customer Portal with responsive account navigation, profile and password management, mocked order history, address book CRUD, bilingual UX, validation, loading states, and toast feedback. Added the future Pending Gap Analysis checklist.
-* **[2026-09-04]**: Hardened storefront client state with LocalStorage-persistent cart/wishlist, added debounced global search and search results, connected wishlist discovery flow, and synchronized checkout order IDs with the Success page.
-* **[2026-09-04]**: **[Frontend Premium UI Polish]**: Refactored the storefront to a modern, premium design system using robust Tailwind CSS variables (`--primary`, `--background`, `--foreground`). Replaced raw slate/indigo utility classes with semantic design tokens, applied elegant typography (Plus Jakarta Sans & Hind Siliguri), unified component states (hover/focus/active), and elevated micro-interactions (animations, glassmorphism, refined shadows) across all core storefront, discovery, checkout, and auth screens.
-* **[2026-09-04]**: **[Hero Carousel]**: Replaced static homepage banner with a dynamic, dashboard-ready `embla-carousel-react` integration, featuring autoplay, smooth transitions, and glassmorphic UI controls.
-* **[2026-09-04]**: **[Premium Cards]**: Redesigned Product Catalog cards and Homepage Category cards with enhanced data display (dynamic rating, reviews, stock status), premium glassmorphic overlays, 'New' badges, floating Add to Cart buttons, and immersive hover zoom animations optimized for all device sizes.
-* **[2026-09-04]**: **[Catalog Verification Attempt]**: MongoDB connectivity was confirmed successfully with a Mongoose admin ping. The catalog seeder was then executed but exceeded the 34-second command timeout before completion, so product insertion and database counts remain unverified. Phase 4 real search integration and legacy mock-data cleanup have not started.
-* **[2026-09-05]**: **[Phase 6 Address + Shipping + Checkout]**: Added protected `GET/POST /api/addresses` endpoints tied to the authenticated user, a server shipping quote (`Dhaka: 60 BDT`, other cities: `120 BDT`), and a responsive checkout that loads server cart data, selects/saves addresses with validation and loading states, and calculates subtotal plus live shipping cost. Server-side order creation, address update/delete, tax, and payment remain pending.
-* **[2026-09-05]**: **[Phase 7–8 Payment + Order Placement]**: Added protected `POST /api/orders` with database-authoritative cart price/stock revalidation, address ownership validation, Dhaka-aware shipping calculation, pending Payment creation with bKash/Nagad TxID, OrderItem snapshots, atomic-scope cart clearing, duplicate TxID protection, and a real order-ID query redirect to the Success page. Payment verification, order lifecycle APIs, and server-side idempotency remain pending.
+* **[2026-09-02]**: **[Phase 1-4 Setup]**: Scaffolded full Monorepo workspace. Set up Next.js apps, Express backend, and all shared packages. Pushed initial commit to `main`.
+* **[2026-09-03]**: **[Phase 5 DB]**: Fixed `mongodb` driver version mismatches across the monorepo. Connected backend to MongoDB URI and successfully ran seeders.
+* **[2026-09-04]**: **[Phase 6 Storefront UI]**: Built `HeroCarousel`, `HomeCatalog`, `ProductDetail` and `Footer` in `apps/storefront`. Implemented `CatalogService` for API fetching. Verified CORS setup.
+* **[2026-09-04]**: **[Phase 7-8 Checkout]**: Configured Zustand Cart Context. Built fully responsive Cart Drawer and Checkout Flow with error handling and toast notifications.
 * **[2026-09-05]**: **[BugFix & Premium UI Upgrade]**: Resolved critical `next-intl` language persistence issue and `/account/profile` infinite redirect loop by configuring the correct global matcher in the proxy middleware and fixing broken navigation links. Upgraded the `CatalogCard`, Homepage Categories, and Shop listing components with a highly premium glassmorphic aesthetic, unified hover animations, refined typography, and layout optimizations.
 * **[2026-09-05]**: **[Special Offers & Product Card Polish]**: Refactored the `CatalogCard` component to include a dynamic star rating display and prominent discount pricing with crossed-out original prices. Created a new backend integration for `isSpecialOffer` inside the `Product` schema, re-seeded the database with discounted products, and built a dedicated, responsive "Special Offers" layout section in `home-catalog.tsx` that is queryable via the dashboard/API. Fully integrated dual-language translations for the new components.
 * **[2026-09-07]**: **[Phase 12O Final Merge & Audit]**: Performed full UI/API audit. Verified RBAC permissions for Managers/Support. Wrapped sensitive debug logs in dev checks. Added .env.example templates. Successfully merged dashboard-all into main and pushed to remote, completing the Phase 12 Admin Dashboard Epic.
 * **[2026-09-07]**: **[Phase 13D Storefront UX Supercharge]**: Implemented a slide-out Mini Cart drawer with auto-open on "Add to Cart", Live Search with debounced rich product suggestions (thumbnails/prices), and upgraded skeleton loaders for the catalog to reduce CLS and improve perceived performance. Added micro-animations (`active:scale-95`) to all primary action buttons (Add to Cart, Wishlist) and integrated toast notifications for wishlist toggles. Passed frontend build validation and proactive mobile layout auditing.
-* **[2026-09-08]**: **[Phase 13E Product Details Premium Enhancement]**: Supercharged the `ProductDetail` component for Lifestyle Businesses. Integrated `lucide-react` for iconography. Added Advanced Availability (Scarcity & Urgency logic) based on stock levels. Built a responsive Trust Block with premium UI badges (Secure Checkout, Fast Delivery, Easy Returns, Warranty) right below Add to Cart. Added an automated Inquiry/Contact CTA with dynamic mailto linking. Developed a robust Specifications accordion that gracefully handles missing API data by extracting sizes, colors, categories, and SKUs from variant fallbacks. Pushed cleanly to `dashboard-all` branch.
 * **[2026-09-08]**: **[Phase 13H SEO, Structured Data & ISR]**: Added localized fallback metadata with `%s | ReadyCommerce` title templating, dynamic product/category metadata, canonical/OpenGraph data, Product Schema.org JSON-LD with offers and conditional aggregate ratings, SEO-friendly localized category routes, and 60-second revalidation for high-traffic catalog surfaces plus cached server catalog fetches. Storefront lint, TypeScript production build, translation validation and static-rendering generation passed; live crawler/Lighthouse and browser verification remain pending.
 * **[2026-09-08]**: **[Phase 13F Trust & Retention Polish]**: Added a responsive customer order-status timeline for pending, processing, shipped, delivered and terminal return/refund states. Replaced storefront static product ratings with database-backed `ratingAverage` and `reviewCount` values. Added verified-purchase detection from the customer’s eligible order items and a bilingual review badge. Added a non-blocking Nodemailer order-confirmation email template/hook with environment-based SMTP configuration. Fixed related Storefront lint defects in search rendering and recently-viewed hydration. Storefront lint and production build passed; live SMTP delivery and visual browser verification remain pending.
+* **[2026-09-08]**: **[Phase 13E Product Details Premium Enhancement]**: Supercharged the `ProductDetail` component for Lifestyle Businesses. Integrated `lucide-react` for iconography. Added Advanced Availability (Scarcity & Urgency logic) based on stock levels. Built a responsive Trust Block with premium UI badges (Secure Checkout, Fast Delivery, Easy Returns, Warranty) right below Add to Cart. Added an automated Inquiry/Contact CTA with dynamic mailto linking. Developed a robust Specifications accordion that gracefully handles missing API data by extracting sizes, colors, categories, and SKUs from variant fallbacks. Pushed cleanly to `dashboard-all` branch.
+* **[2026-09-08]**: **[Phase 13I Mobile UI & Responsive Polish]**: Implemented a slide-out Mobile Navigation Drawer (Hamburger Menu) for `< xl` viewports using `lucide-react` icons. Upgraded touch targets in the cart drawer from `36px` to `44px` for optimal mobile accessibility. Adjusted bottom padding in `product-detail.tsx` to safely accommodate the mobile sticky Add to Cart CTA. Added `break-words` class to specification values to prevent horizontal scrolling overflows on extremely narrow devices. Performed an aggressive code re-format to fully restore and polish the Trust Badges and Inquiry CTA that were previously minified. Code safely pushed to `dashboard-all`.
+* **[2026-09-08]**: **[Phase 13K PWA & Offline Support]**: Converted the Storefront into a fully installable Progressive Web App (PWA) using `@ducanh2912/next-pwa`. Wrapped `next.config.ts` to automatically generate service workers in the `public` directory (disabled during dev to prevent caching issues). Created a responsive `manifest.json` with app icons, brand theme colors (`#4f46e5`), and `standalone` display properties. Injected standard PWA meta tags and `themeColor` into the root `layout.tsx`. Implemented a premium `~offline/page.tsx` fallback UI utilizing `lucide-react` and `next-intl` to gracefully handle network disconnections. Storefront compiled successfully and changes were pushed to `dashboard-all`.

@@ -20,8 +20,18 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
   title: { default: 'ReadyCommerce', template: '%s | ReadyCommerce' },
   description: 'Premium beauty, fragrance and lifestyle essentials for considered everyday rituals.',
+  manifest: "/manifest.json",
   openGraph: { type: 'website', siteName: 'ReadyCommerce', title: 'ReadyCommerce', description: 'Premium beauty, fragrance and lifestyle essentials.' },
   twitter: { card: 'summary_large_image', title: 'ReadyCommerce', description: 'Premium beauty, fragrance and lifestyle essentials.' },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "ReadyCommerce",
+  },
+};
+
+export const viewport = {
+  themeColor: "#4f46e5",
 };
 
 export default async function RootLayout({
