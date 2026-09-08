@@ -26,4 +26,20 @@ const authorize = (...roles) => {
   );
 };
 
-module.exports = { authMiddleware, authorize, normalizeRole, STAFF_ROLES };
+const optionalAuth = async (req, res, next) => {
+  try {
+    const token = req.cookies?.rc_access;
+    if (token) {
+      const payload = verifyAccessToken(token);
+      const user = await User.findById(payload.sub);
+      if (user && user.isActive) {
+        req.user = user;
+      }
+    }
+  } catch {
+    // Continue unauthenticated
+  }
+  return next();
+};
+
+module.exports = { authMiddleware, authorize, normalizeRole, STAFF_ROLES, optionalAuth };

@@ -12,6 +12,7 @@ const auditLogger = require('../middlewares/auditLogger');
 const audit = require('../controllers/auditLogController');
 const refund = require('../controllers/adminRefundController');
 const teamRoutes = require('./adminTeamRoutes');
+const adminCampaignRoutes = require('./adminCampaignRoutes');
 const { getAnalytics, exportAnalytics } = require('../controllers/adminAnalyticsController');
 const { createNotification } = require('../utils/notifications');
 
@@ -79,6 +80,7 @@ router.put('/coupons/:id', authorize(...PROMOTION_ROLES), moderation.updateCoupo
 router.delete('/coupons/:id', authorize(...PROMOTION_ROLES), moderation.deleteCoupon);
 router.get('/cms/homepage', authorize(...CMS_ROLES), cms.get);
 router.put('/cms/homepage', authorize(...CMS_ROLES), cms.update);
+router.use('/campaigns', adminCampaignRoutes);
 
 router.get('/settings', authorize(...SUPER_ADMIN), settings.get);
 router.put('/settings', authorize(...SUPER_ADMIN), settings.update);

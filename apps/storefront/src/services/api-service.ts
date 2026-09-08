@@ -72,3 +72,66 @@ export const leadService = {
       body: JSON.stringify(payload),
     }),
 };
+
+export type PublicCampaignData = {
+  _id: string;
+  title: string;
+  slug: string;
+  status: 'draft' | 'scheduled' | 'active' | 'expired' | 'archived';
+  configuredStatus: string;
+  startsAt?: string;
+  expiresAt?: string;
+  serverTime: string;
+  showCountdown: boolean;
+  onExpiryAction: string;
+  badgeText: string;
+  headline: string;
+  subheadline: string;
+  offerPrice: number;
+  regularPrice: number;
+  discountPercentage: number;
+  ctaText: string;
+  ctaSubtext: string;
+  bannerImage: string;
+  mobileBannerImage: string;
+  galleryImages: string[];
+  benefits: Array<{ icon: string; title: string; description: string }>;
+  specifications: Array<{ name: string; value: string }>;
+  product: {
+    _id: string;
+    name: string;
+    slug: string;
+    ratingAverage: number;
+    reviewCount: number;
+    category?: { name: string; slug: string };
+    variants: Array<{ _id: string; sku: string; name: string; price: number; stock: number; size?: string; color?: string }>;
+    inStock: boolean;
+  };
+  recommendedProducts?: CatalogProduct[];
+  seo: {
+    metaTitle: string;
+    metaDescription: string;
+    canonicalUrl?: string;
+    ogTitle: string;
+    ogDescription: string;
+    ogImage: string;
+    twitterCard: string;
+  };
+  isPreview?: boolean;
+  expired?: boolean;
+  action?: string;
+  targetUrl?: string;
+};
+
+export const campaignService = {
+  getBySlug: async (slug: string, options?: ApiRequestInit) =>
+    request<{ success: boolean; data: PublicCampaignData }>(`/campaigns/${encodeURIComponent(slug)}`, options),
+  getPreview: async (slug: string, token: string, options?: ApiRequestInit) =>
+    request<{ success: boolean; data: PublicCampaignData }>(`/campaigns/${encodeURIComponent(slug)}/preview?token=${encodeURIComponent(token)}`, options),
+  trackAction: async (slug: string, actionType: 'view' | 'cta_click' | 'add_to_cart' | 'checkout', metadata?: Record<string, any>) =>
+    request<{ success: boolean }>(`/campaigns/${encodeURIComponent(slug)}/track`, {
+      method: 'POST',
+      body: JSON.stringify({ actionType, metadata }),
+    }),
+};
+

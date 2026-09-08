@@ -107,3 +107,93 @@ export const adminNotificationService = {
   markRead: (id:string) => request<{success:boolean;data:AdminNotification}>(`/admin/notifications/${encodeURIComponent(id)}/read`,{method:'PUT'}),
   markAllRead: () => request<{success:boolean;data:{updated:number}}>('/admin/notifications/read-all',{method:'PUT'}),
 };
+
+export type AdminCampaign = {
+  _id: string;
+  title: string;
+  slug: string;
+  status: 'draft' | 'scheduled' | 'active' | 'expired' | 'archived';
+  liveStatus?: 'draft' | 'scheduled' | 'active' | 'expired' | 'archived';
+  product: { _id: string; name: string; basePrice: number; discountPrice?: number; images: string[]; category?: any; variants?: any[] };
+  selectedVariants?: string[];
+  headline?: string;
+  subheadline?: string;
+  badgeText?: string;
+  offerPrice?: number;
+  discountPercentage?: number;
+  ctaText?: string;
+  ctaSubtext?: string;
+  bannerImage?: string;
+  mobileBannerImage?: string;
+  galleryImages?: string[];
+  benefits?: Array<{ icon: string; title: string; description?: string }>;
+  specifications?: Array<{ label: string; value: string }>;
+  startsAt: string;
+  expiresAt: string;
+  showCountdown: boolean;
+  onExpiryAction: 'show_expired_page' | 'redirect_product' | 'redirect_home';
+  recommendedProducts?: Array<{ _id: string; name: string; basePrice: number; images: string[] }>;
+  seo?: {
+    metaTitle?: string;
+    metaDescription?: string;
+    canonicalUrl?: string;
+    ogTitle?: string;
+    ogDescription?: string;
+    ogImage?: string;
+    twitterCard?: string;
+  };
+  previewToken?: string;
+  analytics?: { views: number; clicks: number; conversions: number };
+  createdAt: string;
+  updatedAt: string;
+};
+
+export const adminCampaignService = {
+  list: (params: Record<string, string | number | undefined> = {}) => {
+    const query = new URLSearchParams(
+      Object.entries(params)
+        .filter(([, v]) => v !== undefined && v !== '')
+        .map(([k, v]) => [k, String(v)])
+    );
+    return request<{
+      success: boolean;
+      data: AdminCampaign[];
+      pagination: { page: number; limit: number; total: number; pages: number };
+    }>(`/admin/campaigns?${query}`);
+  },
+  get: (id: string) => request<{ success: boolean; data: AdminCampaign }>(`/admin/campaigns/${encodeURIComponent(id)}`),
+  create: (payload: Partial<AdminCampaign>) =>
+    request<{ success: boolean; message: string; data: AdminCampaign }>('/admin/campaigns', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+  update: (id: string, payload: Partial<AdminCampaign>) =>
+    request<{ success: boolean; message: string; data: AdminCampaign }>(`/admin/campaigns/${encodeURIComponent(id)}`, {
+      method: 'PUT',
+      body: JSON.stringify(payload),
+    }),
+  publish: (id: string) =>
+    request<{ success: boolean; message: string; data: { status: string; liveStatus: string } }>(
+      `/admin/campaigns/${encodeURIComponent(id)}/publish`,
+      { method: 'POST' }
+    ),
+  unpublish: (id: string) =>
+    request<{ success: boolean; message: string; data: { status: string } }>(
+      `/admin/campaigns/${encodeURIComponent(id)}/unpublish`,
+      { method: 'POST' }
+    ),
+  duplicate: (id: string) =>
+    request<{ success: boolean; message: string; data: AdminCampaign }>(
+      `/admin/campaigns/${encodeURIComponent(id)}/duplicate`,
+      { method: 'POST' }
+    ),
+  archive: (id: string) =>
+    request<{ success: boolean; message: string; data: { status: string } }>(
+      `/admin/campaigns/${encodeURIComponent(id)}/archive`,
+      { method: 'PUT' }
+    ),
+  delete: (id: string) =>
+    request<{ success: boolean; message: string }>(`/admin/campaigns/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    }),
+};

@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import toast from 'react-hot-toast';
 import {
   Archive, BarChart3, Bell, CreditCard, FileText, Home, Image, Layout, Menu,
-  Package, Percent, RotateCcw, Settings, Shield, ShoppingCart, Star, Tags, Users, X,
+  Package, Percent, RotateCcw, Settings, Shield, ShoppingCart, Sparkles, Star, Tags, Users, X,
   type LucideIcon,
 } from 'lucide-react';
 import { ErrorState, Skeleton } from './ui/primitives';
@@ -33,7 +33,7 @@ const copy = {
     comingSoon: '🚀 This module is under development and coming soon!',
     nav: {
       overview: 'Overview', orders: 'Orders', payments: 'Payments', products: 'Products', categories: 'Categories',
-      inventory: 'Inventory', customers: 'Customers', reviews: 'Reviews', coupons: 'Coupons & Promotions', cms: 'Website CMS',
+      inventory: 'Inventory', customers: 'Customers', reviews: 'Reviews', coupons: 'Coupons & Promotions', campaigns: 'Campaigns & Landing', cms: 'Website CMS',
       media: 'Media Library', analytics: 'Analytics & Reports', returns: 'Returns & Refunds', notifications: 'Notifications',
       team: 'Team & Roles', settings: 'Settings', audit: 'Audit Logs',
     },
@@ -45,7 +45,7 @@ const copy = {
     verifyError: 'অ্যাডমিন সেশন যাচাই করা যায়নি।', comingSoon: '🚀 এই মডিউলটি নির্মাণাধীন এবং শীঘ্রই আসছে!',
     nav: {
       overview: 'ওভারভিউ', orders: 'অর্ডার', payments: 'পেমেন্ট', products: 'পণ্য', categories: 'ক্যাটাগরি',
-      inventory: 'ইনভেন্টরি', customers: 'কাস্টমার', reviews: 'রিভিউ', coupons: 'কুপন ও প্রোমোশন', cms: 'ওয়েবসাইট CMS',
+      inventory: 'ইনভেন্টরি', customers: 'কাস্টমার', reviews: 'রিভিউ', coupons: 'কুপন ও প্রোমোশন', campaigns: 'ক্যাম্পেইন ও ল্যান্ডিং', cms: 'ওয়েবসাইট CMS',
       media: 'মিডিয়া লাইব্রেরি', analytics: 'অ্যানালিটিক্স ও রিপোর্ট', returns: 'রিটার্ন ও রিফান্ড',
       notifications: 'নোটিফিকেশন', team: 'টিম ও রোল', settings: 'সেটিংস', audit: 'অডিট লগ',
     },
@@ -62,6 +62,7 @@ const navItems: NavItem[] = [
   { key: 'customers', icon: Users, href: '/customers', roles: CUSTOMER_ROLES },
   { key: 'reviews', icon: Star, href: '/reviews', roles: ALL_STAFF },
   { key: 'coupons', icon: Percent, href: '/coupons', roles: CONTENT_ROLES },
+  { key: 'campaigns', icon: Sparkles, href: '/campaigns', roles: CONTENT_ROLES },
   { key: 'cms', icon: Layout, href: '/cms', roles: ['super-admin', 'editor'] },
   { key: 'media', icon: Image, href: '/media-library', roles: ['super-admin', 'editor'] },
   { key: 'analytics', icon: BarChart3, href: '/analytics', roles: ['super-admin', 'manager'] },
