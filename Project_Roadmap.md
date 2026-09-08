@@ -294,3 +294,13 @@ The Admin Dashboard must not begin until Phase 12's Storefront Production Gate p
 - [x] Added localized `/categories/[slug]` routes and connected homepage category cards to them.
 - [x] Added 60-second route revalidation and cached server catalog fetches for high-traffic catalog surfaces.
 - [ ] Complete live Google Rich Results validation, sitemap/robots expansion, Lighthouse measurement and production CDN cache verification.
+
+## Phase 13L Hybrid Wishlist Architecture (2026-09-08)
+
+- [x] Added protected `GET /api/wishlist`, `POST /api/wishlist/toggle`, and `POST /api/wishlist/sync` endpoints.
+- [x] Added active-product validation, duplicate-safe database merging and stale-product filtering.
+- [x] Preserved LocalStorage wishlist behavior for guests.
+- [x] Added authenticated session restoration and login/register synchronization from LocalStorage to MongoDB.
+- [x] Added optimistic wishlist UI with pending state, backend persistence and rollback on failure.
+- [x] Fixed the protected `/orders/myorders` route precedence bug discovered during the related-flow scan.
+- [ ] Complete live MongoDB wishlist E2E, logout/login multi-device conflict testing and visual browser/device verification.

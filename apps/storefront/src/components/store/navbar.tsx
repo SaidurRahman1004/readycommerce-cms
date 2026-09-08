@@ -19,7 +19,8 @@ export default function Navbar({ locale }: { locale: string }) {
 
   // Close mobile menu when route changes
   useEffect(() => {
-    setMobileMenuOpen(false);
+    const timer = window.setTimeout(() => setMobileMenuOpen(false), 0);
+    return () => window.clearTimeout(timer);
   }, [pathname]);
 
   return (
