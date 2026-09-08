@@ -1,4 +1,5 @@
 {
+  "Phase13F": {"verifiedPurchase": "যাচাইকৃত ক্রয়", "customer": "ক্রেতা", "loadError": "রিভিউ লোড করা যায়নি।", "validation": "কমপক্ষে ৩টি অক্ষর লিখুন।", "success": "রিভিউ সফলভাবে জমা হয়েছে।", "error": "রিভিউ জমা দেওয়া যায়নি।", "empty": "এখনও কোনো রিভিউ নেই।", "write": "আপনার অভিজ্ঞতা শেয়ার করুন", "placeholder": "অন্য ক্রেতাদের আপনার মতামত জানান…", "submitting": "জমা হচ্ছে…", "submit": "রিভিউ জমা দিন", "reviewCount": "টি রিভিউ", "noReviews": "এখনও কোনো রিভিউ নেই", "outOfStock": "স্টক শেষ", "inStock": "স্টকে আছে · {count}টি উপলব্ধ", "status": {"pending": "অপেক্ষমাণ", "processing": "প্রক্রিয়াধীন", "shipped": "পাঠানো হয়েছে", "delivered": "ডেলিভারি সম্পন্ন", "cancelled": "বাতিল", "returned": "ফেরত", "refunded": "অর্থ ফেরত", "confirmed": "নিশ্চিত"}},
   "Coupon": {"label": "প্রোমো কোড", "placeholder": "কোড লিখুন", "apply": "প্রয়োগ করুন", "applied": "প্রোমো কোড প্রয়োগ হয়েছে", "invalid": "অবৈধ বা মেয়াদোত্তীর্ণ প্রোমো কোড"},
   "HomePage": {"title": "ReadyCommerce", "description": "আধুনিক লাইফস্টাইল ব্র্যান্ডের জন্য প্রিমিয়াম কমার্স অভিজ্ঞতা।", "languageEnglish": "English", "languageBengali": "বাংলা"},
   "Storefront": {

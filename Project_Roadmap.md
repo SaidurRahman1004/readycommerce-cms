@@ -228,6 +228,15 @@ The Admin Dashboard must not begin until Phase 12's Storefront Production Gate p
 - [x] Connected new-order, low-stock/inventory adjustment and return-request event producers to the notification utility.
 - [ ] Notification preferences and visual browser verification remain pending.
 
+## Phase 13F Trust & Retention Polish (2026-09-08)
+
+- [x] Added responsive visual order tracking timeline in the customer account orders view.
+- [x] Connected product cards and PDP to authoritative product rating averages and review counts.
+- [x] Added database-backed verified-purchase flags and bilingual verified badges to product reviews.
+- [x] Added environment-configured Nodemailer order-confirmation email template and non-blocking order hook.
+- [x] Fixed related Storefront lint issues and verified the production build.
+- [ ] Configure production SMTP credentials, perform live email delivery verification, and complete visual browser/device QA.
+
 ## Phase 12K Team & Roles / RBAC (2026-09-06)
 
 - [x] Expanded the staff role model to `super-admin`, `manager`, `editor`, and `support`, retaining safe compatibility for legacy `admin` accounts.

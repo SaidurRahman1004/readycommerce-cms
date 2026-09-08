@@ -144,7 +144,7 @@ export function CommandPalette() {
             </div>
           ) : results && flatItems.length === 0 ? (
             <div className="py-14 text-center text-slate-500">
-              No results found for "<span className="text-slate-900 font-medium">{query}</span>"
+              No results found for &quot;<span className="text-slate-900 font-medium">{query}</span>&quot;
             </div>
           ) : (
             <div className="px-2">

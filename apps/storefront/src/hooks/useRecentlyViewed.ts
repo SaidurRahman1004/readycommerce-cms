@@ -8,14 +8,18 @@ export function useRecentlyViewed() {
   const [recentlyViewed, setRecentlyViewed] = useState<CatalogProduct[]>([]);
 
   useEffect(() => {
+    let active = true;
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
-        setRecentlyViewed(JSON.parse(stored));
+        const parsed: unknown = JSON.parse(stored);
+        const items = Array.isArray(parsed) ? parsed.filter((item): item is CatalogProduct => Boolean(item) && typeof item === 'object' && typeof (item as CatalogProduct)._id === 'string') : [];
+        window.setTimeout(() => { if (active) setRecentlyViewed(items); }, 0);
       }
     } catch (err) {
       console.error('Failed to parse recently viewed items', err);
     }
+    return () => { active = false; };
   }, []);
 
   const addProduct = (product: CatalogProduct) => {

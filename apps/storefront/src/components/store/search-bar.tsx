@@ -87,7 +87,7 @@ export default function SearchBar() {
             onClick={submit} 
             className="mt-2 block w-full rounded-lg bg-primary/5 py-2.5 text-center text-[13px] font-bold text-primary transition-colors hover:bg-primary/10"
           >
-            View all results for "{query}"
+            View all results for &quot;{query}&quot;
           </button>
         </div>
       )}

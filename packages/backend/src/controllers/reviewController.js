@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const Review = require('../models/Review');
 const Product = require('../models/Product');
 const { AppError } = require('../middlewares/errorHandler');
+const { client: redis } = require('../config/redis');
 
 const listReviews = async (req, res, next) => { try { if (!mongoose.isValidObjectId(req.params.productId)) return next(new AppError('Product not found.', 404, 'PRODUCT_NOT_FOUND')); const reviews = await Review.find({ product: req.params.productId, status: 'approved' }).populate('user', 'firstName lastName').sort({ createdAt: -1 }).lean(); return res.json({ success: true, data: reviews }); } catch (error) { return next(error); } };
 const createReview = async (req, res, next) => {
@@ -17,6 +18,7 @@ const createReview = async (req, res, next) => {
     const eligibleOrders = await Order.find({
       user: req.user._id,
       status: { $in: ['confirmed', 'processing', 'shipped', 'delivered'] },
+      paymentStatus: { $in: ['authorized', 'paid'] },
     }).select('_id').lean();
     const verifiedOrder = eligibleOrders.length
       ? await OrderItem.findOne({ order: { $in: eligibleOrders.map((order) => order._id) }, product: productId }).select('order').lean()
@@ -37,6 +39,10 @@ const createReview = async (req, res, next) => {
     product.ratingAverage = Number(summary.average.toFixed(2));
     product.reviewCount = summary.count;
     await product.save();
+    if (redis && redis.status === 'ready') {
+      const catalogKeys = await redis.keys(`catalog:products:*`);
+      await Promise.all([redis.del(`catalog:product:${productId}`, `catalog:product:${productId}:related`), catalogKeys.length ? redis.del(...catalogKeys) : Promise.resolve()]);
+    }
     return res.status(201).json({ success: true, data: review });
   } catch (error) { return next(error); }
 };
