@@ -66,7 +66,7 @@ export default function OrdersClient() {
     if (status) params.append('status', status);
     if (paymentStatus) params.append('paymentStatus', paymentStatus);
     if (search) params.append('search', search);
-    window.location.href = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/admin/orders/export?${params.toString()}`;
+    window.location.href = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}/admin/orders/export?${params.toString()}`;
   };
   return (
     <section className="mx-auto max-w-7xl pb-24">
