@@ -63,3 +63,12 @@ export type CustomerOrder = { _id: string; orderNumber: string; status: string; 
 export const userService = { profile: async () => request<{success: boolean; user: AuthUser}>('/users/profile'), updateProfile: async (payload: {firstName: string; lastName: string; phone: string}) => request<{success: boolean; user: AuthUser}>('/users/profile', {method: 'PUT', body: JSON.stringify(payload)}) };
 export type ProductReview = { _id: string; rating: number; title?: string; body: string; createdAt: string; isVerifiedPurchase?: boolean; user?: { firstName: string; lastName: string } };
 export const reviewService = { list: async (productId: string) => request<{success: boolean; data: ProductReview[]}>(`/reviews/${encodeURIComponent(productId)}`), create: async (payload: {productId: string; rating: number; title?: string; body: string}) => request<{success: boolean; data: ProductReview}>('/reviews', {method: 'POST', body: JSON.stringify(payload)}) };
+export type RestockLeadPayload = { email: string; productId: string; variantId?: string | null };
+export type RestockLeadResponse = { success: boolean; message: string; alreadySubscribed?: boolean; data?: any };
+export const leadService = {
+  notifyRestock: async (payload: RestockLeadPayload) =>
+    request<RestockLeadResponse>('/leads/restock', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    }),
+};

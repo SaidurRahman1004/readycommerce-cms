@@ -3,12 +3,14 @@
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { catalogService, CatalogProduct } from '@/services/api-service';
+import toast from 'react-hot-toast';
+import { catalogService, CatalogProduct, leadService } from '@/services/api-service';
 import { useCart } from './cart-context';
+import { useAuth } from '@/components/auth/auth-context';
 import WishlistButton from './wishlist-button';
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 import CatalogCard from './catalog-card';
-import { ShieldCheck, Truck, RefreshCcw, Award, HelpCircle } from 'lucide-react';
+import { ShieldCheck, Truck, RefreshCcw, Award, HelpCircle, Bell, Mail, CheckCircle2, Loader2 } from 'lucide-react';
 
 function DetailSkeleton() { return <main className="mx-auto grid max-w-7xl animate-pulse gap-10 px-5 py-10 lg:grid-cols-2 lg:px-10 lg:py-16"><div className="aspect-square rounded-[2rem] bg-muted" /><div className="space-y-5 py-8"><div className="h-5 w-1/3 rounded bg-muted" /><div className="h-14 w-4/5 rounded bg-muted" /><div className="h-8 w-1/4 rounded bg-muted" /><div className="h-32 rounded bg-muted" /></div></main>; }
 
@@ -26,6 +28,20 @@ export default function ProductDetail({ productId }: { productId: string }) {
   const [variant, setVariant] = useState('');
   const [open, setOpen] = useState('description');
   const { recentlyViewed, addProduct } = useRecentlyViewed();
+  const { user } = useAuth();
+  const [notifyEmail, setNotifyEmail] = useState('');
+  const [submittingLead, setSubmittingLead] = useState(false);
+  const [leadSubscribed, setLeadSubscribed] = useState(false);
+
+  useEffect(() => {
+    if (user?.email && !notifyEmail) {
+      setNotifyEmail(user.email);
+    }
+  }, [user?.email, notifyEmail]);
+
+  useEffect(() => {
+    setLeadSubscribed(false);
+  }, [variant]);
 
   useEffect(() => {
     let mounted = true;
@@ -45,6 +61,25 @@ export default function ProductDetail({ productId }: { productId: string }) {
   const stock = selected?.stock ?? 0;
   const price = selected?.price || product.discountPrice || product.basePrice;
   const add = () => { if (selected && stock > 0) void addItem(product._id, quantity, { price, name: product.name, image: gallery[0] }, selected._id); };
+  const handleNotifyRestock = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!product || !notifyEmail.trim()) return;
+
+    setSubmittingLead(true);
+    try {
+      const response = await leadService.notifyRestock({
+        email: notifyEmail.trim(),
+        productId: product._id,
+        variantId: selected?._id || null,
+      });
+      toast.success(response?.message || "We'll notify you!");
+      setLeadSubscribed(true);
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to submit restock notification. Please try again.');
+    } finally {
+      setSubmittingLead(false);
+    }
+  };
   const stars = Math.round(product.ratingAverage || 0);
 
   return (
@@ -95,16 +130,64 @@ export default function ProductDetail({ productId }: { productId: string }) {
             </div>
           </div>
           
-          <div className="mt-8 flex gap-4">
-            <div className="flex h-14 w-32 items-center justify-between rounded-xl border border-border bg-surface px-1">
-              <button type="button" aria-label={t('pdp.decrease')} onClick={() => setQuantity((value) => Math.max(1, value - 1))} className="flex h-10 w-10 items-center justify-center text-lg">−</button>
-              <span className="w-8 text-center text-[15px] font-bold">{quantity}</span>
-              <button type="button" aria-label={t('pdp.increase')} onClick={() => setQuantity((value) => Math.min(stock || 1, value + 1))} className="flex h-10 w-10 items-center justify-center text-lg">+</button>
+          {stock > 0 ? (
+            <div className="mt-8 flex gap-4">
+              <div className="flex h-14 w-32 items-center justify-between rounded-xl border border-border bg-surface px-1">
+                <button type="button" aria-label={t('pdp.decrease')} onClick={() => setQuantity((value) => Math.max(1, value - 1))} className="flex h-10 w-10 items-center justify-center text-lg">−</button>
+                <span className="w-8 text-center text-[15px] font-bold">{quantity}</span>
+                <button type="button" aria-label={t('pdp.increase')} onClick={() => setQuantity((value) => Math.min(stock || 1, value + 1))} className="flex h-10 w-10 items-center justify-center text-lg">+</button>
+              </div>
+              <button type="button" onClick={add} className="hidden h-14 flex-1 rounded-xl bg-primary px-6 text-[15px] font-bold text-white shadow-premium transition-all hover:-translate-y-0.5 active:scale-95 sm:block">
+                {t('products.addToCart')}
+              </button>
             </div>
-            <button type="button" disabled={!stock} onClick={add} className="hidden h-14 flex-1 rounded-xl bg-primary px-6 text-[15px] font-bold text-white shadow-premium transition-all hover:-translate-y-0.5 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 sm:block">
-              {stock ? t('products.addToCart') : t13('outOfStock')}
-            </button>
-          </div>
+          ) : (
+            <div className="mt-8 rounded-2xl border border-border/80 bg-surface/80 p-5 shadow-sm backdrop-blur-sm transition-all">
+              <div className="flex items-center gap-2 text-[15px] font-bold text-foreground">
+                <Bell className="h-4 w-4 text-primary animate-pulse" />
+                <span>Restock Notification</span>
+              </div>
+              <p className="mt-1 text-[13px] text-muted-foreground">
+                Leave your email and we&apos;ll alert you immediately when this item is back in stock.
+              </p>
+
+              {leadSubscribed ? (
+                <div className="mt-4 flex items-center gap-2.5 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-emerald-700 dark:text-emerald-400">
+                  <CheckCircle2 className="h-5 w-5 shrink-0" />
+                  <span>We&apos;ll notify you when available!</span>
+                </div>
+              ) : (
+                <form onSubmit={handleNotifyRestock} className="mt-4 flex flex-col gap-3 sm:flex-row">
+                  <div className="relative min-w-0 flex-1">
+                    <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <input
+                      type="email"
+                      required
+                      value={notifyEmail}
+                      onChange={(e) => setNotifyEmail(e.target.value)}
+                      placeholder="Enter your email..."
+                      disabled={submittingLead}
+                      className="h-12 w-full rounded-xl border border-border bg-background pl-10 pr-4 text-[14px] text-foreground placeholder:text-muted-foreground outline-none transition-all focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:opacity-50"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={submittingLead || !notifyEmail.trim()}
+                    className="flex h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-primary px-5 text-[14px] font-bold text-white shadow-premium transition-all hover:-translate-y-0.5 active:scale-95 disabled:pointer-events-none disabled:opacity-50"
+                  >
+                    {submittingLead ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Submitting...</span>
+                      </>
+                    ) : (
+                      <span>🔔 Notify me when available</span>
+                    )}
+                  </button>
+                </form>
+              )}
+            </div>
+          )}
 
           {/* Trust Badges */}
           <div className="mt-8 grid grid-cols-2 gap-4 rounded-2xl border border-border/60 bg-surface/50 p-5 sm:grid-cols-4">
@@ -173,11 +256,13 @@ export default function ProductDetail({ productId }: { productId: string }) {
         </section>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/90 p-4 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] backdrop-blur-xl sm:hidden">
-        <button type="button" disabled={!stock} onClick={add} className="h-14 w-full rounded-xl bg-primary text-[15px] font-bold text-white shadow-premium active:scale-95 disabled:opacity-50">
-          {stock ? `${t('products.addToCart')} - ৳${(price * quantity).toLocaleString()}` : t13('outOfStock')}
-        </button>
-      </div>
+      {stock > 0 && (
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background/90 p-4 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] backdrop-blur-xl sm:hidden">
+          <button type="button" onClick={add} className="h-14 w-full rounded-xl bg-primary text-[15px] font-bold text-white shadow-premium active:scale-95">
+            {`${t('products.addToCart')} - ৳${(price * quantity).toLocaleString()}`}
+          </button>
+        </div>
+      )}
 
       {(loadingRelated || related.length > 0) && (
         <div className="mx-auto mt-16 max-w-7xl border-t border-border px-5 pt-16 sm:px-8 lg:px-10 lg:pt-24">
