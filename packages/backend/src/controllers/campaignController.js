@@ -19,12 +19,20 @@ const computeLiveStatus = (campaign, now = new Date()) => {
     return 'expired';
   }
 
-  if (currentTime < startTime) {
-    return 'scheduled';
-  }
   if (currentTime > expiryTime) {
     return 'expired';
   }
+
+  // If status is explicitly active, don't let clock skew or start-of-day/future-hour timezone offset block it
+  if (campaign.status === 'active') {
+    return 'active';
+  }
+
+  // If status is scheduled or start time is still in the future (beyond 5m grace), it's scheduled
+  if (campaign.status === 'scheduled' || currentTime < startTime - (5 * 60 * 1000)) {
+    return 'scheduled';
+  }
+
   return 'active';
 };
 
@@ -144,9 +152,10 @@ const serializeCampaignResponse = async (campaignDoc, liveStatus) => {
 const getPublicCampaign = async (req, res, next) => {
   try {
     const { slug } = req.params;
+    const token = req.query.token || req.query.previewToken || req.query.preview_token;
     const cacheKey = `campaign:slug:${slug}`;
 
-    if (redis && redis.status === 'ready') {
+    if (!token && redis && redis.status === 'ready') {
       const cached = await redis.get(cacheKey);
       if (cached) {
         res.set('X-Cache', 'HIT');
@@ -165,32 +174,40 @@ const getPublicCampaign = async (req, res, next) => {
     }
 
     const liveStatus = computeLiveStatus(campaign);
+    const isTokenPreview = Boolean(token && campaign.previewToken && token === campaign.previewToken);
 
-    if (liveStatus === 'draft' || liveStatus === 'archived') {
-      return next(new AppError('Campaign not found.', 404, 'CAMPAIGN_NOT_FOUND'));
+    if (!isTokenPreview) {
+      if (liveStatus === 'draft' || liveStatus === 'archived') {
+        return next(new AppError('Campaign not found.', 404, 'CAMPAIGN_NOT_FOUND'));
+      }
+
+      if (liveStatus === 'scheduled') {
+        return next(new AppError('This campaign has not started yet.', 404, 'CAMPAIGN_NOT_STARTED'));
+      }
+
+      if (liveStatus === 'expired' && campaign.onExpiryAction !== 'show_expired_page') {
+        return res.json({
+          success: true,
+          data: {
+            expired: true,
+            action: campaign.onExpiryAction,
+            targetUrl: campaign.onExpiryAction === 'redirect_product' ? `/products/${campaign.product._id}` : '/',
+          },
+        });
+      }
     }
 
-    if (liveStatus === 'scheduled') {
-      return next(new AppError('This campaign has not started yet.', 404, 'CAMPAIGN_NOT_STARTED'));
-    }
-
-    if (liveStatus === 'expired' && campaign.onExpiryAction !== 'show_expired_page') {
-      return res.json({
-        success: true,
-        data: {
-          expired: true,
-          action: campaign.onExpiryAction,
-          targetUrl: campaign.onExpiryAction === 'redirect_product' ? `/products/${campaign.product._id}` : '/',
-        },
-      });
+    const serialized = await serializeCampaignResponse(campaign, liveStatus);
+    if (isTokenPreview) {
+      serialized.isPreview = true;
     }
 
     const responseData = {
       success: true,
-      data: await serializeCampaignResponse(campaign, liveStatus),
+      data: serialized,
     };
 
-    if (redis && redis.status === 'ready' && liveStatus === 'active') {
+    if (!isTokenPreview && redis && redis.status === 'ready' && liveStatus === 'active') {
       await redis.setex(cacheKey, 3600, JSON.stringify(responseData));
     }
 

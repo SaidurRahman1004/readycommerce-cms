@@ -143,6 +143,7 @@ export type AdminCampaign = {
     twitterCard?: string;
   };
   previewToken?: string;
+  publishImmediately?: boolean;
   analytics?: { views: number; clicks: number; conversions: number };
   createdAt: string;
   updatedAt: string;

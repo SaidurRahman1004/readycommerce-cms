@@ -7,7 +7,9 @@ import Image from 'next/image';
 import toast from 'react-hot-toast';
 import {
   Sparkles, Save, ArrowLeft, Calendar, Tag, Image as ImageIcon,
-  CheckCircle, Plus, Trash2, Globe, Share2, HelpCircle, Eye
+  CheckCircle2, Plus, Trash2, Globe, Share2, HelpCircle, Eye,
+  ExternalLink, Rocket, Clock, ChevronRight, ChevronLeft, DollarSign,
+  AlertCircle, ShieldCheck, Truck, RefreshCcw, CreditCard, Layout
 } from 'lucide-react';
 import { adminCampaignService, catalogService, type AdminCampaign, type CatalogProduct } from '../../services/api-service';
 
@@ -19,16 +21,20 @@ interface CampaignFormProps {
   campaignId?: string;
 }
 
+const STOREFRONT_URL = process.env.NEXT_PUBLIC_STOREFRONT_URL || 'http://localhost:3000';
+
 export default function CampaignForm({ initialData, mode, campaignId }: CampaignFormProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<FormTab>('product');
   const [submitting, setSubmitting] = useState(false);
+  const [submitAction, setSubmitAction] = useState<'draft' | 'publish' | null>(null);
   const [products, setProducts] = useState<CatalogProduct[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
 
   // Form State
   const [title, setTitle] = useState(initialData?.title || '');
   const [slug, setSlug] = useState(initialData?.slug || '');
+  const [currentStatus, setCurrentStatus] = useState(initialData?.status || 'draft');
   const [productId, setProductId] = useState(
     typeof initialData?.product === 'string' ? initialData.product : initialData?.product?._id || ''
   );
@@ -135,8 +141,8 @@ export default function CampaignForm({ initialData, mode, campaignId }: Campaign
     setSpecifications(specifications.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Submit Handler: supports saving as Draft or Publishing immediately
+  const handleFormSubmit = async (publishImmediately: boolean) => {
     if (!title.trim()) {
       toast.error('Campaign title is required.');
       setActiveTab('product');
@@ -157,12 +163,14 @@ export default function CampaignForm({ initialData, mode, campaignId }: Campaign
     const endUtc = new Date(expiresAt).toISOString();
 
     if (new Date(endUtc) <= new Date(startUtc)) {
-      toast.error('End date must be strictly after start date.');
+      toast.error('Campaign end date must be strictly after start date.');
       setActiveTab('schedule');
       return;
     }
 
     setSubmitting(true);
+    setSubmitAction(publishImmediately ? 'publish' : 'draft');
+
     try {
       const payload: any = {
         title: title.trim(),
@@ -181,10 +189,12 @@ export default function CampaignForm({ initialData, mode, campaignId }: Campaign
         galleryImages: galleryImages.filter((img) => img.trim() !== ''),
         benefits: benefits.filter((b) => b.title.trim() !== ''),
         specifications: specifications.filter((s) => s.label.trim() !== '' && s.value.trim() !== ''),
-        startsAt: startUtc,
+        startsAt: publishImmediately ? new Date().toISOString() : startUtc,
         expiresAt: endUtc,
         showCountdown,
         onExpiryAction,
+        status: publishImmediately ? 'active' : 'draft',
+        publishImmediately,
         seo: {
           metaTitle: metaTitle.trim() || undefined,
           metaDescription: metaDescription.trim() || undefined,
@@ -194,73 +204,132 @@ export default function CampaignForm({ initialData, mode, campaignId }: Campaign
 
       if (mode === 'create') {
         const res = await adminCampaignService.create(payload);
-        toast.success('Campaign created in draft mode!');
-        router.push(`/campaigns/${res.data._id}/edit`);
+        if (publishImmediately) {
+          toast.success('Campaign created and published live!');
+        } else {
+          toast.success('Campaign created in draft mode.');
+        }
+        router.push(`/campaigns`);
       } else if (campaignId) {
         await adminCampaignService.update(campaignId, payload);
-        toast.success('Campaign changes saved.');
+        if (publishImmediately) {
+          toast.success('Campaign updated and published live!');
+          setCurrentStatus('active');
+        } else {
+          toast.success('Campaign changes saved as draft.');
+          setCurrentStatus('draft');
+        }
         router.push('/campaigns');
       }
     } catch (err: any) {
       toast.error(err?.message || 'Failed to save campaign.');
     } finally {
       setSubmitting(false);
+      setSubmitAction(null);
     }
   };
 
   const tabs: Array<{ id: FormTab; label: string; icon: any }> = [
     { id: 'product', label: '1. Basic & Product', icon: Tag },
-    { id: 'marketing', label: '2. Marketing Copy', icon: Sparkles },
+    { id: 'marketing', label: '2. Offer & Pricing', icon: Sparkles },
     { id: 'schedule', label: '3. Schedule & Timer', icon: Calendar },
     { id: 'media', label: '4. Visual Media', icon: ImageIcon },
-    { id: 'specs', label: '5. Benefits & Specs', icon: CheckCircle },
+    { id: 'specs', label: '5. Benefits & Specs', icon: CheckCircle2 },
     { id: 'seo', label: '6. SEO & Social Preview', icon: Globe },
   ];
 
+  const currentTabIndex = tabs.findIndex((t) => t.id === activeTab);
+
+  // Storefront preview link for edit mode
+  const storefrontPreviewUrl = initialData?.slug
+    ? `${STOREFRONT_URL}/en/campaign/${initialData.slug}${
+        (currentStatus === 'draft' || currentStatus === 'scheduled') && initialData?.previewToken
+          ? `?preview=true&token=${encodeURIComponent(initialData.previewToken)}`
+          : ''
+      }`
+    : null;
+
   return (
-    <form onSubmit={handleSubmit} className="mx-auto max-w-5xl pb-24">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
-          <Link
-            href="/campaigns"
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-white text-slate-500 hover:bg-slate-50"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-          <div>
-            <h1 className="text-2xl font-extrabold tracking-tight text-foreground">
-              {mode === 'create' ? 'Create New Campaign' : `Edit: ${initialData?.title || 'Campaign'}`}
-            </h1>
-            <p className="text-xs text-muted-foreground">
-              Configure targeted landing page settings, pricing override, and conversion elements.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-          {mode === 'edit' && campaignId && (
+    <div className="mx-auto max-w-5xl pb-32">
+      {/* ========================================================================= */}
+      {/* 1. STICKY TOP ACTION BAR                                                  */}
+      {/* ========================================================================= */}
+      <div className="sticky top-0 z-40 -mx-4 mb-6 border-b border-border/80 bg-white/95 px-4 py-3.5 shadow-xs backdrop-blur-md sm:-mx-8 sm:px-8">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
             <Link
-              href={`/campaigns/${campaignId}/preview`}
-              className="inline-flex items-center gap-2 rounded-xl border border-border bg-white px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50"
+              href="/campaigns"
+              className="flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-white text-slate-500 hover:bg-slate-50 hover:text-foreground transition-colors"
+              title="Back to Campaigns"
             >
-              <Eye className="h-4 w-4 text-indigo-600" />
-              <span>Preview Frame</span>
+              <ArrowLeft className="h-4 w-4" />
             </Link>
-          )}
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-lg font-black tracking-tight text-foreground sm:text-xl">
+                  {mode === 'create' ? 'Create New Campaign' : `Edit Campaign`}
+                </h1>
+                <span
+                  className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold ${
+                    currentStatus === 'active'
+                      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                      : 'bg-slate-100 text-slate-600 border border-slate-200'
+                  }`}
+                >
+                  {currentStatus === 'active' && <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />}
+                  {currentStatus === 'active' ? 'Live' : 'Draft'}
+                </span>
+              </div>
+              <p className="hidden text-xs text-muted-foreground sm:block truncate max-w-md">
+                {title || 'Targeted high-converting promotional landing page builder'}
+              </p>
+            </div>
+          </div>
 
-          <button
-            type="submit"
-            disabled={submitting}
-            className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white shadow-premium transition-all hover:-translate-y-0.5 active:scale-95 disabled:opacity-50"
-          >
-            <Save className="h-4 w-4" />
-            <span>{submitting ? 'Saving...' : 'Save Campaign'}</span>
-          </button>
+          <div className="flex items-center gap-2">
+            {storefrontPreviewUrl && (
+              <a
+                href={storefrontPreviewUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hidden md:inline-flex items-center gap-1.5 rounded-xl border border-border bg-white px-3.5 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors"
+                title="View live storefront landing page (appends preview token if draft)"
+              >
+                <Eye className="h-3.5 w-3.5 text-indigo-600" />
+                <span>Open Storefront</span>
+                <ExternalLink className="h-3 w-3 text-slate-400" />
+              </a>
+            )}
+
+            {/* Save Draft Button */}
+            <button
+              type="button"
+              disabled={submitting}
+              onClick={() => handleFormSubmit(false)}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-white px-4 py-2 text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-50 active:scale-95 transition-all disabled:opacity-50"
+            >
+              <Save className="h-3.5 w-3.5 text-slate-500" />
+              <span>{submitting && submitAction === 'draft' ? 'Saving Draft...' : 'Save Draft'}</span>
+            </button>
+
+            {/* Publish Campaign Immediately Button */}
+            <button
+              type="button"
+              disabled={submitting}
+              onClick={() => handleFormSubmit(true)}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-white shadow-premium hover:bg-primary/90 active:scale-95 transition-all disabled:opacity-50"
+            >
+              <Rocket className="h-3.5 w-3.5" />
+              <span>{submitting && submitAction === 'publish' ? 'Publishing...' : 'Publish Campaign'}</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Tabs Navigation */}
-      <div className="mt-8 flex overflow-x-auto rounded-2xl border border-border bg-white/70 p-1.5 shadow-sm [scrollbar-width:none]">
+      {/* ========================================================================= */}
+      {/* 2. TABBED STEP NAVIGATION                                                 */}
+      {/* ========================================================================= */}
+      <div className="mb-6 flex overflow-x-auto rounded-2xl border border-border bg-white/80 p-1.5 shadow-xs [scrollbar-width:none]">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -269,10 +338,10 @@ export default function CampaignForm({ initialData, mode, campaignId }: Campaign
               type="button"
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all ${
+              className={`flex shrink-0 items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
                 isActive
-                  ? 'bg-primary text-white shadow-sm'
-                  : 'text-muted-foreground hover:bg-white hover:text-foreground'
+                  ? 'bg-primary text-white shadow-xs'
+                  : 'text-muted-foreground hover:bg-slate-50 hover:text-foreground'
               }`}
             >
               <Icon className="h-3.5 w-3.5" />
@@ -282,75 +351,103 @@ export default function CampaignForm({ initialData, mode, campaignId }: Campaign
         })}
       </div>
 
-      {/* Tab 1: Product & Basic */}
+      {/* ========================================================================= */}
+      {/* 3. CARD CONTENT SECTIONS                                                  */}
+      {/* ========================================================================= */}
+
+      {/* CARD 1: Basic & Product */}
       {activeTab === 'product' && (
-        <div className="mt-6 space-y-6 rounded-3xl border border-border bg-white/90 p-6 shadow-sm">
-          <div>
-            <h2 className="text-base font-bold text-foreground">Campaign Identification & Product Reference</h2>
-            <p className="text-xs text-muted-foreground">Select the canonical product this campaign promotes.</p>
+        <div className="space-y-6 rounded-3xl border border-border bg-white/95 p-6 sm:p-8 shadow-xs">
+          <div className="flex items-center gap-3 border-b border-border/60 pb-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <Tag className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="text-base font-black text-foreground">Campaign Identification & Target Product</h2>
+              <p className="text-xs text-muted-foreground">Select the canonical product this targeted landing page promotes.</p>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
             <div>
-              <label className="text-xs font-bold text-slate-700">Internal Campaign Title *</label>
+              <label className="text-xs font-bold text-slate-800">
+                Internal Campaign Title <span className="text-rose-500">*</span>
+              </label>
               <input
                 type="text"
                 required
                 value={title}
                 onChange={(e) => handleTitleChange(e.target.value)}
                 placeholder="e.g. Summer Mega Glow Sale 2026"
-                className="mt-1.5 h-11 w-full rounded-xl border border-border bg-white px-3.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="mt-1.5 h-11 w-full rounded-xl border border-border bg-white px-3.5 text-sm font-medium outline-hidden focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
               />
+              <p className="mt-1 text-[11px] text-muted-foreground">Used internally in the dashboard to organize your marketing campaigns.</p>
             </div>
 
             <div>
-              <label className="text-xs font-bold text-slate-700">Landing Page URL Slug *</label>
-              <div className="mt-1.5 flex h-11 items-center rounded-xl border border-border bg-slate-50 px-3 text-xs text-slate-500 font-mono">
-                <span>/campaign/</span>
+              <label className="text-xs font-bold text-slate-800">
+                Landing Page URL Slug <span className="text-rose-500">*</span>
+              </label>
+              <div className="mt-1.5 flex h-11 items-center rounded-xl border border-border bg-slate-50 px-3 text-xs font-mono text-slate-500 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+                <span className="shrink-0 text-slate-400">/campaign/</span>
                 <input
                   type="text"
                   required
                   value={slug}
                   onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]+/g, ''))}
                   placeholder="summer-glow-sale"
-                  className="ml-1 h-full w-full bg-transparent font-bold text-primary outline-none"
+                  className="ml-1 h-full w-full bg-transparent font-bold text-primary outline-hidden"
                 />
               </div>
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                The public URL slug. Lowercase alphanumeric and hyphens only (e.g. <span className="font-mono text-slate-700">/campaign/summer-glow-sale</span>).
+              </p>
             </div>
           </div>
 
           <div>
-            <label className="text-xs font-bold text-slate-700">Select Canonical Product *</label>
+            <label className="text-xs font-bold text-slate-800">
+              Select Canonical Product <span className="text-rose-500">*</span>
+            </label>
             {loadingProducts ? (
               <div className="mt-2 h-11 rounded-xl bg-slate-100 animate-pulse" />
             ) : (
               <select
                 value={productId}
                 onChange={(e) => setProductId(e.target.value)}
-                className="mt-1.5 h-11 w-full rounded-xl border border-border bg-white px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="mt-1.5 h-11 w-full rounded-xl border border-border bg-white px-3 text-sm font-medium outline-hidden focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
               >
                 {products.map((prod) => (
                   <option key={prod._id} value={prod._id}>
-                    {prod.name} (Regular: ৳{prod.basePrice.toLocaleString()})
+                    {prod.name} (Regular Price: ৳{prod.basePrice.toLocaleString()})
                   </option>
                 ))}
               </select>
             )}
+            <p className="mt-1 text-[11px] text-muted-foreground">Orders and payments made on this campaign will deduct stock directly from this product.</p>
           </div>
 
           {selectedProduct && (
-            <div className="rounded-2xl border border-border/80 bg-slate-50/70 p-4">
+            <div className="rounded-2xl border border-emerald-100 bg-emerald-50/40 p-4">
               <div className="flex items-center gap-4">
                 {selectedProduct.images?.[0] && (
-                  <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-white border border-border">
+                  <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-white border border-border shadow-xs">
                     <Image src={selectedProduct.images[0]} alt={selectedProduct.name} fill className="object-cover" />
                   </div>
                 )}
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-wider text-primary">Target Product Linked</p>
-                  <p className="font-bold text-foreground line-clamp-1">{selectedProduct.name}</p>
+                <div className="flex-1">
+                  <span className="inline-flex items-center gap-1 rounded-md bg-emerald-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-800">
+                    Linked Catalog Product
+                  </span>
+                  <p className="mt-1 font-bold text-foreground line-clamp-1">{selectedProduct.name}</p>
                   <p className="text-xs text-muted-foreground">
-                    Base Price: ৳{selectedProduct.basePrice.toLocaleString()} • Category: {selectedProduct.category?.name || 'General'}
+                    Base Price: <span className="font-semibold text-slate-800">৳{selectedProduct.basePrice.toLocaleString()}</span>
+                    {selectedProduct.discountPrice && (
+                      <span className="ml-2 text-emerald-700 font-semibold">
+                        (Discount: ৳{selectedProduct.discountPrice.toLocaleString()})
+                      </span>
+                    )}
+                    {' '}• Category: {selectedProduct.category?.name || 'General'}
                   </p>
                 </div>
               </div>
@@ -359,120 +456,145 @@ export default function CampaignForm({ initialData, mode, campaignId }: Campaign
         </div>
       )}
 
-      {/* Tab 2: Marketing & Offer */}
+      {/* CARD 2: Offer & Pricing */}
       {activeTab === 'marketing' && (
-        <div className="mt-6 space-y-6 rounded-3xl border border-border bg-white/90 p-6 shadow-sm">
-          <div>
-            <h2 className="text-base font-bold text-foreground">Marketing Copy & Promotional Pricing</h2>
-            <p className="text-xs text-muted-foreground">Override headlines, badge text, and offer pricing.</p>
+        <div className="space-y-6 rounded-3xl border border-border bg-white/95 p-6 sm:p-8 shadow-xs">
+          <div className="flex items-center gap-3 border-b border-border/60 pb-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+              <DollarSign className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="text-base font-black text-foreground">Promotional Pricing & Marketing Copy</h2>
+              <p className="text-xs text-muted-foreground">Configure price overrides, headline hooks, and call-to-action guarantees.</p>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
             <div>
-              <label className="text-xs font-bold text-slate-700">Promo Badge Tag</label>
+              <label className="text-xs font-bold text-slate-800">Promotional Badge Tag</label>
               <input
                 type="text"
                 value={badgeText}
                 onChange={(e) => setBadgeText(e.target.value)}
-                placeholder="e.g. MEGA EID PROMO • 40% OFF"
-                className="mt-1.5 h-11 w-full rounded-xl border border-border bg-white px-3.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                placeholder="e.g. LIMITED TIME OFFER • 40% OFF"
+                className="mt-1.5 h-11 w-full rounded-xl border border-border bg-white px-3.5 text-sm font-medium outline-hidden focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
               />
+              <p className="mt-1 text-[11px] text-muted-foreground">Displays as an animated glowing badge above the hero headline.</p>
             </div>
 
             <div>
-              <label className="text-xs font-bold text-slate-700">Campaign Offer Price (৳)</label>
-              <input
-                type="number"
-                min="0"
-                value={offerPrice}
-                onChange={(e) => setOfferPrice(e.target.value)}
-                placeholder={selectedProduct ? String(selectedProduct.discountPrice || selectedProduct.basePrice) : 'Offer price override'}
-                className="mt-1.5 h-11 w-full rounded-xl border border-border bg-white px-3.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-              />
-              <span className="text-[11px] text-muted-foreground">Leave empty to use the product standard price.</span>
+              <label className="text-xs font-bold text-slate-800">Campaign Offer Price (৳)</label>
+              <div className="relative mt-1.5">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">৳</span>
+                <input
+                  type="number"
+                  min="0"
+                  value={offerPrice}
+                  onChange={(e) => setOfferPrice(e.target.value)}
+                  placeholder={selectedProduct ? String(selectedProduct.discountPrice || selectedProduct.basePrice) : 'Special campaign price'}
+                  className="h-11 w-full rounded-xl border border-border bg-white pl-8 pr-4 text-sm font-bold text-emerald-600 outline-hidden focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                />
+              </div>
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                Overrides regular product price for visitors to this campaign only. Leave empty to use product standard price.
+              </p>
             </div>
           </div>
 
           <div>
-            <label className="text-xs font-bold text-slate-700">High-Impact Landing Page Headline</label>
+            <label className="text-xs font-bold text-slate-800">High-Impact Landing Page Headline</label>
             <input
               type="text"
               value={headline}
               onChange={(e) => setHeadline(e.target.value)}
-              placeholder={selectedProduct?.name || 'e.g. Experience Unmatched Elegance & Radiance'}
-              className="mt-1.5 h-11 w-full rounded-xl border border-border bg-white px-3.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+              placeholder={selectedProduct?.name || 'e.g. Experience Luxury & Flawless Radiance Today'}
+              className="mt-1.5 h-11 w-full rounded-xl border border-border bg-white px-3.5 text-sm font-medium outline-hidden focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
             />
-            <span className="text-[11px] text-muted-foreground">Appears as the primary H1 title on the landing page.</span>
+            <p className="mt-1 text-[11px] text-muted-foreground">The primary hero title. Leave empty to default to the canonical product title.</p>
           </div>
 
           <div>
-            <label className="text-xs font-bold text-slate-700">Subheadline & Campaign Hook</label>
+            <label className="text-xs font-bold text-slate-800">Subheadline & Emotional Hook</label>
             <textarea
               rows={3}
               value={subheadline}
               onChange={(e) => setSubheadline(e.target.value)}
-              placeholder="e.g. Handcrafted with premium organic extracts. Limited batches made specially for this festive season."
-              className="mt-1.5 w-full rounded-xl border border-border bg-white p-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+              placeholder="e.g. Handcrafted with 100% pure organic extracts. Specially formulated for healthy, glowing skin this season."
+              className="mt-1.5 w-full rounded-xl border border-border bg-white p-3.5 text-sm outline-hidden focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
             />
+            <p className="mt-1 text-[11px] text-muted-foreground">Compelling 1-2 sentence description placed directly underneath the headline.</p>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
             <div>
-              <label className="text-xs font-bold text-slate-700">Call-to-Action (CTA) Button Text</label>
+              <label className="text-xs font-bold text-slate-800">Primary CTA Button Text</label>
               <input
                 type="text"
                 value={ctaText}
                 onChange={(e) => setCtaText(e.target.value)}
                 placeholder="Order Now - Limited Stock"
-                className="mt-1.5 h-11 w-full rounded-xl border border-border bg-white px-3.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="mt-1.5 h-11 w-full rounded-xl border border-border bg-white px-3.5 text-sm font-medium outline-hidden focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
               />
+              <p className="mt-1 text-[11px] text-muted-foreground">e.g. "Order Now - Pay on Delivery" or "Claim 40% Off".</p>
             </div>
 
             <div>
-              <label className="text-xs font-bold text-slate-700">CTA Subtext Guarantee</label>
+              <label className="text-xs font-bold text-slate-800">CTA Guarantee Subtext</label>
               <input
                 type="text"
                 value={ctaSubtext}
                 onChange={(e) => setCtaSubtext(e.target.value)}
                 placeholder="Free Delivery Across Bangladesh"
-                className="mt-1.5 h-11 w-full rounded-xl border border-border bg-white px-3.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="mt-1.5 h-11 w-full rounded-xl border border-border bg-white px-3.5 text-sm font-medium outline-hidden focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
               />
+              <p className="mt-1 text-[11px] text-muted-foreground">Reassurance displayed below the main order button.</p>
             </div>
           </div>
         </div>
       )}
 
-      {/* Tab 3: Schedule & Timing */}
+      {/* CARD 3: Schedule & Timer */}
       {activeTab === 'schedule' && (
-        <div className="mt-6 space-y-6 rounded-3xl border border-border bg-white/90 p-6 shadow-sm">
-          <div>
-            <h2 className="text-base font-bold text-foreground">Campaign Schedule & Countdown Expiry</h2>
-            <p className="text-xs text-muted-foreground">Server-authoritative timing. Automatically transitions between Scheduled, Active, and Expired.</p>
+        <div className="space-y-6 rounded-3xl border border-border bg-white/95 p-6 sm:p-8 shadow-xs">
+          <div className="flex items-center gap-3 border-b border-border/60 pb-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+              <Calendar className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="text-base font-black text-foreground">Campaign Schedule & Countdown Expiry</h2>
+              <p className="text-xs text-muted-foreground">Server-authoritative scheduling. Automatically tracks start and expiry timestamps.</p>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
             <div>
-              <label className="text-xs font-bold text-slate-700">Campaign Starts At *</label>
+              <label className="text-xs font-bold text-slate-800">
+                Campaign Starts At <span className="text-rose-500">*</span>
+              </label>
               <input
                 type="datetime-local"
                 required
                 value={startsAt}
                 onChange={(e) => setStartsAt(e.target.value)}
-                className="mt-1.5 h-11 w-full rounded-xl border border-border bg-white px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="mt-1.5 h-11 w-full rounded-xl border border-border bg-white px-3 text-sm font-medium outline-hidden focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
               />
-              <span className="text-[11px] text-muted-foreground">Timezone: Local / UTC Synced</span>
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                Tip: When you click <span className="font-semibold text-primary">"Publish Campaign"</span>, it goes live immediately regardless of timezone.
+              </p>
             </div>
 
             <div>
-              <label className="text-xs font-bold text-slate-700">Campaign Ends At *</label>
+              <label className="text-xs font-bold text-slate-800">
+                Campaign Ends At (Expiry) <span className="text-rose-500">*</span>
+              </label>
               <input
                 type="datetime-local"
                 required
                 value={expiresAt}
                 onChange={(e) => setExpiresAt(e.target.value)}
-                className="mt-1.5 h-11 w-full rounded-xl border border-border bg-white px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="mt-1.5 h-11 w-full rounded-xl border border-border bg-white px-3 text-sm font-medium outline-hidden focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
               />
-              <span className="text-[11px] text-muted-foreground">Countdown timer counts down to this exact instant.</span>
+              <p className="mt-1 text-[11px] text-muted-foreground">The countdown timer on the storefront ticks down to this exact minute.</p>
             </div>
           </div>
 
@@ -482,97 +604,110 @@ export default function CampaignForm({ initialData, mode, campaignId }: Campaign
               id="countdownToggle"
               checked={showCountdown}
               onChange={(e) => setShowCountdown(e.target.checked)}
-              className="h-4 w-4 rounded text-primary focus:ring-primary"
+              className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
             />
-            <label htmlFor="countdownToggle" className="text-sm font-bold text-slate-800 cursor-pointer">
-              Display Live Animated Countdown Timer on Landing Page
+            <label htmlFor="countdownToggle" className="text-xs font-bold text-slate-800 cursor-pointer">
+              Display Live Animated Countdown Timer on Landing Page (Urgency Driver)
             </label>
           </div>
 
           <div>
-            <label className="text-xs font-bold text-slate-700">Action when campaign expires:</label>
+            <label className="text-xs font-bold text-slate-800">Action when campaign expires:</label>
             <select
               value={onExpiryAction}
               onChange={(e) => setOnExpiryAction(e.target.value as any)}
-              className="mt-1.5 h-11 w-full rounded-xl border border-border bg-white px-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="mt-1.5 h-11 w-full rounded-xl border border-border bg-white px-3 text-sm font-medium outline-hidden focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
             >
-              <option value="show_expired_page">Show Graceful Expired Page (Retain traffic, offer normal price)</option>
-              <option value="redirect_product">307 Redirect to Standard Product Page</option>
+              <option value="show_expired_page">Show Graceful Expired Page (Keep traffic, offer normal catalog purchase)</option>
+              <option value="redirect_product">307 Redirect to Standard Catalog Product Page</option>
               <option value="redirect_home">307 Redirect to Storefront Homepage</option>
             </select>
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Protects ad spend and customer experience by handling expired links gracefully without broken pages.
+            </p>
           </div>
         </div>
       )}
 
-      {/* Tab 4: Media & Visuals */}
+      {/* CARD 4: Visual Media */}
       {activeTab === 'media' && (
-        <div className="mt-6 space-y-6 rounded-3xl border border-border bg-white/90 p-6 shadow-sm">
-          <div>
-            <h2 className="text-base font-bold text-foreground">Visual Assets & Banners</h2>
-            <p className="text-xs text-muted-foreground">Configure desktop and mobile specific high-resolution visual banners.</p>
+        <div className="space-y-6 rounded-3xl border border-border bg-white/95 p-6 sm:p-8 shadow-xs">
+          <div className="flex items-center gap-3 border-b border-border/60 pb-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-purple-50 text-purple-600">
+              <ImageIcon className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="text-base font-black text-foreground">Visual Assets & Landing Banners</h2>
+              <p className="text-xs text-muted-foreground">Configure desktop and mobile-optimized high-resolution banner visuals.</p>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
             <div>
-              <label className="text-xs font-bold text-slate-700">Desktop Hero Banner URL</label>
+              <label className="text-xs font-bold text-slate-800">Desktop Hero Banner URL</label>
               <input
                 type="text"
                 value={bannerImage}
                 onChange={(e) => setBannerImage(e.target.value)}
                 placeholder="https://... or /uploads/hero-desktop.webp"
-                className="mt-1.5 h-11 w-full rounded-xl border border-border bg-white px-3.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="mt-1.5 h-11 w-full rounded-xl border border-border bg-white px-3.5 text-sm font-medium outline-hidden focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
               />
-              <span className="text-[11px] text-muted-foreground">Recommended: 1920x800 or 16:9 ratio.</span>
+              <p className="mt-1 text-[11px] text-muted-foreground">Recommended: 1920x800 or 16:9 ratio. Leave empty to use product image.</p>
             </div>
 
             <div>
-              <label className="text-xs font-bold text-slate-700">Mobile Hero Banner URL</label>
+              <label className="text-xs font-bold text-slate-800">Mobile Hero Banner URL</label>
               <input
                 type="text"
                 value={mobileBannerImage}
                 onChange={(e) => setMobileBannerImage(e.target.value)}
                 placeholder="https://... or /uploads/hero-mobile.webp"
-                className="mt-1.5 h-11 w-full rounded-xl border border-border bg-white px-3.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="mt-1.5 h-11 w-full rounded-xl border border-border bg-white px-3.5 text-sm font-medium outline-hidden focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
               />
-              <span className="text-[11px] text-muted-foreground">Recommended: 800x1000 or 4:5 vertical ratio.</span>
+              <p className="mt-1 text-[11px] text-muted-foreground">Recommended: 800x1000 or 4:5 vertical ratio for smartphones.</p>
             </div>
           </div>
 
           <div>
-            <label className="text-xs font-bold text-slate-700">Custom Showcase Gallery Images (Comma separated)</label>
+            <label className="text-xs font-bold text-slate-800">Showcase Gallery Images (Comma separated URLs)</label>
             <textarea
               rows={2}
               value={galleryImages.join(', ')}
               onChange={(e) => setGalleryImages(e.target.value.split(',').map((s) => s.trim()).filter(Boolean))}
               placeholder="https://...image1.jpg, https://...image2.jpg"
-              className="mt-1.5 w-full rounded-xl border border-border bg-white p-3 text-xs font-mono outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="mt-1.5 w-full rounded-xl border border-border bg-white p-3.5 text-xs font-mono outline-hidden focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
             />
-            <span className="text-[11px] text-muted-foreground">Leave empty to use the standard product photos automatically.</span>
+            <p className="mt-1 text-[11px] text-muted-foreground">Leave empty to inherit standard product photo gallery automatically.</p>
           </div>
         </div>
       )}
 
-      {/* Tab 5: Benefits & Specs */}
+      {/* CARD 5: Benefits & Specs */}
       {activeTab === 'specs' && (
-        <div className="mt-6 space-y-6 rounded-3xl border border-border bg-white/90 p-6 shadow-sm">
-          <div>
-            <div className="flex items-center justify-between">
-              <h2 className="text-base font-bold text-foreground">Key Benefits & Trust Props</h2>
-              <button
-                type="button"
-                onClick={handleAddBenefit}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-white px-3 py-1.5 text-xs font-bold text-primary hover:bg-slate-50"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                <span>Add Benefit</span>
-              </button>
+        <div className="space-y-6 rounded-3xl border border-border bg-white/95 p-6 sm:p-8 shadow-xs">
+          <div className="flex items-center justify-between border-b border-border/60 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                <CheckCircle2 className="h-5 w-5" />
+              </div>
+              <div>
+                <h2 className="text-base font-black text-foreground">Trust Signals & Specifications</h2>
+                <p className="text-xs text-muted-foreground">Reassurance badges, warranty info, and key specs.</p>
+              </div>
             </div>
-            <p className="text-xs text-muted-foreground">Trust signals displayed below the hero section.</p>
+            <button
+              type="button"
+              onClick={handleAddBenefit}
+              className="inline-flex items-center gap-1 rounded-xl border border-border bg-white px-3 py-1.5 text-xs font-bold text-primary hover:bg-slate-50 transition-colors"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              <span>Add Benefit</span>
+            </button>
           </div>
 
           <div className="space-y-3">
             {benefits.map((b, i) => (
-              <div key={i} className="flex flex-col items-stretch gap-3 rounded-2xl border border-border bg-slate-50/50 p-3 sm:flex-row sm:items-center">
+              <div key={i} className="flex flex-col gap-3 rounded-2xl border border-border bg-slate-50/50 p-3 sm:flex-row sm:items-center">
                 <input
                   type="text"
                   value={b.title}
@@ -582,7 +717,7 @@ export default function CampaignForm({ initialData, mode, campaignId }: Campaign
                     setBenefits(next);
                   }}
                   placeholder="Benefit Title (e.g. 100% Genuine)"
-                  className="h-10 w-full flex-1 rounded-xl border border-border bg-white px-3 text-xs font-bold outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 sm:w-auto"
+                  className="h-10 w-full sm:w-1/3 rounded-xl border border-border bg-white px-3 text-xs font-bold outline-hidden focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                 />
                 <input
                   type="text"
@@ -592,13 +727,14 @@ export default function CampaignForm({ initialData, mode, campaignId }: Campaign
                     next[i].description = e.target.value;
                     setBenefits(next);
                   }}
-                  placeholder="Short explanation"
-                  className="h-10 w-full flex-1 rounded-xl border border-border bg-white px-3 text-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 sm:w-auto"
+                  placeholder="Short explanation (e.g. Direct from verified brand manufacturer)"
+                  className="h-10 w-full flex-1 rounded-xl border border-border bg-white px-3 text-xs outline-hidden focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                 />
                 <button
                   type="button"
                   onClick={() => handleRemoveBenefit(i)}
-                className="flex h-10 w-full shrink-0 items-center justify-center rounded-xl text-rose-500 hover:bg-rose-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 sm:h-9 sm:w-9"
+                  className="flex h-10 w-full sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-xl text-rose-500 hover:bg-rose-50 transition-colors"
+                  title="Remove benefit"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
@@ -606,109 +742,117 @@ export default function CampaignForm({ initialData, mode, campaignId }: Campaign
             ))}
           </div>
 
-          <div className="border-t border-border pt-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-base font-bold text-foreground">Features & Specifications</h2>
+          <div className="border-t border-border/60 pt-6">
+            <div className="flex items-center justify-between pb-3">
+              <h3 className="text-sm font-bold text-slate-800">Product Specifications Table</h3>
               <button
                 type="button"
                 onClick={handleAddSpec}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-white px-3 py-1.5 text-xs font-bold text-primary hover:bg-slate-50"
+                className="inline-flex items-center gap-1 rounded-xl border border-border bg-white px-3 py-1.5 text-xs font-bold text-primary hover:bg-slate-50 transition-colors"
               >
                 <Plus className="h-3.5 w-3.5" />
                 <span>Add Spec</span>
               </button>
             </div>
-          </div>
 
-          <div className="space-y-3">
-            {specifications.map((s, i) => (
-              <div key={i} className="flex flex-col items-stretch gap-3 rounded-2xl border border-border bg-slate-50/50 p-3 sm:flex-row sm:items-center">
-                <input
-                  type="text"
-                  value={s.label}
-                  onChange={(e) => {
-                    const next = [...specifications];
-                    next[i].label = e.target.value;
-                    setSpecifications(next);
-                  }}
-                  placeholder="Label (e.g. Warranty)"
-                  className="h-10 w-full rounded-xl border border-border bg-white px-3 text-xs font-bold outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 sm:w-1/3"
-                />
-                <input
-                  type="text"
-                  value={s.value}
-                  onChange={(e) => {
-                    const next = [...specifications];
-                    next[i].value = e.target.value;
-                    setSpecifications(next);
-                  }}
-                  placeholder="Value (e.g. 1 Year Replacement)"
-                  className="h-10 w-full flex-1 rounded-xl border border-border bg-white px-3 text-xs outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 sm:w-auto"
-                />
-                <button
-                  type="button"
-                  onClick={() => handleRemoveSpec(i)}
-                className="flex h-10 w-full shrink-0 items-center justify-center rounded-xl text-rose-500 hover:bg-rose-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 sm:h-9 sm:w-9"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </div>
-            ))}
+            <div className="space-y-3">
+              {specifications.map((s, i) => (
+                <div key={i} className="flex flex-col gap-3 rounded-2xl border border-border bg-slate-50/50 p-3 sm:flex-row sm:items-center">
+                  <input
+                    type="text"
+                    value={s.label}
+                    onChange={(e) => {
+                      const next = [...specifications];
+                      next[i].label = e.target.value;
+                      setSpecifications(next);
+                    }}
+                    placeholder="Spec Label (e.g. Warranty)"
+                    className="h-10 w-full sm:w-1/3 rounded-xl border border-border bg-white px-3 text-xs font-bold outline-hidden focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                  />
+                  <input
+                    type="text"
+                    value={s.value}
+                    onChange={(e) => {
+                      const next = [...specifications];
+                      next[i].value = e.target.value;
+                      setSpecifications(next);
+                    }}
+                    placeholder="Spec Value (e.g. 1 Year Replacement Warranty)"
+                    className="h-10 w-full flex-1 rounded-xl border border-border bg-white px-3 text-xs outline-hidden focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveSpec(i)}
+                    className="flex h-10 w-full sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-xl text-rose-500 hover:bg-rose-50 transition-colors"
+                    title="Remove specification"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
 
-      {/* Tab 6: SEO & Social Share Preview */}
+      {/* CARD 6: SEO & Social Share Preview */}
       {activeTab === 'seo' && (
-        <div className="mt-6 space-y-6 rounded-3xl border border-border bg-white/90 p-6 shadow-sm">
-          <div>
-            <h2 className="text-base font-bold text-foreground">SEO & Open Graph Social Sharing Metadata</h2>
-            <p className="text-xs text-muted-foreground">Control how the campaign appears on Google Search, Facebook, and WhatsApp.</p>
+        <div className="space-y-6 rounded-3xl border border-border bg-white/95 p-6 sm:p-8 shadow-xs">
+          <div className="flex items-center gap-3 border-b border-border/60 pb-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+              <Globe className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="text-base font-black text-foreground">SEO & Open Graph Social Sharing</h2>
+              <p className="text-xs text-muted-foreground">Control how this landing page appears on Google Search, Facebook, and WhatsApp.</p>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
             <div>
-              <label className="text-xs font-bold text-slate-700">SEO Meta Title</label>
+              <label className="text-xs font-bold text-slate-800">SEO Meta Title</label>
               <input
                 type="text"
                 value={metaTitle}
                 onChange={(e) => setMetaTitle(e.target.value)}
                 placeholder={headline || selectedProduct?.name || 'Campaign SEO Title'}
-                className="mt-1.5 h-11 w-full rounded-xl border border-border bg-white px-3.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="mt-1.5 h-11 w-full rounded-xl border border-border bg-white px-3.5 text-sm font-medium outline-hidden focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
               />
+              <p className="mt-1 text-[11px] text-muted-foreground">Appears in browser tabs and search engine results.</p>
             </div>
 
             <div>
-              <label className="text-xs font-bold text-slate-700">Open Graph Social Banner URL</label>
+              <label className="text-xs font-bold text-slate-800">Open Graph Social Image URL</label>
               <input
                 type="text"
                 value={ogImage}
                 onChange={(e) => setOgImage(e.target.value)}
                 placeholder={bannerImage || selectedProduct?.images?.[0] || '1200x630px image'}
-                className="mt-1.5 h-11 w-full rounded-xl border border-border bg-white px-3.5 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="mt-1.5 h-11 w-full rounded-xl border border-border bg-white px-3.5 text-sm font-medium outline-hidden focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
               />
+              <p className="mt-1 text-[11px] text-muted-foreground">Image preview when shared on WhatsApp, Facebook, or Twitter.</p>
             </div>
           </div>
 
           <div>
-            <label className="text-xs font-bold text-slate-700">Meta Description</label>
+            <label className="text-xs font-bold text-slate-800">Meta Description</label>
             <textarea
               rows={3}
               value={metaDescription}
               onChange={(e) => setMetaDescription(e.target.value)}
               placeholder={subheadline || selectedProduct?.shortDescription || 'Search snippet summary'}
-              className="mt-1.5 w-full rounded-xl border border-border bg-white p-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="mt-1.5 w-full rounded-xl border border-border bg-white p-3.5 text-sm outline-hidden focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
             />
           </div>
 
-          {/* Live Social Share Card Preview */}
-          <div className="mt-8 rounded-2xl border border-border bg-slate-50 p-5">
-            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500">
-              <Share2 className="h-4 w-4" />
+          {/* Social Card Preview */}
+          <div className="mt-6 rounded-2xl border border-border bg-slate-50 p-5">
+            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-600">
+              <Share2 className="h-4 w-4 text-primary" />
               <span>Live Social Card Preview (Facebook & WhatsApp)</span>
             </div>
 
-            <div className="mt-4 max-w-md overflow-hidden rounded-2xl border border-border/80 bg-white shadow-md">
+            <div className="mt-4 max-w-md overflow-hidden rounded-2xl border border-border bg-white shadow-sm">
               <div className="relative aspect-[1.91/1] w-full bg-slate-200">
                 {ogImage || bannerImage || selectedProduct?.images?.[0] ? (
                   <Image
@@ -723,7 +867,7 @@ export default function CampaignForm({ initialData, mode, campaignId }: Campaign
                   </div>
                 )}
               </div>
-              <div className="p-3.5">
+              <div className="p-4">
                 <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 font-mono">READYCOMMERCE.COM</p>
                 <p className="mt-1 font-bold text-slate-900 line-clamp-1">
                   {metaTitle || headline || title || 'Campaign Headline'}
@@ -736,6 +880,83 @@ export default function CampaignForm({ initialData, mode, campaignId }: Campaign
           </div>
         </div>
       )}
-    </form>
+
+      {/* ========================================================================= */}
+      {/* 4. BOTTOM STEP NAVIGATION & PERSISTENT ACTION FOOTER                      */}
+      {/* ========================================================================= */}
+      <div className="mt-8 flex items-center justify-between rounded-2xl border border-border bg-white/90 p-4 shadow-xs">
+        <button
+          type="button"
+          disabled={currentTabIndex === 0}
+          onClick={() => setActiveTab(tabs[currentTabIndex - 1].id)}
+          className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-white px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-30 transition-all"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          <span>Previous Step</span>
+        </button>
+
+        <div className="text-xs font-bold text-slate-500">
+          Step {currentTabIndex + 1} of {tabs.length}
+        </div>
+
+        {currentTabIndex < tabs.length - 1 ? (
+          <button
+            type="button"
+            onClick={() => setActiveTab(tabs[currentTabIndex + 1].id)}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-slate-900 px-4 py-2 text-xs font-bold text-white hover:bg-slate-800 transition-all"
+          >
+            <span>Next Step</span>
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        ) : (
+          <button
+            type="button"
+            disabled={submitting}
+            onClick={() => handleFormSubmit(true)}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-white shadow-premium hover:bg-primary/90 transition-all"
+          >
+            <Rocket className="h-3.5 w-3.5" />
+            <span>Publish Campaign</span>
+          </button>
+        )}
+      </div>
+
+      {/* ========================================================================= */}
+      {/* 5. FLOATING BOTTOM BAR (ALWAYS VISIBLE ON SCREEN)                         */}
+      {/* ========================================================================= */}
+      <div className="fixed bottom-4 left-1/2 z-40 w-[92%] max-w-3xl -translate-x-1/2 rounded-2xl border border-border/90 bg-white/95 px-5 py-3 shadow-2xl backdrop-blur-lg flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <span className="flex h-2.5 w-2.5 relative">
+            <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${currentStatus === 'active' ? 'bg-emerald-400' : 'bg-slate-400'}`} />
+            <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${currentStatus === 'active' ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+          </span>
+          <span className="text-xs font-bold text-slate-700">
+            {currentStatus === 'active' ? 'Campaign is Live' : 'Unpublished Draft'}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            disabled={submitting}
+            onClick={() => handleFormSubmit(false)}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-white px-3.5 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-all disabled:opacity-50"
+          >
+            <Save className="h-3.5 w-3.5 text-slate-500" />
+            <span>{submitting && submitAction === 'draft' ? 'Saving...' : 'Save Draft'}</span>
+          </button>
+
+          <button
+            type="button"
+            disabled={submitting}
+            onClick={() => handleFormSubmit(true)}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-primary/90 transition-all disabled:opacity-50"
+          >
+            <Rocket className="h-3.5 w-3.5" />
+            <span>{submitting && submitAction === 'publish' ? 'Publishing...' : 'Publish Campaign'}</span>
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }

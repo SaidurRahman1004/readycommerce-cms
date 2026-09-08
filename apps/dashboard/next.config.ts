@@ -12,6 +12,16 @@ const nextConfig: NextConfig = {
       { protocol: 'https', hostname: 'images.unsplash.com' },
     ],
   },
+  async redirects() {
+    const storefront = process.env.NEXT_PUBLIC_STOREFRONT_URL || 'http://localhost:3000';
+    return [
+      {
+        source: '/campaign/:slug',
+        destination: `${storefront}/en/campaign/:slug`,
+        permanent: false,
+      },
+    ];
+  },
   async rewrites() {
     return [
       {

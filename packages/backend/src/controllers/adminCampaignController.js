@@ -43,6 +43,8 @@ const campaignValidationSchema = Joi.object({
   expiresAt: Joi.date().iso().greater(Joi.ref('startsAt')).required()
     .messages({ 'date.greater': 'Campaign end date must be strictly after start date.' }),
   showCountdown: Joi.boolean().default(true),
+  status: Joi.string().valid('draft', 'active', 'scheduled', 'archived').default('draft'),
+  publishImmediately: Joi.boolean().default(false),
   onExpiryAction: Joi.string().valid('show_expired_page', 'redirect_product', 'redirect_home').default('show_expired_page'),
   recommendedProducts: Joi.array().items(Joi.string().custom((value, helpers) => {
     if (!mongoose.isValidObjectId(value)) return helpers.error('any.invalid');
@@ -186,12 +188,25 @@ const createCampaign = async (req, res, next) => {
       return next(new AppError('A campaign with this URL slug already exists. Please choose a unique slug.', 409, 'SLUG_EXISTS'));
     }
 
+    const now = new Date();
+    let finalStatus = value.status || 'draft';
+    let finalStartsAt = value.startsAt;
+
+    if (value.publishImmediately || value.status === 'active') {
+      finalStatus = 'active';
+      // If startsAt was set for today or in the future, bring it to now so it is active immediately
+      if (new Date(finalStartsAt) > now) {
+        finalStartsAt = new Date(now.getTime() - 1000);
+      }
+    }
+
     const previewToken = crypto.randomUUID();
 
     const campaign = await Campaign.create({
       ...value,
+      startsAt: finalStartsAt,
       slug,
-      status: 'draft',
+      status: finalStatus,
       previewToken,
       createdBy: req.user._id,
       updatedBy: req.user._id,
@@ -199,7 +214,7 @@ const createCampaign = async (req, res, next) => {
 
     return res.status(201).json({
       success: true,
-      message: 'Campaign created in draft mode.',
+      message: finalStatus === 'active' ? 'Campaign published and is now live!' : 'Campaign saved as draft.',
       data: campaign,
     });
   } catch (error) {
@@ -233,9 +248,21 @@ const updateCampaign = async (req, res, next) => {
     }
 
     const previousSlug = existing.slug;
+    const now = new Date();
+    let finalStartsAt = value.startsAt !== undefined ? value.startsAt : existing.startsAt;
+    let finalStatus = value.status !== undefined ? value.status : existing.status;
+
+    if (value.publishImmediately || value.status === 'active') {
+      finalStatus = 'active';
+      if (new Date(finalStartsAt) > now) {
+        finalStartsAt = new Date(now.getTime() - 1000);
+      }
+    }
 
     Object.assign(existing, value, {
       slug: targetSlug,
+      startsAt: finalStartsAt,
+      status: finalStatus,
       updatedBy: req.user._id,
     });
 
@@ -267,8 +294,13 @@ const publishCampaign = async (req, res, next) => {
       return next(new AppError('Cannot publish an expired campaign. Please update the expiry date first.', 400, 'CAMPAIGN_ALREADY_EXPIRED'));
     }
 
-    const newStatus = now >= new Date(campaign.startsAt) ? 'active' : 'scheduled';
-    campaign.status = newStatus;
+    // When the admin explicitly clicks "Publish Campaign", make it active immediately!
+    // If startsAt was set in the future or today, clamp startsAt to now so it is active immediately.
+    if (new Date(campaign.startsAt) > now) {
+      campaign.startsAt = new Date(now.getTime() - 1000);
+    }
+
+    campaign.status = 'active';
     campaign.updatedBy = req.user._id;
     await campaign.save();
 
@@ -276,8 +308,8 @@ const publishCampaign = async (req, res, next) => {
 
     return res.json({
       success: true,
-      message: newStatus === 'active' ? 'Campaign published and is now live!' : 'Campaign scheduled successfully.',
-      data: { status: newStatus, liveStatus: computeLiveStatus(campaign) },
+      message: 'Campaign published and is now live!',
+      data: { status: 'active', liveStatus: computeLiveStatus(campaign) },
     });
   } catch (error) {
     return next(error);

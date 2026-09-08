@@ -36,11 +36,12 @@ export async function generateMetadata({
   searchParams,
 }: {
   params: Promise<{ locale: string; slug: string }>;
-  searchParams: Promise<{ token?: string }>;
+  searchParams: Promise<{ token?: string; previewToken?: string; preview?: string }>;
 }): Promise<Metadata> {
   const { locale, slug } = await params;
-  const { token } = await searchParams;
-  const campaign = await getCampaign(slug, token);
+  const search = await searchParams;
+  const effectiveToken = search.token || search.previewToken;
+  const campaign = await getCampaign(slug, effectiveToken);
 
   if (!campaign) {
     return {
@@ -133,11 +134,12 @@ export default async function CampaignPage({
   searchParams,
 }: {
   params: Promise<{ locale: string; slug: string }>;
-  searchParams: Promise<{ token?: string }>;
+  searchParams: Promise<{ token?: string; previewToken?: string; preview?: string }>;
 }) {
   const { locale, slug } = await params;
-  const { token } = await searchParams;
-  const campaign = await getCampaign(slug, token);
+  const search = await searchParams;
+  const effectiveToken = search.token || search.previewToken;
+  const campaign = await getCampaign(slug, effectiveToken);
 
   if (!campaign) {
     notFound();
