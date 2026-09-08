@@ -46,7 +46,7 @@ export default async function RootLayout({
 
   return (
     <html lang={locale} className={`${plusJakartaSans.variable} ${hindSiliguri.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col" suppressHydrationWarning>
         <NextIntlClientProvider messages={messages}>
           <StorefrontShell locale={locale}>{children}</StorefrontShell>
         </NextIntlClientProvider>
