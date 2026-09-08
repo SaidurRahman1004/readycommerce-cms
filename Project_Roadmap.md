@@ -315,6 +315,7 @@ The Admin Dashboard must not begin until Phase 12's Storefront Production Gate p
 - [x] Added fail-closed handling for malformed campaign schedule dates.
 - [x] Storefront lint and production build passed; Dashboard production build passed; backend campaign syntax checks passed.
 - [ ] Browser/device screenshot verification, live campaign analytics verification, and staging payment/order QA remain pending.
+- [x] Fixed the runtime Campaign Builder crash by allowing the catalog's Unsplash image host in the Dashboard Next.js image configuration.
 
 ## Local Network Development Reliability (2026-09-08)
 

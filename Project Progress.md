@@ -102,6 +102,7 @@ This document serves as the central source of truth for the **ReadyCommerce CMS 
 - [ ] **Production Deployment Configuration**: Verify environment variables (`NEXT_PUBLIC_API_URL`, `MONGODB_URI`, `REDIS_URL`, `SMTP_*`) for production deployment on Vercel/Render.
 - [ ] **Campaign Analytics Visualizations**: Add charts and CSV export for campaign views, CTA clicks, and conversion rates in the Admin Dashboard.
 - [x] **Campaign Deep Audit & UX Polish (2026-09-08)**: Hardened campaign landing-page responsive behavior, preview-banner wrapping, mobile sticky CTA sizing, gallery/specification text wrapping, dashboard benefits/spec editor rows, keyboard focus rings, and countdown callback stability. Removed artificial campaign review fallback values so unrated products show `0.0` and `0 reviews`. Fixed campaign analytics action compatibility (`view`, `cta_click`, `add_to_cart`, `checkout`) and made malformed campaign dates fail closed as expired. Removed related lint/purity errors and verified Storefront/Dashboard production builds.
+- [x] **Campaign Runtime Fix (2026-09-08)**: Fixed the Dashboard `/campaigns/new` crash caused by `next/image` rejecting Unsplash product images because the Dashboard image remote pattern was missing. Added the approved `images.unsplash.com` remote host to `apps/dashboard/next.config.ts`.
 
 ---
 

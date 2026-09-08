@@ -7,6 +7,11 @@ const allowedDevOrigins = (process.env.NEXT_ALLOWED_DEV_ORIGINS || 'localhost,12
 
 const nextConfig: NextConfig = {
   allowedDevOrigins,
+  images: {
+    remotePatterns: [
+      { protocol: 'https', hostname: 'images.unsplash.com' },
+    ],
+  },
   async rewrites() {
     return [
       {
