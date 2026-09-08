@@ -47,7 +47,10 @@ export default function ProductDetail({ productId }: { productId: string }) {
     let mounted = true;
     catalogService.product(productId).then((result) => {
       if (!mounted) return;
-      setProduct(result.data); setVariant(result.data.variants[0]?._id || ''); addProduct(result.data);
+      setProduct(result.data);
+      const firstInStock = result.data.variants.find((v) => (v.stock ?? 0) > 0);
+      setVariant(firstInStock ? firstInStock._id : (result.data.variants[0]?._id || ''));
+      addProduct(result.data);
       catalogService.relatedProducts(result.data._id).then((res) => { if (mounted) setRelated(res.data); }).catch(() => undefined).finally(() => { if (mounted) setLoadingRelated(false); });
     }).catch(() => { if (mounted) setError(true); }).finally(() => { if (mounted) setLoading(false); });
     return () => { mounted = false; };
@@ -109,21 +112,69 @@ export default function ProductDetail({ productId }: { productId: string }) {
           <p className="mt-8 text-3xl font-bold">৳{price.toLocaleString()}</p>
           <p className="mt-6 max-w-lg text-[16px] leading-relaxed text-muted-foreground">{product.description || product.shortDescription}</p>
           
-          <div className={`mt-8 flex items-center gap-3 rounded-xl border px-4 py-3 text-[15px] ${stock > 0 && stock <= 5 ? 'border-amber-200 bg-amber-50' : stock > 5 ? 'border-emerald-200 bg-emerald-50' : 'border-border bg-surface'}`}>
-            <span className={`font-semibold ${stock > 0 && stock <= 5 ? 'text-amber-700' : stock > 5 ? 'text-emerald-700' : 'text-muted-foreground'}`}>
-              {stock > 0 && stock <= 5 ? `🔥 High demand! Only ${stock} items left - order soon` : stock > 5 ? '🟢 In Stock - Ships within 24 hours' : '🔴 Out of Stock'}
+          <div
+            className={`mt-8 flex items-center gap-3 rounded-xl border px-4 py-3 text-[14px] sm:text-[15px] transition-colors duration-200 ${
+              stock > 5
+                ? 'border-emerald-200 bg-emerald-50/80 text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-950/30 dark:text-emerald-300'
+                : stock > 0
+                ? 'border-amber-200 bg-amber-50/80 text-amber-800 dark:border-amber-500/30 dark:bg-amber-950/30 dark:text-amber-300'
+                : 'border-rose-200/80 bg-rose-50/60 text-rose-700 dark:border-rose-500/20 dark:bg-rose-950/20 dark:text-rose-400'
+            }`}
+          >
+            <span className="font-semibold tracking-tight">
+              {stock > 5
+                ? '🟢 In Stock - Ships within 24 hours'
+                : stock > 0
+                ? `🔥 High demand! Only ${stock} items left - order soon`
+                : '🔴 Out of Stock'}
             </span>
           </div>
 
           <div className="mt-8">
-            <p className="text-[14px] font-bold">{t('pdp.size')}</p>
+            <div className="flex items-center justify-between">
+              <p className="text-[14px] font-bold">
+                {product.variants.some((v) => v.size) ? t('pdp.size') : 'Select Variant'}
+              </p>
+              {selected && (
+                <span
+                  className={`text-[13px] font-medium transition-colors ${
+                    stock === 0
+                      ? 'font-semibold text-rose-600 dark:text-rose-400'
+                      : 'text-muted-foreground'
+                  }`}
+                >
+                  {selected.name} {stock === 0 ? '• (Out of Stock)' : ''}
+                </span>
+              )}
+            </div>
             <div className="mt-4 flex flex-wrap gap-3">
               {product.variants.map((item) => {
-                const isOutOfStock = !item.stock || item.stock === 0;
+                const itemOutOfStock = !item.stock || item.stock === 0;
+                const isSelected = variant === item._id;
                 return (
-                  <button type="button" key={item._id} onClick={() => setVariant(item._id)} className={`relative overflow-hidden rounded-full border px-5 py-3 text-[14px] font-bold transition-all ${variant === item._id ? 'border-primary bg-primary text-white' : 'border-border text-foreground hover:bg-surface'} ${isOutOfStock ? 'opacity-60 !bg-surface/50 !text-muted-foreground' : ''}`}>
-                    {item.name}
-                    {isOutOfStock && <span className="absolute left-0 top-1/2 block h-[1.5px] w-full -rotate-12 bg-muted-foreground/60" aria-hidden="true" />}
+                  <button
+                    type="button"
+                    key={item._id}
+                    onClick={() => setVariant(item._id)}
+                    title={itemOutOfStock ? `${item.name} - Out of Stock` : item.name}
+                    aria-label={`${item.name}${itemOutOfStock ? ' - Out of Stock' : ''}`}
+                    className={`group relative overflow-hidden rounded-xl border px-5 py-3 text-[14px] font-bold transition-all duration-150 ${
+                      isSelected
+                        ? itemOutOfStock
+                          ? 'border-rose-400 bg-rose-50/80 text-rose-700 ring-2 ring-rose-400/30 dark:border-rose-500/50 dark:bg-rose-950/30 dark:text-rose-300'
+                          : 'border-primary bg-primary text-white shadow-premium'
+                        : itemOutOfStock
+                        ? 'border-border/60 bg-muted/40 text-muted-foreground/60 hover:bg-muted/70 hover:text-muted-foreground cursor-pointer'
+                        : 'border-border bg-surface text-foreground hover:border-border/80 hover:bg-surface/80 active:scale-95'
+                    }`}
+                  >
+                    <span className={itemOutOfStock ? 'opacity-70' : ''}>{item.name}</span>
+                    {itemOutOfStock && (
+                      <span
+                        className="pointer-events-none absolute inset-0 m-auto h-[1.5px] w-[125%] -rotate-12 bg-muted-foreground/60 transition-colors group-hover:bg-rose-500/60"
+                        aria-hidden="true"
+                      />
+                    )}
                   </button>
                 );
               })}
