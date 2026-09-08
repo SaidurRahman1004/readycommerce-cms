@@ -9,7 +9,7 @@ This document serves as the central source of truth for the **ReadyCommerce CMS 
 **Tech Stack:**
 - **Storefront:** Next.js (App Router), React, Tailwind CSS, TypeScript
 - **Admin Dashboard:** Next.js (App Router), React, Tailwind CSS, TypeScript
-- **Backend API:** Node.js, Express, MongoDB (Mongoose)
+- **Backend API:** Node.js, Express, MongoDB (Mongoose), Redis (ioredis), Winston
 - **Shared Packages:** `@readycommerce/ui`, `@readycommerce/config`, `@readycommerce/database`, `@readycommerce/utils`
 
 ## Phase Definitions & Current Status
@@ -25,8 +25,11 @@ This document serves as the central source of truth for the **ReadyCommerce CMS 
 - **Phase 10:** Admin Dashboard Analytics & Core Routing (✅ Completed)
 - **Phase 11:** Multi-language (i18n) Architecture (✅ Completed)
 - **Phase 12:** Role-Based Access Control (RBAC) & Middleware (✅ Completed)
-- **Phase 13:** Performance, SEO, and Premium UI Upgrades (🚧 Current)
-- **Phase 14:** Production Hardening, Caching, and Deployment (Pending)
+- **Phase 13:** Performance, SEO, PWA & Premium UI Upgrades (✅ Completed)
+- **Phase 14:** Enterprise Backend Hardening, Redis Caching & Idempotency (✅ Completed)
+- **Phase 15:** Smart Customer Features, Urgency Psychology & Restock Leads (✅ Completed)
+- **Phase 16:** Campaign Management & High-Conversion Landing Page System (✅ Completed)
+- **Phase 17:** End-to-End Staging QA & Production Gate (🚧 Current)
 
 ## Agent Instructions (MANDATORY RULES)
 1. **Read First:** ALWAYS read this document before writing any code.
@@ -64,14 +67,40 @@ This document serves as the central source of truth for the **ReadyCommerce CMS 
 - [x] Completed Phase 13D: Storefront UX Supercharge (Mini Cart, Live Search, Skeleton loaders).
 - [x] Completed Phase 13E: Product Details Premium Enhancement (Scarcity logic, Trust block, Inquiry CTA).
 - [x] Completed Phase 13I: Mobile UI & Responsive Polish (Hamburger menu, touch targets).
+- [x] Completed Phase 13K: Progressive Web App (PWA) with Manifest, Service Worker, and offline fallback (`~offline`).
+- [x] Completed Phase 13H: SEO, Structured Data (Schema.org JSON-LD), Open Graph, and Next.js 60s ISR revalidation.
+- [x] Completed Phase 13L: Hybrid Wishlist Architecture (LocalStorage for guests + authenticated MongoDB sync).
+- [x] Completed Phase 13F: Trust & Retention Polish (Verified purchase reviews, Nodemailer order receipt template).
+- [x] Implemented "Perfect Pairings" (Smart Related Products matching: Level 1 Category/Tag matching & Level 2 Manual Cross-sell).
+- [x] Implemented Real Customer Ratings & Verified Purchase green checkmark badges.
+- [x] Implemented Visual Order Tracking Timeline (Pending ➔ Processing ➔ Shipped ➔ Delivered, with Return/Refund support).
+- [x] Added Redis Caching Layer (`ioredis`) for public catalog APIs with instant purge on admin updates.
+- [x] Added Structured Error Logging with Winston logger integration across backend controllers and error handlers.
+- [x] Implemented Idempotent Order Creation via `x-idempotency-key` headers to eliminate duplicate charging races.
+- [x] Added CSV Data Export functionality for Orders and Analytics with active filters.
+- [x] Implemented Admin Command Palette (CMD+K / CTRL+K global search overlay) & Bulk Order status operations.
+- [x] Enhanced Product Availability UX with Scarcity psychology (Green in-stock, Amber high-demand, Red out-of-stock).
+- [x] Implemented Disabled Out-of-Stock Variant buttons with diagonal slash strike-through styling.
+- [x] Created Backend `RestockLead` schema and Lead Capture API (`POST /api/leads/restock`) with duplicate email protection.
+- [x] Built Frontend "Notify Me When In Stock" form replacing cart buttons when items/variants are out of stock.
+- [x] Designed & implemented full **Campaign Management & Landing Page System**:
+  - [x] Zero-Data-Duplication backend schema (`Campaign.js`) referencing canonical `Product` with runtime override merging.
+  - [x] Server-authoritative status evaluation (`computeLiveStatus`: Draft, Scheduled, Active, Expired, Archived).
+  - [x] Redis caching layer for campaign slug endpoints (`campaign:slug:${slug}`) with 3600s TTL and purge on updates.
+  - [x] Secure preview mechanism with UUID `previewToken` and admin session verification (`optionalAuth`).
+  - [x] Future-ready lightweight analytics action tracker (`POST /api/campaigns/:slug/track`).
+  - [x] Admin Campaign Management screen (`/campaigns`) with metrics, search, status tabs, and quick action menus.
+  - [x] 6-Tab Campaign Builder (`/campaigns/new`, `/campaigns/[id]/edit`) with live pricing math, auto-slug generation, and collision handling.
+  - [x] Admin Live Device Simulator (`/campaigns/[id]/preview`) with responsive Desktop/Mobile viewport switcher.
+  - [x] Dedicated Public Landing Page route (`/[locale]/campaign/[slug]`) with Next.js ISR (`revalidate = 60`), `generateMetadata`, OpenGraph, Twitter cards, and Schema.org Product JSON-LD structured data.
+  - [x] Storefront components: `CampaignLanding` (master), `CampaignCountdown` (hydration-safe live timer with server skew sync), `CampaignGallery` (interactive touch gallery with discount badges), `CampaignOfferBox` (high-conversion pricing, stock status, variant picker, instant Buy Now checkout navigation, and Add to Cart), `CampaignBenefits` (trust badges & specifications table), `CampaignStickyBar` (floating bottom mobile/desktop CTA on scroll), and `CampaignExpired` (graceful expired notice with fallback to standard retail product).
 
 ---
 
 ## Pending Tasks (Next Steps)
-- [ ] **Phase 13 Integration Tests**: Perform End-to-End (E2E) testing of the Storefront checking translations, SEO tags, responsive menus, and product flows.
-- [ ] **Phase 14 Production Hardening**: Implement caching (Redis/Next.js ISR tweaks), fix any lingering missing ENV variable errors, and prepare for Vercel/Render deployment.
-- [x] **Local Network Development Reliability (2026-09-08)**: Added Next.js `allowedDevOrigins` for localhost, loopback, the active LAN host (`10.10.14.198`) and `.local` development hostnames in both apps. Storefront API requests now derive the backend host from the browser hostname when `NEXT_PUBLIC_API_URL` is not configured, keeping LAN authentication/session requests on the correct machine. Replaced the broken fallback hero image URL.
-- [ ] Configure `NEXT_ALLOWED_DEV_ORIGINS` and `NEXT_PUBLIC_API_URL` explicitly for each deployment environment; live LAN browser verification remains recommended.
+- [ ] **End-to-End Live Staging QA**: Test live payment flows (bKash/Nagad manual sandbox), order status timeline transitions, and restock lead notifications.
+- [ ] **Production Deployment Configuration**: Verify environment variables (`NEXT_PUBLIC_API_URL`, `MONGODB_URI`, `REDIS_URL`, `SMTP_*`) for production deployment on Vercel/Render.
+- [ ] **Campaign Analytics Visualizations**: Add charts and CSV export for campaign views, CTA clicks, and conversion rates in the Admin Dashboard.
 
 ---
 
@@ -90,3 +119,8 @@ This document serves as the central source of truth for the **ReadyCommerce CMS 
 * **[2026-09-08]**: **[Phase 13E Product Details Premium Enhancement]**: Supercharged the `ProductDetail` component for Lifestyle Businesses. Integrated `lucide-react` for iconography. Added Advanced Availability (Scarcity & Urgency logic) based on stock levels. Built a responsive Trust Block with premium UI badges (Secure Checkout, Fast Delivery, Easy Returns, Warranty) right below Add to Cart. Added an automated Inquiry/Contact CTA with dynamic mailto linking. Developed a robust Specifications accordion that gracefully handles missing API data by extracting sizes, colors, categories, and SKUs from variant fallbacks. Pushed cleanly to `dashboard-all` branch.
 * **[2026-09-08]**: **[Phase 13I Mobile UI & Responsive Polish]**: Implemented a slide-out Mobile Navigation Drawer (Hamburger Menu) for `< xl` viewports using `lucide-react` icons. Upgraded touch targets in the cart drawer from `36px` to `44px` for optimal mobile accessibility. Adjusted bottom padding in `product-detail.tsx` to safely accommodate the mobile sticky Add to Cart CTA. Added `break-words` class to specification values to prevent horizontal scrolling overflows on extremely narrow devices. Performed an aggressive code re-format to fully restore and polish the Trust Badges and Inquiry CTA that were previously minified. Code safely pushed to `dashboard-all`.
 * **[2026-09-08]**: **[Phase 13K PWA & Offline Support]**: Converted the Storefront into a fully installable Progressive Web App (PWA) using `@ducanh2912/next-pwa`. Wrapped `next.config.ts` to automatically generate service workers in the `public` directory (disabled during dev to prevent caching issues). Created a responsive `manifest.json` with app icons, brand theme colors (`#4f46e5`), and `standalone` display properties. Injected standard PWA meta tags and `themeColor` into the root `layout.tsx`. Implemented a premium `~offline/page.tsx` fallback UI utilizing `lucide-react` and `next-intl` to gracefully handle network disconnections. Storefront compiled successfully and changes were pushed to `dashboard-all`.
+* **[2026-09-08]**: **[Smart Customer Experience & Perfect Pairings]**: Implemented "Perfect Pairings" smart related products with 2-tier matching (Level 1 Category/Tag matching & Level 2 Manual Cross-sell). Connected actual MongoDB product reviews to storefront PDP with Verified Purchase badges. Implemented responsive visual order tracking timeline in the customer account area.
+* **[2026-09-08]**: **[Enterprise Backend Hardening & Redis Caching]**: Integrated Redis caching (`ioredis`) for public catalog APIs with instant purge on admin mutations. Configured structured error logging with Winston across all controllers. Implemented idempotent order creation via `x-idempotency-key` to eliminate duplicate order races. Added CSV export for orders & analytics, and built Admin Command Palette (CMD+K / CTRL+K) with bulk order status updating.
+* **[2026-09-08]**: **[Product Availability UX & Scarcity Psychology]**: Enhanced stock status display with dynamic microcopy (🟢 In Stock, 🔥 High Demand, 🔴 Out of Stock). Upgraded variant selection UI to keep out-of-stock options visible but styled with a diagonal slash strike-through line, disabled state, and clear labeling.
+* **[2026-09-08]**: **[Restock Lead Capture & Notify Me Form]**: Created backend `RestockLead` schema and endpoint `POST /api/leads/restock` with duplicate prevention. Built storefront inline "Notify Me When In Stock" form in `product-detail.tsx` that replaces purchase buttons when out of stock and confirms subscription via toast and success banner.
+* **[2026-09-08]**: **[Campaign Management & High-Conversion Landing Page System]**: Implemented full architectural Campaign System with Zero Data Duplication (referencing canonical `Product` and `Inventory`). Developed backend `Campaign` model with compound indexes, server-authoritative status evaluation (`computeLiveStatus`), Redis cache invalidation, public/preview endpoints, and lightweight action tracking. Built multi-tab Admin Campaign Builder, management table, and Live Device Simulator (Desktop/Mobile). Built public dedicated landing page `/[locale]/campaign/[slug]` with Next.js ISR (`revalidate = 60`), Open Graph, Twitter cards, Schema.org JSON-LD, hydration-safe live countdown timer, interactive touch gallery, high-conversion offer box (with direct checkout navigation), benefits grid, mobile/desktop sticky CTA bar, and graceful expired state. Both `apps/dashboard` and `apps/storefront` compiled with zero errors. Pushed cleanly to `origin/dashboard-all`.
