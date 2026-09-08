@@ -285,3 +285,12 @@ The Admin Dashboard must not begin until Phase 12's Storefront Production Gate p
 - [x] Verified RBAC roles in Dashboard sidebar.
 - [x] Successfully merged dashboard-all branch into main and pushed to remote.
 - Phase 12 Admin Dashboard Epic is 100% COMPLETED.
+
+## Phase 13H SEO, Structured Data & Speed Polish (2026-09-08)
+
+- [x] Added localized fallback metadata with `%s | ReadyCommerce` title templating, metadata base, OpenGraph and Twitter defaults.
+- [x] Added dynamic product and category metadata with canonical URLs, descriptions and imagery.
+- [x] Added Product Schema.org JSON-LD with product identity, image, SKU, BDT offers, availability and conditional aggregate rating.
+- [x] Added localized `/categories/[slug]` routes and connected homepage category cards to them.
+- [x] Added 60-second route revalidation and cached server catalog fetches for high-traffic catalog surfaces.
+- [ ] Complete live Google Rich Results validation, sitemap/robots expansion, Lighthouse measurement and production CDN cache verification.

@@ -4,7 +4,8 @@ export type CatalogVariant = { _id: string; sku: string; name: string; size?: st
 export type CatalogProduct = { _id: string; name: string; slug: string; shortDescription?: string; description?: string; basePrice: number; discountPrice?: number; images: string[]; category: { _id: string; name: string; slug: string }; variants: CatalogVariant[]; specifications?: {name: string; value: string}[]; isFeatured?: boolean; isSpecialOffer?: boolean; ratingAverage?: number; reviewCount?: number };
 export type CatalogCategory = {_id: string; name: string; slug: string; image?: string};
 class ApiError extends Error { status: number; code?: string; constructor(message: string, status: number, code?: string) { super(message); this.status = status; this.code = code; } }
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+type ApiRequestInit = RequestInit & { next?: { revalidate?: number; tags?: string[] } };
+async function request<T>(path: string, options: ApiRequestInit = {}): Promise<T> {
   const response = await fetch(`${API_URL}${path}`, {...options, credentials: 'include', headers: {'Content-Type': 'application/json', ...(options.headers || {})}});
   const body = await response.json().catch(() => ({}));
   if (!response.ok) throw new ApiError(body?.error?.message || 'Request failed.', response.status, body?.error?.code);
@@ -12,9 +13,9 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 }
 export const catalogService = {
   products: async (params: Record<string, string | number | boolean | undefined> = {}) => {const query = new URLSearchParams(Object.entries(params).filter(([, value]) => value !== undefined && value !== '').map(([key, value]) => [key, String(value)])); return request<{success: boolean; data: CatalogProduct[]; pagination: {page: number; limit: number; total: number; pages: number}}>(`/products?${query}`);},
-  product: async (id: string) => request<{success: boolean; data: CatalogProduct}>(`/products/${encodeURIComponent(id)}`),
+  product: async (id: string, options?: ApiRequestInit) => request<{success: boolean; data: CatalogProduct}>(`/products/${encodeURIComponent(id)}`, options),
   relatedProducts: async (id: string) => request<{success: boolean; data: CatalogProduct[]}>(`/products/${encodeURIComponent(id)}/related`),
-  categories: async () => request<{success: boolean; data: CatalogCategory[]}>('/categories'),
+  categories: async (options?: ApiRequestInit) => request<{success: boolean; data: CatalogCategory[]}>('/categories', options),
 };
 export type ServerCart = {id: string; items: Array<{id: string; productId: string; variantId?: string; quantity: number; price: number; name: string; image?: string; sku?: string}>; subtotal: number; total: number; currency: string};
 export const cartService = {

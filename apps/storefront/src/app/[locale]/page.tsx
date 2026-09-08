@@ -3,4 +3,6 @@ import {Link} from '@/i18n/routing';
 import HeroCarousel from '@/components/store/hero-carousel';
 import HomeCatalog from '@/components/store/home-catalog';
 
+export const revalidate = 60;
+
 export default function Home() { const t = useTranslations('Storefront'); return <main className="bg-background text-foreground"><section id="about" className="mx-auto grid max-w-7xl gap-8 px-5 pb-16 pt-6 sm:px-8 sm:pt-8 lg:grid-cols-[.92fr_1.08fr] lg:gap-12 lg:px-10 lg:pb-24 lg:pt-10"><div className="flex flex-col justify-center py-8 lg:py-16"><p className="mb-6 text-[13px] font-bold uppercase tracking-[0.25em] text-primary">{t('hero.eyebrow')}</p><h1 className="max-w-xl whitespace-pre-line text-[clamp(2.8rem,6vw,5.75rem)] font-bold leading-[1.05] tracking-tight">{t('hero.title')}</h1><p className="mt-7 max-w-md text-[17px] leading-relaxed text-muted-foreground sm:text-[19px]">{t('hero.description')}</p><Link href="/shop" className="mt-10 inline-flex min-h-[52px] w-fit items-center gap-3 rounded-full bg-primary px-8 text-[15px] font-semibold text-white shadow-premium hover:bg-primary-hover">{t('hero.cta')} →</Link></div><div className="relative min-h-[440px] rounded-[2.5rem] bg-muted shadow-premium sm:min-h-[560px] lg:min-h-[680px]"><HeroCarousel /></div></section><HomeCatalog /></main>; }

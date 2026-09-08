@@ -45,7 +45,7 @@ export default function HomeCatalog() {
         ) : (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-6">
             {categories.map((category) => (
-              <Link href={`/shop?category=${category.slug}`} key={category._id} className="group relative block aspect-[4/5] overflow-hidden rounded-[24px] bg-slate-100 shadow-sm transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.15)]">
+              <Link href={`/categories/${category.slug}`} key={category._id} className="group relative block aspect-[4/5] overflow-hidden rounded-[24px] bg-slate-100 shadow-sm transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.15)]">
                 <Image src={category.image || 'https://images.unsplash.com/photo-1556229010-6c3f2c9ca5f8?auto=format&fit=crop&w=700&q=88'} alt={category.name} fill sizes="(max-width: 640px) 45vw, 23vw" className="object-cover transition-transform duration-1000 ease-out group-hover:scale-110" />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/20 to-transparent opacity-80 transition-opacity duration-500 group-hover:opacity-100" />
                 <div className="absolute bottom-6 left-6 right-6 flex flex-col items-center text-center">

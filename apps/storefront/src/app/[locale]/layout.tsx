@@ -17,8 +17,11 @@ const hindSiliguri = Hind_Siliguri({
 });
 
 export const metadata: Metadata = {
-  title: "ReadyCommerce CMS",
-  description: "Premium self-hosted commerce platform",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
+  title: { default: 'ReadyCommerce', template: '%s | ReadyCommerce' },
+  description: 'Premium beauty, fragrance and lifestyle essentials for considered everyday rituals.',
+  openGraph: { type: 'website', siteName: 'ReadyCommerce', title: 'ReadyCommerce', description: 'Premium beauty, fragrance and lifestyle essentials.' },
+  twitter: { card: 'summary_large_image', title: 'ReadyCommerce', description: 'Premium beauty, fragrance and lifestyle essentials.' },
 };
 
 export default async function RootLayout({
