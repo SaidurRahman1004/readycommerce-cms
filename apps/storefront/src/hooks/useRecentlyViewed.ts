@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { CatalogProduct } from '@/services/api-service';
 
 const STORAGE_KEY = 'readycommerce_recently_viewed';
@@ -22,7 +22,7 @@ export function useRecentlyViewed() {
     return () => { active = false; };
   }, []);
 
-  const addProduct = (product: CatalogProduct) => {
+  const addProduct = useCallback((product: CatalogProduct) => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       let items: CatalogProduct[] = stored ? JSON.parse(stored) : [];
@@ -43,7 +43,7 @@ export function useRecentlyViewed() {
     } catch (err) {
       console.error('Failed to update recently viewed items', err);
     }
-  };
+  }, []);
 
   return { recentlyViewed, addProduct };
 }
