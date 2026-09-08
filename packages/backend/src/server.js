@@ -9,7 +9,7 @@ const connectDB = require('./config/db');
 const { notFoundHandler, errorHandler } = require('./middlewares/errorHandler');
 const { getShippingCost } = require('./utils/shipping');
 const StoreSettings = require('./models/StoreSettings');
-const { optionalAuth, authMiddleware } = require('./middlewares/authMiddleware');
+const { optionalAuth } = require('./middlewares/authMiddleware');
 const { customerGuides } = require('./controllers/manualController');
 const adminManualRoutes = require('./routes/adminManualRoutes');
 

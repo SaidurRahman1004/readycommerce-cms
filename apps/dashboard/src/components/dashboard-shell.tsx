@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import toast from 'react-hot-toast';
 import {
-  Archive, BarChart3, Bell, CreditCard, FileText, Home, Image, Layout, Menu,
+  Archive, BarChart3, Bell, BookOpen, CreditCard, FileText, Home, Image, Layout, Menu,
   Package, Percent, RotateCcw, Settings, Shield, ShoppingCart, Sparkles, Star, Tags, Users, X,
   LogOut, Lock, Mail, ArrowRight, Loader2,
   type LucideIcon,
@@ -35,7 +35,7 @@ const copy = {
     nav: {
       overview: 'Overview', orders: 'Orders', payments: 'Payments', products: 'Products', categories: 'Categories',
       inventory: 'Inventory', customers: 'Customers', reviews: 'Reviews', coupons: 'Coupons & Promotions', campaigns: 'Campaigns & Landing', cms: 'Website CMS',
-      media: 'Media Library', analytics: 'Analytics & Reports', returns: 'Returns & Refunds', notifications: 'Notifications',
+      media: 'Media Library', manuals: 'Manuals & SOPs', analytics: 'Analytics & Reports', returns: 'Returns & Refunds', notifications: 'Notifications',
       team: 'Team & Roles', settings: 'Settings', audit: 'Audit Logs',
     },
   },
@@ -47,7 +47,7 @@ const copy = {
     nav: {
       overview: 'ওভারভিউ', orders: 'অর্ডার', payments: 'পেমেন্ট', products: 'পণ্য', categories: 'ক্যাটাগরি',
       inventory: 'ইনভেন্টরি', customers: 'কাস্টমার', reviews: 'রিভিউ', coupons: 'কুপন ও প্রোমোশন', campaigns: 'ক্যাম্পেইন ও ল্যান্ডিং', cms: 'ওয়েবসাইট CMS',
-      media: 'মিডিয়া লাইব্রেরি', analytics: 'অ্যানালিটিক্স ও রিপোর্ট', returns: 'রিটার্ন ও রিফান্ড',
+      media: 'মিডিয়া লাইব্রেরি', manuals: 'ম্যানুয়াল ও SOP', analytics: 'অ্যানালিটিক্স ও রিপোর্ট', returns: 'রিটার্ন ও রিফান্ড',
       notifications: 'নোটিফিকেশন', team: 'টিম ও রোল', settings: 'সেটিংস', audit: 'অডিট লগ',
     },
   },
@@ -67,6 +67,7 @@ const navItems: NavItem[] = [
   { key: 'campaigns', icon: Sparkles, href: '/campaigns', roles: CONTENT_ROLES },
   { key: 'cms', icon: Layout, href: '/cms', roles: ['super-admin', 'editor'] },
   { key: 'media', icon: Image, href: '/media-library', roles: ['super-admin', 'editor'] },
+  { key: 'manuals', icon: BookOpen, href: '/manuals', roles: ['super-admin', 'manager', 'editor'] },
   { key: 'analytics', icon: BarChart3, href: '/analytics', roles: ['super-admin', 'manager'] },
   { key: 'notifications', icon: Bell, href: '/notifications', roles: ['super-admin', 'manager'] },
   { key: 'team', icon: Shield, href: '/team-&-roles', roles: SUPER_ADMIN },

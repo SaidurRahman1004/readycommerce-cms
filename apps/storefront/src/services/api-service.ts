@@ -7,6 +7,7 @@ export type AuthUser = {id: string; firstName: string; lastName: string; email: 
 export type CatalogVariant = { _id: string; sku: string; name: string; size?: string; color?: string; price: number; stock: number | null };
 export type CatalogProduct = { _id: string; name: string; slug: string; shortDescription?: string; description?: string; basePrice: number; discountPrice?: number; images: string[]; category: { _id: string; name: string; slug: string }; variants: CatalogVariant[]; specifications?: {name: string; value: string}[]; isFeatured?: boolean; isSpecialOffer?: boolean; ratingAverage?: number; reviewCount?: number };
 export type CatalogCategory = {_id: string; name: string; slug: string; image?: string};
+export type CustomerManual = { _id: string; title: string; slug: string; type: 'customer_guide'; content: string; relatedProducts: Array<{ _id: string; name: string; slug: string; images?: string[] }>; status: 'active' | 'draft'; updatedAt: string };
 class ApiError extends Error { status: number; code?: string; constructor(message: string, status: number, code?: string) { super(message); this.status = status; this.code = code; } }
 type ApiRequestInit = RequestInit & { next?: { revalidate?: number; tags?: string[] } };
 async function request<T>(path: string, options: ApiRequestInit = {}): Promise<T> {
@@ -38,6 +39,7 @@ export const wishlistService = {
   toggle: async (productId: string) => request<{success: boolean; data: {items: WishlistResponse[]; productId: string; added: boolean}}>('/wishlist/toggle', {method: 'POST', body: JSON.stringify({productId})}),
   sync: async (productIds: string[]) => request<{success: boolean; data: {items: WishlistResponse[]}}>('/wishlist/sync', {method: 'POST', body: JSON.stringify({productIds})}),
 };
+export const manualService = { customerGuides: async () => request<{ success: boolean; data: CustomerManual[] }>('/manuals/customer-guides') };
 
 export type AuthPayload = {name?: string; email: string; password: string};
 export type CheckoutPayload = {addressId: string; paymentMethod: 'bkash' | 'nagad'; txid: string; couponCode?: string; idempotencyKey?: string};

@@ -1,9 +1,11 @@
 const express = require('express');
-const { authorize } = require('../middlewares/authMiddleware');
+const cookieParser = require('cookie-parser');
+const { authMiddleware, authorize } = require('../middlewares/authMiddleware');
 const controller = require('../controllers/manualController');
 
 const router = express.Router();
 const EDIT_ROLES = ['super-admin', 'manager', 'editor'];
+router.use(cookieParser(), authMiddleware);
 router.get('/', authorize(...EDIT_ROLES), controller.list);
 router.post('/', authorize(...EDIT_ROLES), controller.create);
 router.put('/:id', authorize(...EDIT_ROLES), controller.update);

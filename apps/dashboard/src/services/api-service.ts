@@ -3,6 +3,7 @@ export type AuthUser = {id: string; firstName: string; lastName: string; email: 
 export type CatalogVariant = { _id: string; sku: string; name: string; size?: string; color?: string; price: number; stock: number | null };
 export type CatalogProduct = { _id: string; name: string; slug: string; shortDescription?: string; description?: string; basePrice: number; discountPrice?: number; images: string[]; category: { _id: string; name: string; slug: string }; variants: CatalogVariant[]; isFeatured?: boolean; isSpecialOffer?: boolean };
 export type CatalogCategory = {_id: string; name: string; slug: string; image?: string};
+export type AdminManual = { _id: string; title: string; slug: string; type: 'staff_sop' | 'customer_guide'; content: string; relatedProducts: Array<{ _id: string; name: string; slug: string; images?: string[] }>; status: 'active' | 'draft'; createdAt: string; updatedAt: string };
 class ApiError extends Error { status: number; code?: string; constructor(message: string, status: number, code?: string) { super(message); this.status = status; this.code = code; } }
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
@@ -15,6 +16,15 @@ export const catalogService = {
   products: async (params: Record<string, string | number | boolean | undefined> = {}) => {const query = new URLSearchParams(Object.entries(params).filter(([, value]) => value !== undefined && value !== '').map(([key, value]) => [key, String(value)])); return request<{success: boolean; data: CatalogProduct[]; pagination: {page: number; limit: number; total: number; pages: number}}>(`/products?${query}`);},
   product: async (id: string) => request<{success: boolean; data: CatalogProduct}>(`/products/${encodeURIComponent(id)}`),
   categories: async () => request<{success: boolean; data: CatalogCategory[]}>('/categories'),
+};
+export const manualService = {
+  list: async (params: { type?: AdminManual['type']; status?: AdminManual['status'] } = {}) => {
+    const query = new URLSearchParams(Object.entries(params).filter(([, value]) => value).map(([key, value]) => [key, String(value)]));
+    return request<{ success: boolean; data: AdminManual[] }>(`/admin/manuals?${query}`);
+  },
+  create: async (payload: Omit<AdminManual, '_id' | 'createdAt' | 'updatedAt' | 'relatedProducts'> & { relatedProducts: string[] }) => request<{ success: boolean; data: AdminManual }>('/admin/manuals', { method: 'POST', body: JSON.stringify(payload) }),
+  update: async (id: string, payload: Omit<AdminManual, '_id' | 'createdAt' | 'updatedAt' | 'relatedProducts'> & { relatedProducts: string[] }) => request<{ success: boolean; data: AdminManual }>(`/admin/manuals/${encodeURIComponent(id)}`, { method: 'PUT', body: JSON.stringify(payload) }),
+  remove: async (id: string) => request<{ success: boolean }>(`/admin/manuals/${encodeURIComponent(id)}`, { method: 'DELETE' }),
 };
 export type ServerCart = {id: string; items: Array<{id: string; productId: string; variantId?: string; quantity: number; price: number; name: string; image?: string; sku?: string}>; subtotal: number; total: number; currency: string};
 export const cartService = {

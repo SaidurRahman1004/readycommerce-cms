@@ -317,6 +317,15 @@ The Admin Dashboard must not begin until Phase 12's Storefront Production Gate p
 - [ ] Browser/device screenshot verification, live campaign analytics verification, and staging payment/order QA remain pending.
 - [x] Fixed the runtime Campaign Builder crash by allowing the catalog's Unsplash image host in the Dashboard Next.js image configuration.
 
+## System Manuals & Customer Guides (2026-09-08)
+
+- [x] Added `Manual` MongoDB model for staff SOPs and customer product guides.
+- [x] Added admin-only CRUD routes under `/api/admin/manuals` with role authorization and validation.
+- [x] Added authenticated `/api/manuals/customer-guides` endpoint with purchased-product entitlement filtering and general-guide support.
+- [x] Added Dashboard `/manuals` CMS with responsive table, Markdown-friendly editor, preview, product targeting, and CRUD feedback states.
+- [x] Added Storefront `/[locale]/account/guides` with responsive reading cards, loading/empty/error states, and account navigation integration.
+- [ ] Rich-text sanitization/rendering, formal SOP version history, guide analytics, and browser/device verification remain future hardening work.
+
 ## Local Network Development Reliability (2026-09-08)
 
 - [x] Added `allowedDevOrigins` to the Storefront and Dashboard Next.js development configurations for localhost, loopback, the current LAN host, and `.local` hostnames.
