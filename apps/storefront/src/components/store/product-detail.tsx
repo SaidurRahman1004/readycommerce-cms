@@ -19,6 +19,7 @@ export default function ProductDetail({ productId }: { productId: string }) {
   const [product, setProduct] = useState<CatalogProduct | null>(null);
   const [related, setRelated] = useState<CatalogProduct[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingRelated, setLoadingRelated] = useState(true);
   const [error, setError] = useState(false);
   const [active, setActive] = useState(0);
   const [quantity, setQuantity] = useState(1);
@@ -31,7 +32,7 @@ export default function ProductDetail({ productId }: { productId: string }) {
     catalogService.product(productId).then((result) => {
       if (!mounted) return;
       setProduct(result.data); setVariant(result.data.variants[0]?._id || ''); addProduct(result.data);
-      catalogService.relatedProducts(result.data._id).then((res) => { if (mounted) setRelated(res.data); }).catch(() => undefined);
+      catalogService.relatedProducts(result.data._id).then((res) => { if (mounted) setRelated(res.data); }).catch(() => undefined).finally(() => { if (mounted) setLoadingRelated(false); });
     }).catch(() => { if (mounted) setError(true); }).finally(() => { if (mounted) setLoading(false); });
     return () => { mounted = false; };
   }, [productId, addProduct]);
@@ -175,20 +176,37 @@ export default function ProductDetail({ productId }: { productId: string }) {
         </button>
       </div>
 
-      {related.length > 0 && (
+      {(loadingRelated || related.length > 0) && (
         <div className="mx-auto mt-16 max-w-7xl border-t border-border px-5 pt-16 sm:px-8 lg:px-10 lg:pt-24">
-          <h2 className="text-2xl font-bold">{t('pdp.related')}</h2>
-          <div className="mt-10 grid grid-cols-2 gap-x-4 gap-y-9 sm:gap-x-6 lg:grid-cols-4">
-            {related.map((item) => <CatalogCard key={item._id} product={item} />)}
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold sm:text-3xl">Perfect Pairings</h2>
+          </div>
+          <div className="mt-10 -mx-5 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-8 sm:-mx-8 sm:px-8 lg:mx-0 lg:grid lg:grid-cols-4 lg:gap-x-6 lg:gap-y-10 lg:overflow-visible lg:px-0 lg:pb-0 lg:snap-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {loadingRelated ? Array(4).fill(0).map((_, i) => (
+              <div key={i} className="w-[280px] shrink-0 snap-start lg:w-auto">
+                <div className="flex flex-col gap-4 animate-pulse">
+                  <div className="aspect-[4/5] rounded-[1.5rem] bg-muted w-full" />
+                  <div className="space-y-2 px-2"><div className="h-4 w-3/4 bg-muted rounded" /><div className="h-4 w-1/2 bg-muted rounded" /></div>
+                </div>
+              </div>
+            )) : related.map((item) => (
+              <div key={item._id} className="w-[280px] shrink-0 snap-start lg:w-auto">
+                <CatalogCard product={item} />
+              </div>
+            ))}
           </div>
         </div>
       )}
 
       {recentlyViewed.filter((item) => item._id !== product._id).length > 0 && (
         <div className="mx-auto mt-16 max-w-7xl border-t border-border px-5 pt-16 sm:px-8 lg:px-10">
-          <h2 className="text-2xl font-bold">{t('pdp.recentlyViewed')}</h2>
-          <div className="mt-10 grid grid-cols-2 gap-x-4 gap-y-9 sm:gap-x-6 lg:grid-cols-4">
-            {recentlyViewed.filter((item) => item._id !== product._id).slice(0, 4).map((item) => <CatalogCard key={item._id} product={item} />)}
+          <h2 className="text-2xl font-bold sm:text-3xl">{t('pdp.recentlyViewed')}</h2>
+          <div className="mt-10 -mx-5 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-8 sm:-mx-8 sm:px-8 lg:mx-0 lg:grid lg:grid-cols-4 lg:gap-x-6 lg:gap-y-10 lg:overflow-visible lg:px-0 lg:pb-0 lg:snap-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {recentlyViewed.filter((item) => item._id !== product._id).slice(0, 4).map((item) => (
+              <div key={item._id} className="w-[280px] shrink-0 snap-start lg:w-auto">
+                <CatalogCard product={item} />
+              </div>
+            ))}
           </div>
         </div>
       )}

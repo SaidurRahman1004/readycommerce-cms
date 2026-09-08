@@ -93,14 +93,33 @@ const getRelatedProducts = async (req, res, next) => {
     }
 
     const query = mongoose.isValidObjectId(queryId) ? { _id: queryId } : { slug: queryId };
-    const product = await Product.findOne(query).select('category _id').lean();
+    const product = await Product.findOne(query).select('category tags crossSellIds _id').lean();
     if (!product) return next(new AppError('Product not found.', 404, 'PRODUCT_NOT_FOUND'));
     
-    // Find up to 4 active products in the same category, excluding the current one
-    const relatedProducts = await Product.find({ category: product.category, status: 'active', _id: { $ne: product._id } })
-      .populate('category', 'name slug image')
-      .limit(4)
-      .lean();
+    let relatedProducts = [];
+    if (product.crossSellIds && product.crossSellIds.length > 0) {
+      relatedProducts = await Product.find({ _id: { $in: product.crossSellIds }, status: 'active' })
+        .populate('category', 'name slug image')
+        .limit(4)
+        .lean();
+    }
+    
+    if (relatedProducts.length < 4) {
+      const excludeIds = [product._id, ...relatedProducts.map(p => p._id)];
+      const matchQuery = { status: 'active', _id: { $nin: excludeIds } };
+      
+      if (product.tags && product.tags.length > 0) {
+        matchQuery.$or = [{ tags: { $in: product.tags } }, { category: product.category }];
+      } else {
+        matchQuery.category = product.category;
+      }
+      
+      const moreRelated = await Product.find(matchQuery)
+        .populate('category', 'name slug image')
+        .limit(4 - relatedProducts.length)
+        .lean();
+      relatedProducts = [...relatedProducts, ...moreRelated];
+    }
     
     const data = await Promise.all(relatedProducts.map(async (p) => ({ ...p, variants: await variantData(await ProductVariant.find({ product: p._id, isActive: true })) })));
     
