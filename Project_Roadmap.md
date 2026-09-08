@@ -304,3 +304,10 @@ The Admin Dashboard must not begin until Phase 12's Storefront Production Gate p
 - [x] Added optimistic wishlist UI with pending state, backend persistence and rollback on failure.
 - [x] Fixed the protected `/orders/myorders` route precedence bug discovered during the related-flow scan.
 - [ ] Complete live MongoDB wishlist E2E, logout/login multi-device conflict testing and visual browser/device verification.
+
+## Local Network Development Reliability (2026-09-08)
+
+- [x] Added `allowedDevOrigins` to the Storefront and Dashboard Next.js development configurations for localhost, loopback, the current LAN host, and `.local` hostnames.
+- [x] Made Storefront's backend API fallback LAN-aware so browser requests use the page host on port 5000 when no public API URL is configured; HttpOnly cookies therefore remain scoped to the host actually being used.
+- [x] Fixed the broken fallback Unsplash hero image URL.
+- [ ] Set explicit `NEXT_ALLOWED_DEV_ORIGINS` and `NEXT_PUBLIC_API_URL` values for staging/production deployments and perform live multi-device verification.

@@ -1,4 +1,8 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+export const getApiUrl = () => process.env.NEXT_PUBLIC_API_URL || (
+  typeof window !== 'undefined'
+    ? `${window.location.protocol}//${window.location.hostname}:5000/api`
+    : 'http://localhost:5000/api'
+);
 export type AuthUser = {id: string; firstName: string; lastName: string; email: string; phone?: string; role: string; isActive: boolean; isEmailVerified: boolean; createdAt?: string};
 export type CatalogVariant = { _id: string; sku: string; name: string; size?: string; color?: string; price: number; stock: number | null };
 export type CatalogProduct = { _id: string; name: string; slug: string; shortDescription?: string; description?: string; basePrice: number; discountPrice?: number; images: string[]; category: { _id: string; name: string; slug: string }; variants: CatalogVariant[]; specifications?: {name: string; value: string}[]; isFeatured?: boolean; isSpecialOffer?: boolean; ratingAverage?: number; reviewCount?: number };
@@ -6,7 +10,7 @@ export type CatalogCategory = {_id: string; name: string; slug: string; image?: 
 class ApiError extends Error { status: number; code?: string; constructor(message: string, status: number, code?: string) { super(message); this.status = status; this.code = code; } }
 type ApiRequestInit = RequestInit & { next?: { revalidate?: number; tags?: string[] } };
 async function request<T>(path: string, options: ApiRequestInit = {}): Promise<T> {
-  const response = await fetch(`${API_URL}${path}`, {...options, credentials: 'include', headers: {'Content-Type': 'application/json', ...(options.headers || {})}});
+  const response = await fetch(`${getApiUrl()}${path}`, {...options, credentials: 'include', headers: {'Content-Type': 'application/json', ...(options.headers || {})}});
   const body = await response.json().catch(() => ({}));
   if (!response.ok) throw new ApiError(body?.error?.message || 'Request failed.', response.status, body?.error?.code);
   return body as T;

@@ -5,6 +5,7 @@ import Image from 'next/image';
 import useEmblaCarousel from 'embla-carousel-react';
 import Autoplay from 'embla-carousel-autoplay';
 import {useTranslations} from 'next-intl';
+import {getApiUrl} from '@/services/api-service';
 
 const heroSlides = [
   {
@@ -21,7 +22,7 @@ const heroSlides = [
   },
   {
     id: 'slide-3',
-    image: 'https://images.unsplash.com/photo-1615397323238-709403b22e17?auto=format&fit=crop&w=1500&q=90',
+    image: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?auto=format&fit=crop&w=1500&q=90',
     caption: 'hero.caption',
     alt: 'hero.imageAlt'
   }
@@ -30,7 +31,7 @@ const heroSlides = [
 export default function HeroCarousel() {
   const t = useTranslations('Storefront');
   const [slides, setSlides] = useState(heroSlides);
-  useEffect(() => { const api = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'; fetch(`${api}/cms/homepage`).then((response) => response.ok ? response.json() : null).then((body) => { const remote = body?.data?.slides?.filter((slide: { image?: string; isActive?: boolean }) => slide.image && slide.isActive !== false); if (remote?.length) setSlides(remote.map((slide: { image: string; title?: string }, index: number) => ({ id: `cms-${index}`, image: slide.image, caption: slide.title || 'hero.caption', alt: 'hero.imageAlt' }))); }).catch(() => undefined); }, []);
+  useEffect(() => { const api = getApiUrl(); fetch(`${api}/cms/homepage`, {credentials: 'include'}).then((response) => response.ok ? response.json() : null).then((body) => { const remote = body?.data?.slides?.filter((slide: { image?: string; isActive?: boolean }) => slide.image && slide.isActive !== false); if (remote?.length) setSlides(remote.map((slide: { image: string; title?: string }, index: number) => ({ id: `cms-${index}`, image: slide.image, caption: slide.title || 'hero.caption', alt: 'hero.imageAlt' }))); }).catch(() => undefined); }, []);
   
   // Initialize Embla with loop and autoplay
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true }, [

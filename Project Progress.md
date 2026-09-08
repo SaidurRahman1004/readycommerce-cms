@@ -70,6 +70,8 @@ This document serves as the central source of truth for the **ReadyCommerce CMS 
 ## Pending Tasks (Next Steps)
 - [ ] **Phase 13 Integration Tests**: Perform End-to-End (E2E) testing of the Storefront checking translations, SEO tags, responsive menus, and product flows.
 - [ ] **Phase 14 Production Hardening**: Implement caching (Redis/Next.js ISR tweaks), fix any lingering missing ENV variable errors, and prepare for Vercel/Render deployment.
+- [x] **Local Network Development Reliability (2026-09-08)**: Added Next.js `allowedDevOrigins` for localhost, loopback, the active LAN host (`10.10.14.198`) and `.local` development hostnames in both apps. Storefront API requests now derive the backend host from the browser hostname when `NEXT_PUBLIC_API_URL` is not configured, keeping LAN authentication/session requests on the correct machine. Replaced the broken fallback hero image URL.
+- [ ] Configure `NEXT_ALLOWED_DEV_ORIGINS` and `NEXT_PUBLIC_API_URL` explicitly for each deployment environment; live LAN browser verification remains recommended.
 
 ---
 
