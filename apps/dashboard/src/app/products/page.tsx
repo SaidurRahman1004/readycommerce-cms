@@ -60,7 +60,7 @@ function ProductsTable() {
   }, [search, debouncedSearch, updateUrl]);
 
   // Fetch Products based on URL State
-  const load = useCallback(() => {
+  const load = useCallback((signal?: AbortSignal) => {
     setLoading(true);
     setError(false);
     
@@ -70,17 +70,23 @@ function ProductsTable() {
       search: debouncedSearch || undefined,
       category: currentCategory || undefined,
       status: currentStatus || undefined
-    })
+    }, { signal })
     .then(r => {
       setItems(r.data);
       if (r.pagination) setPagination(r.pagination);
     })
-    .catch(() => setError(true))
-    .finally(() => setLoading(false));
+    .catch((error) => {
+      if (error?.code !== 'ABORTED') setError(true);
+    })
+    .finally(() => {
+      if (!signal?.aborted) setLoading(false);
+    });
   }, [currentPage, debouncedSearch, currentCategory, currentStatus]);
 
   useEffect(() => {
-    load();
+    const controller = new AbortController();
+    void load(controller.signal);
+    return () => controller.abort();
   }, [load]);
 
   const clearFilters = () => {

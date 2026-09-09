@@ -7,10 +7,45 @@ export type AdminManual = { _id: string; title: string; slug: string; type: 'sta
 class ApiError extends Error { status: number; code?: string; constructor(message: string, status: number, code?: string) { super(message); this.status = status; this.code = code; } }
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
-  const response = await fetch(`${API_URL}${path}`, {...options, credentials: 'include', headers: isFormData ? (options.headers || {}) : {'Content-Type': 'application/json', ...(options.headers || {})}});
-  const body = await response.json().catch(() => ({}));
-  if (!response.ok) throw new ApiError(body?.error?.message || 'Request failed.', response.status, body?.error?.code);
-  return body as T;
+  const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  const id = controller ? setTimeout(() => controller.abort(), 15000) : null;
+  const externalSignal = options.signal;
+  const abortFromCaller = () => controller?.abort();
+  externalSignal?.addEventListener('abort', abortFromCaller, { once: true });
+  const config = controller ? { ...options, signal: controller.signal } : options;
+
+  try {
+    const response = await fetch(`${API_URL}${path}`, { ...config, credentials: 'include', headers: isFormData ? (options.headers || {}) : { 'Content-Type': 'application/json', ...(options.headers || {}) } });
+    if (id) clearTimeout(id);
+
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
+          window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`;
+        }
+      }
+      throw new ApiError(body?.error?.message || body?.message || 'Request failed.', response.status, body?.error?.code);
+    }
+    return body as T;
+  } catch (error: unknown) {
+    if (id) clearTimeout(id);
+    const errorName = error instanceof Error ? error.name : '';
+    if (errorName === 'AbortError') {
+      throw new ApiError(
+        options.signal?.aborted ? 'Request cancelled.' : 'Network connection timed out. Please check your internet.',
+        options.signal?.aborted ? 499 : 408,
+        options.signal?.aborted ? 'ABORTED' : 'TIMEOUT'
+      );
+    }
+    if (!(error instanceof ApiError)) {
+      throw new ApiError('Network error. Please try again.', 500, 'NETWORK_ERROR');
+    }
+    throw error;
+  } finally {
+    if (id) clearTimeout(id);
+    externalSignal?.removeEventListener('abort', abortFromCaller);
+  }
 }
 export const catalogService = {
   products: async (params: Record<string, string | number | boolean | undefined> = {}) => {const query = new URLSearchParams(Object.entries(params).filter(([, value]) => value !== undefined && value !== '').map(([key, value]) => [key, String(value)])); return request<{success: boolean; data: CatalogProduct[]; pagination: {page: number; limit: number; total: number; pages: number}}>(`/products?${query}`);},
@@ -78,10 +113,25 @@ export type AdminOrderDetail = AdminOrder & { shippingAddress: { recipientName: 
 export const adminOrderService = { list: (params: Record<string, string | number | undefined> = {}) => { const query = new URLSearchParams(Object.entries(params).filter(([, value]) => value !== undefined && value !== '').map(([key, value]) => [key, String(value)])); return request<{ success: boolean; data: AdminOrder[]; pagination: { page: number; limit: number; total: number; pages: number } }>(`/admin/orders?${query}`); }, detail: (id: string) => request<{ success: boolean; data: AdminOrderDetail }>(`/admin/orders/${encodeURIComponent(id)}`), status: (id: string, status: string) => request<{ success: boolean; data: { orderId: string; status: string } }>(`/admin/orders/${encodeURIComponent(id)}/status`, { method: 'PUT', body: JSON.stringify({ status }) }), bulkStatus: (orderIds: string[], status: string) => request<{ success: boolean; message: string }>('/admin/orders/bulk-status', { method: 'PUT', body: JSON.stringify({ orderIds, status }) }), payment: (id: string, status: string, failureReason?: string) => request<{ success: boolean; data: { orderId: string; paymentStatus: string } }>(`/admin/orders/${encodeURIComponent(id)}/payment`, { method: 'PUT', body: JSON.stringify({ status, failureReason }) }), refund: (id: string, action: 'request'|'approve'|'refund') => request<{success:boolean;data:{orderId:string;status:string;returnStatus?:string;paymentStatus:string}}>(`/admin/orders/${encodeURIComponent(id)}/refund`, {method:'PUT',body:JSON.stringify({action})}) };
 export type AdminProduct = { _id: string; name: string; slug: string; description?: string; shortDescription?: string; category?: { _id: string; name: string }; basePrice: number; discountPrice?: number; images: string[]; status: string; isFeatured?: boolean; isSpecialOffer?: boolean; variants: Array<{ _id: string; sku: string; name: string; price: number; stock: number; attributes?: Record<string, string> }> };
 export type AdminInventory = { _id: string; variantId: string; product: string; image?: string; sku: string; variant: string; quantity: number; reservedQuantity: number; available: number; threshold: number; status: string };
-export const adminCatalogService = { products: (params: Record<string, string | number | undefined> = {}) => { const q = new URLSearchParams(Object.entries(params).filter(([, v]) => v !== undefined && v !== '').map(([k, v]) => [k, String(v)])); return request<{ success: boolean; data: AdminProduct[]; pagination: { page: number; limit: number; total: number; pages: number } }>(`/admin/products?${q}`); }, product: (id: string) => request<{ success: boolean; data: AdminProduct }>(`/admin/products/${id}`), create: (payload: Record<string, unknown>) => request<{ success: boolean; data: AdminProduct }>('/admin/products', { method: 'POST', body: JSON.stringify(payload) }), update: (id: string, payload: Record<string, unknown>) => request<{ success: boolean; data: AdminProduct }>(`/admin/products/${id}`, { method: 'PUT', body: JSON.stringify(payload) }), archive: (id: string) => request<{ success: boolean }>('/admin/products/' + id, { method: 'DELETE' }), inventory: (params: Record<string, string | number | undefined> = {}) => { const q = new URLSearchParams(Object.entries(params).filter(([, v]) => v !== undefined && v !== '').map(([k, v]) => [k, String(v)])); return request<{ success: boolean; data: AdminInventory[]; pagination?: { page: number; limit: number; total: number; pages: number } }>(`/admin/inventory?${q}`); }, adjust: (id: string, quantity: number, lowStockThreshold?: number) => request<{ success: boolean; data: AdminInventory }>(`/admin/inventory/${id}`, { method: 'PUT', body: JSON.stringify({ quantity, lowStockThreshold }) }), bulkThreshold: (inventoryIds: string[], lowStockThreshold: number) => request<{ success: boolean; message: string }>('/admin/inventory/bulk-threshold', { method: 'PUT', body: JSON.stringify({ inventoryIds, lowStockThreshold }) }) };
+export const adminCatalogService = { products: (params: Record<string, string | number | undefined> = {}, options: RequestInit = {}) => { const q = new URLSearchParams(Object.entries(params).filter(([, v]) => v !== undefined && v !== '').map(([k, v]) => [k, String(v)])); return request<{ success: boolean; data: AdminProduct[]; pagination: { page: number; limit: number; total: number; pages: number } }>(`/admin/products?${q}`, options); }, product: (id: string) => request<{ success: boolean; data: AdminProduct }>(`/admin/products/${id}`), create: (payload: Record<string, unknown>) => request<{ success: boolean; data: AdminProduct }>('/admin/products', { method: 'POST', body: JSON.stringify(payload) }), update: (id: string, payload: Record<string, unknown>) => request<{ success: boolean; data: AdminProduct }>(`/admin/products/${id}`, { method: 'PUT', body: JSON.stringify(payload) }), archive: (id: string) => request<{ success: boolean }>('/admin/products/' + id, { method: 'DELETE' }), inventory: (params: Record<string, string | number | undefined> = {}) => { const q = new URLSearchParams(Object.entries(params).filter(([, v]) => v !== undefined && v !== '').map(([k, v]) => [k, String(v)])); return request<{ success: boolean; data: AdminInventory[]; pagination?: { page: number; limit: number; total: number; pages: number } }>(`/admin/inventory?${q}`); }, adjust: (id: string, quantity: number, lowStockThreshold?: number) => request<{ success: boolean; data: AdminInventory }>(`/admin/inventory/${id}`, { method: 'PUT', body: JSON.stringify({ quantity, lowStockThreshold }) }), bulkThreshold: (inventoryIds: string[], lowStockThreshold: number) => request<{ success: boolean; message: string }>('/admin/inventory/bulk-threshold', { method: 'PUT', body: JSON.stringify({ inventoryIds, lowStockThreshold }) }) };
 export type AdminCategory = { _id: string; name: string; slug: string; description?: string; parent?: { name: string }; isActive: boolean; sortOrder: number };
 export type AdminCustomer = { _id: string; name: string; firstName: string; lastName: string; email: string; phone?: string; isActive: boolean; isEmailVerified: boolean; createdAt: string; totalOrders: number; totalSpend: number };
-export const adminDirectoryService = { categories: () => request<{success:boolean;data:AdminCategory[]}>('/admin/categories'), createCategory: (payload: Record<string,unknown>) => request<{success:boolean;data:AdminCategory}>('/admin/categories',{method:'POST',body:JSON.stringify(payload)}), updateCategory: (id:string,payload:Record<string,unknown>) => request<{success:boolean;data:AdminCategory}>(`/admin/categories/${id}`,{method:'PUT',body:JSON.stringify(payload)}), deleteCategory: (id:string) => request<{success:boolean}>(`/admin/categories/${id}`,{method:'DELETE'}), customers: (params: Record<string, string | number | undefined> = {}) => { const q = new URLSearchParams(Object.entries(params).filter(([, v]) => v !== undefined && v !== '').map(([k, v]) => [k, String(v)])); return request<{success:boolean;data:AdminCustomer[];pagination:{page:number;limit:number;total:number;pages:number}}>(`/admin/customers?${q}`); }, customer: (id:string) => request<{success:boolean;data:AdminCustomer & {addresses:Array<Record<string,string>>;orders:Array<{_id:string;orderNumber:string;status:string;paymentStatus:string;totalAmount:number;createdAt:string}>}}>(`/admin/customers/${id}`), customerStatus:(id:string,isActive:boolean)=>request(`/admin/customers/${id}/status`,{method:'PUT',body:JSON.stringify({isActive})}) };
+export type AdminCustomerDetail = AdminCustomer & {
+  addresses: Array<Record<string, string>>;
+  orders: Array<{ _id: string; orderNumber: string; status: string; paymentStatus: string; totalAmount: number; createdAt: string }>;
+};
+export const adminDirectoryService = {
+  categories: () => request<{ success: boolean; data: AdminCategory[] }>('/admin/categories'),
+  createCategory: (payload: Record<string, unknown>) => request<{ success: boolean; data: AdminCategory }>('/admin/categories', { method: 'POST', body: JSON.stringify(payload) }),
+  updateCategory: (id: string, payload: Record<string, unknown>) => request<{ success: boolean; data: AdminCategory }>(`/admin/categories/${id}`, { method: 'PUT', body: JSON.stringify(payload) }),
+  deleteCategory: (id: string) => request<{ success: boolean }>(`/admin/categories/${id}`, { method: 'DELETE' }),
+  customers: (params: Record<string, string | number | undefined> = {}, options: RequestInit = {}) => {
+    const q = new URLSearchParams(Object.entries(params).filter(([, v]) => v !== undefined && v !== '').map(([k, v]) => [k, String(v)]));
+    return request<{ success: boolean; data: AdminCustomer[]; pagination: { page: number; limit: number; total: number; pages: number } }>(`/admin/customers?${q}`, options);
+  },
+  customer: (id: string) => request<{ success: boolean; data: AdminCustomerDetail }>(`/admin/customers/${id}`),
+  customerStatus: (id: string, isActive: boolean) => request(`/admin/customers/${id}/status`, { method: 'PUT', body: JSON.stringify({ isActive }) }),
+};
 export type AdminReview={_id:string;product?:{name:string};user?:{firstName:string;lastName:string};rating:number;body:string;status:string;createdAt:string};export type AdminCoupon={_id:string;code:string;discountType:string;discountValue:number;expiresAt:string;isActive:boolean;usedCount:number};export const adminPromoService={reviews:()=>request<{success:boolean;data:AdminReview[]}>('/admin/reviews'),reviewStatus:(id:string,status:string)=>request('/admin/reviews/'+id+'/status',{method:'PUT',body:JSON.stringify({status})}),deleteReview:(id:string)=>request('/admin/reviews/'+id,{method:'DELETE'}),coupons:()=>request<{success:boolean;data:AdminCoupon[]}>('/admin/coupons'),createCoupon:(payload:Record<string,unknown>)=>request('/admin/coupons',{method:'POST',body:JSON.stringify(payload)}),deleteCoupon:(id:string)=>request('/admin/coupons/'+id,{method:'DELETE'})};
 
 export type StaffRole = 'super-admin' | 'manager' | 'editor' | 'support';

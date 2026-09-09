@@ -48,23 +48,31 @@ function CustomersClient() {
   }, [search, debouncedSearch, updateUrl]);
 
   // Fetch data
-  const load = useCallback(() => {
+  const load = useCallback((signal?: AbortSignal) => {
     setLoading(true);
     adminDirectoryService.customers({
       page: currentPage,
       search: debouncedSearch || undefined,
       sort: currentSortKey || undefined,
       order: currentSortOrder || undefined
-    })
+    }, { signal })
     .then((r) => {
       setCustomers(r.data);
       if (r.pagination) setPagination(r.pagination);
     })
-    .catch(console.error)
-    .finally(() => setLoading(false));
+    .catch((error) => {
+      if (error?.code !== 'ABORTED') console.error(error);
+    })
+    .finally(() => {
+      if (!signal?.aborted) setLoading(false);
+    });
   }, [currentPage, debouncedSearch, currentSortKey, currentSortOrder]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    const controller = new AbortController();
+    void load(controller.signal);
+    return () => controller.abort();
+  }, [load]);
 
   const columns: Column<AdminCustomer>[] = [
     { key: 'name', label: 'Customer', sortable: true, render: (row) => (<div><p className="font-bold">{row.name}</p><p className="text-xs text-slate-500">{row.email}</p></div>) },

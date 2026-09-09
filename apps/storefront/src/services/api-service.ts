@@ -11,13 +11,48 @@ export type CustomerManual = { _id: string; title: string; slug: string; type: '
 class ApiError extends Error { status: number; code?: string; constructor(message: string, status: number, code?: string) { super(message); this.status = status; this.code = code; } }
 type ApiRequestInit = RequestInit & { next?: { revalidate?: number; tags?: string[] } };
 async function request<T>(path: string, options: ApiRequestInit = {}): Promise<T> {
-  const response = await fetch(`${getApiUrl()}${path}`, {...options, credentials: 'include', headers: {'Content-Type': 'application/json', ...(options.headers || {})}});
-  const body = await response.json().catch(() => ({}));
-  if (!response.ok) throw new ApiError(body?.error?.message || 'Request failed.', response.status, body?.error?.code);
-  return body as T;
+  const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  const id = controller ? setTimeout(() => controller.abort(), 15000) : null;
+  const externalSignal = options.signal;
+  const abortFromCaller = () => controller?.abort();
+  externalSignal?.addEventListener('abort', abortFromCaller, { once: true });
+  const config = controller ? { ...options, signal: controller.signal } : options;
+
+  try {
+    const response = await fetch(`${getApiUrl()}${path}`, { ...config, credentials: 'include', headers: { 'Content-Type': 'application/json', ...(options.headers || {}) } });
+    if (id) clearTimeout(id);
+
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      if (response.status === 401 || response.status === 403) {
+        if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
+          window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`;
+        }
+      }
+      throw new ApiError(body?.error?.message || body?.message || 'Request failed.', response.status, body?.error?.code);
+    }
+    return body as T;
+  } catch (error: unknown) {
+    if (id) clearTimeout(id);
+    const errorName = error instanceof Error ? error.name : '';
+    if (errorName === 'AbortError') {
+      throw new ApiError(
+        externalSignal?.aborted ? 'Request cancelled.' : 'Network connection timed out. Please check your internet.',
+        externalSignal?.aborted ? 499 : 408,
+        externalSignal?.aborted ? 'ABORTED' : 'TIMEOUT'
+      );
+    }
+    if (!(error instanceof ApiError)) {
+      throw new ApiError('Network error. Please try again.', 500, 'NETWORK_ERROR');
+    }
+    throw error;
+  } finally {
+    if (id) clearTimeout(id);
+    externalSignal?.removeEventListener('abort', abortFromCaller);
+  }
 }
 export const catalogService = {
-  products: async (params: Record<string, string | number | boolean | undefined> = {}) => {const query = new URLSearchParams(Object.entries(params).filter(([, value]) => value !== undefined && value !== '').map(([key, value]) => [key, String(value)])); return request<{success: boolean; data: CatalogProduct[]; pagination: {page: number; limit: number; total: number; pages: number}}>(`/products?${query}`);},
+  products: async (params: Record<string, string | number | boolean | undefined> = {}, options?: ApiRequestInit) => {const query = new URLSearchParams(Object.entries(params).filter(([, value]) => value !== undefined && value !== '').map(([key, value]) => [key, String(value)])); return request<{success: boolean; data: CatalogProduct[]; pagination: {page: number; limit: number; total: number; pages: number}}>(`/products?${query}`, options);},
   product: async (id: string, options?: ApiRequestInit) => request<{success: boolean; data: CatalogProduct}>(`/products/${encodeURIComponent(id)}`, options),
   relatedProducts: async (id: string) => request<{success: boolean; data: CatalogProduct[]}>(`/products/${encodeURIComponent(id)}/related`),
   categories: async (options?: ApiRequestInit) => request<{success: boolean; data: CatalogCategory[]}>('/categories', options),
