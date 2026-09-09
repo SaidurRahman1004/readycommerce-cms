@@ -29,9 +29,37 @@ const list = async (req, res, next) => {
     const filter = {};
     if (req.query.type && ['staff_sop', 'customer_guide'].includes(req.query.type)) filter.type = req.query.type;
     if (req.query.status && ['active', 'draft'].includes(req.query.status)) filter.status = req.query.status;
-    const data = await Manual.find(filter).populate('relatedProducts', 'name slug images').sort({ createdAt: -1 }).lean();
-    return res.json({ success: true, data });
+    if (req.query.search) {
+      const s = String(req.query.search).trim();
+      filter.$or = [
+        { title: { $regex: s, $options: 'i' } },
+        { slug: { $regex: s, $options: 'i' } },
+      ];
+    }
+    const data = await Manual.find(filter)
+      .populate('relatedProducts', 'name slug images basePrice')
+      .populate('createdBy', 'firstName lastName email')
+      .sort({ createdAt: -1 })
+      .lean();
+    return res.json({ success: true, data: data || [] });
   } catch (error) { return next(error); }
+};
+
+const getById = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    let manual = null;
+    if (mongoose.isValidObjectId(id)) {
+      manual = await Manual.findById(id).populate('relatedProducts', 'name slug images basePrice').lean();
+    }
+    if (!manual) {
+      manual = await Manual.findOne({ slug: id }).populate('relatedProducts', 'name slug images basePrice').lean();
+    }
+    if (!manual) return next(new AppError('Manual not found.', 404, 'MANUAL_NOT_FOUND'));
+    return res.json({ success: true, data: manual });
+  } catch (error) {
+    return next(error);
+  }
 };
 
 const create = async (req, res, next) => {
@@ -48,7 +76,7 @@ const update = async (req, res, next) => {
     if (!mongoose.isValidObjectId(req.params.id)) return next(new AppError('Invalid manual ID.', 400, 'INVALID_ID'));
     const value = getValue(req.body);
     if (await Manual.exists({ slug: value.slug, _id: { $ne: req.params.id } })) return next(new AppError('A manual with this slug already exists.', 409, 'SLUG_EXISTS'));
-    const data = await Manual.findByIdAndUpdate(req.params.id, { ...value, updatedBy: req.user._id }, { new: true, runValidators: true }).populate('relatedProducts', 'name slug images').lean();
+    const data = await Manual.findByIdAndUpdate(req.params.id, { ...value, updatedBy: req.user._id }, { new: true, runValidators: true }).populate('relatedProducts', 'name slug images basePrice').lean();
     if (!data) return next(new AppError('Manual not found.', 404, 'MANUAL_NOT_FOUND'));
     return res.json({ success: true, data });
   } catch (error) { return next(error); }
@@ -71,9 +99,9 @@ const customerGuides = async (req, res, next) => {
       productIds = await OrderItem.find({ order: { $in: orderIds }, product: { $ne: null } }).distinct('product');
     }
     const data = await Manual.find({ type: 'customer_guide', status: 'active', $or: [{ relatedProducts: { $size: 0 } }, { relatedProducts: { $in: productIds } }] })
-      .populate('relatedProducts', 'name slug images').sort({ createdAt: -1 }).lean();
-    return res.json({ success: true, data });
+      .populate('relatedProducts', 'name slug images basePrice').sort({ createdAt: -1 }).lean();
+    return res.json({ success: true, data: data || [] });
   } catch (error) { return next(error); }
 };
 
-module.exports = { list, create, update, remove, customerGuides };
+module.exports = { list, getById, create, update, remove, customerGuides };

@@ -18,13 +18,20 @@ export const catalogService = {
   categories: async () => request<{success: boolean; data: CatalogCategory[]}>('/categories'),
 };
 export const manualService = {
-  list: async (params: { type?: AdminManual['type']; status?: AdminManual['status'] } = {}) => {
-    const query = new URLSearchParams(Object.entries(params).filter(([, value]) => value).map(([key, value]) => [key, String(value)]));
-    return request<{ success: boolean; data: AdminManual[] }>(`/admin/manuals?${query}`);
+  list: async (params: { type?: AdminManual['type']; status?: AdminManual['status']; search?: string } = {}) => {
+    const query = new URLSearchParams(
+      Object.entries(params)
+        .filter(([, value]) => value !== undefined && value !== '')
+        .map(([key, value]) => [key, String(value)])
+    ).toString();
+    return request<{ success: boolean; data: AdminManual[] }>(`/admin/manuals${query ? `?${query}` : ''}`);
   },
-  create: async (payload: Omit<AdminManual, '_id' | 'createdAt' | 'updatedAt' | 'relatedProducts'> & { relatedProducts: string[] }) => request<{ success: boolean; data: AdminManual }>('/admin/manuals', { method: 'POST', body: JSON.stringify(payload) }),
-  update: async (id: string, payload: Omit<AdminManual, '_id' | 'createdAt' | 'updatedAt' | 'relatedProducts'> & { relatedProducts: string[] }) => request<{ success: boolean; data: AdminManual }>(`/admin/manuals/${encodeURIComponent(id)}`, { method: 'PUT', body: JSON.stringify(payload) }),
-  remove: async (id: string) => request<{ success: boolean }>(`/admin/manuals/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+  get: async (id: string) => request<{ success: boolean; data: AdminManual }>(`/admin/manuals/${encodeURIComponent(id)}`),
+  create: async (payload: Omit<AdminManual, '_id' | 'createdAt' | 'updatedAt' | 'relatedProducts'> & { relatedProducts: string[] }) =>
+    request<{ success: boolean; data: AdminManual }>('/admin/manuals', { method: 'POST', body: JSON.stringify(payload) }),
+  update: async (id: string, payload: Omit<AdminManual, '_id' | 'createdAt' | 'updatedAt' | 'relatedProducts'> & { relatedProducts: string[] }) =>
+    request<{ success: boolean; data: AdminManual }>(`/admin/manuals/${encodeURIComponent(id)}`, { method: 'PUT', body: JSON.stringify(payload) }),
+  remove: async (id: string) => request<{ success: boolean; message?: string }>(`/admin/manuals/${encodeURIComponent(id)}`, { method: 'DELETE' }),
 };
 export type ServerCart = {id: string; items: Array<{id: string; productId: string; variantId?: string; quantity: number; price: number; name: string; image?: string; sku?: string}>; subtotal: number; total: number; currency: string};
 export const cartService = {

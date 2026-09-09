@@ -1,63 +1,584 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import toast from 'react-hot-toast';
-import { BookOpen, Edit3, Plus, Trash2, X } from 'lucide-react';
-import { manualService, catalogService, type AdminManual, type CatalogProduct } from '../../services/api-service';
+import {
+  BookOpen, Edit3, Plus, Trash2, Search, Filter,
+  FileCheck, ShoppingBag, CheckCircle2, Clock, Eye,
+  RefreshCw, Copy, ExternalLink, X, HelpCircle, ArrowRight
+} from 'lucide-react';
+import { manualService, type AdminManual } from '../../services/api-service';
 import { Breadcrumbs, PageHeader } from '../../components/ui/page-header';
 import { EmptyState, ErrorState, Skeleton } from '../../components/ui/primitives';
-
-type Draft = { title: string; slug: string; type: 'staff_sop' | 'customer_guide'; content: string; relatedProducts: string[]; status: 'active' | 'draft' };
-const emptyDraft: Draft = { title: '', slug: '', type: 'staff_sop', content: '', relatedProducts: [], status: 'draft' };
-
-const makeDraft = (manual?: AdminManual): Draft => manual ? ({ title: manual.title, slug: manual.slug, type: manual.type, content: manual.content, relatedProducts: manual.relatedProducts.map((product) => product._id), status: manual.status }) : emptyDraft;
+import { MarkdownPreview } from '../../components/manuals/markdown-preview';
 
 export default function ManualsPage() {
   const [items, setItems] = useState<AdminManual[]>([]);
-  const [products, setProducts] = useState<CatalogProduct[]>([]);
-  const [draft, setDraft] = useState<Draft>(emptyDraft);
-  const [editing, setEditing] = useState<AdminManual | null>(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(false);
 
-  const load = useCallback(async () => {
-    setLoading(true); setError(false);
-    try { const response = await manualService.list(); setItems(response.data); }
-    catch { setError(true); }
-    finally { setLoading(false); }
+  // Filters & Search
+  const [searchQuery, setSearchQuery] = useState('');
+  const [typeFilter, setTypeFilter] = useState<'all' | 'staff_sop' | 'customer_guide'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'draft'>('all');
+
+  // Preview Drawer Modal
+  const [previewManual, setPreviewManual] = useState<AdminManual | null>(null);
+
+  const load = useCallback(async (isRefresh = false) => {
+    if (isRefresh) setRefreshing(true);
+    else setLoading(true);
+    setError(false);
+
+    try {
+      const response = await manualService.list();
+      setItems(Array.isArray(response.data) ? response.data : []);
+    } catch (err) {
+      console.error('Failed to load manuals:', err);
+      setError(true);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
   }, []);
 
-  useEffect(() => { void load(); catalogService.products({ limit: 100 }).then((response) => setProducts(response.data)).catch(() => undefined); }, [load]);
+  useEffect(() => {
+    void load();
+  }, [load]);
 
-  const openCreate = () => { setEditing(null); setDraft({ ...emptyDraft }); };
-  const openEdit = (manual: AdminManual) => { setEditing(manual); setDraft(makeDraft(manual)); };
-  const setField = <K extends keyof Draft>(key: K, value: Draft[K]) => setDraft((current) => ({ ...current, [key]: value }));
-
-  const save = async (event: React.FormEvent) => {
-    event.preventDefault();
-    if (draft.title.trim().length < 3 || !draft.content.trim()) return toast.error('Title and content are required.');
-    setSaving(true);
+  // Quick toggle status (draft <-> active)
+  const toggleStatus = async (manual: AdminManual) => {
+    const nextStatus = manual.status === 'active' ? 'draft' : 'active';
     try {
-      const payload = { ...draft, title: draft.title.trim(), slug: draft.slug.trim() || draft.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') };
-      if (editing) await manualService.update(editing._id, payload); else await manualService.create(payload);
-      toast.success(editing ? 'Manual updated.' : 'Manual created.'); setEditing(null); setDraft({ ...emptyDraft }); await load();
-    } catch (value) { toast.error(value instanceof Error ? value.message : 'Could not save manual.'); }
-    finally { setSaving(false); }
+      await manualService.update(manual._id, {
+        title: manual.title,
+        slug: manual.slug,
+        type: manual.type,
+        status: nextStatus,
+        content: manual.content,
+        relatedProducts: manual.relatedProducts.map((p) => p._id)
+      });
+      toast.success(`Manual marked as ${nextStatus}.`);
+      setItems((prev) =>
+        prev.map((item) => (item._id === manual._id ? { ...item, status: nextStatus } : item))
+      );
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Could not update status.';
+      toast.error(message);
+    }
   };
 
-  const remove = async (id: string) => {
-    if (!window.confirm('Delete this manual permanently?')) return;
-    try { await manualService.remove(id); toast.success('Manual deleted.'); await load(); }
-    catch (value) { toast.error(value instanceof Error ? value.message : 'Could not delete manual.'); }
+  // Delete manual
+  const remove = async (id: string, title: string) => {
+    if (!window.confirm(`Are you sure you want to permanently delete "${title}"?`)) return;
+    try {
+      await manualService.remove(id);
+      toast.success('Manual deleted.');
+      setItems((prev) => prev.filter((item) => item._id !== id));
+      if (previewManual?._id === id) setPreviewManual(null);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Could not delete manual.';
+      toast.error(message);
+    }
   };
 
-  return <section className="mx-auto max-w-7xl overflow-x-hidden">
-    <Breadcrumbs items={[{ label: 'Manuals & SOPs' }]} />
-    <PageHeader eyebrow="Knowledge base" title="Manuals & SOPs" description="Create staff procedures and product activation guides from one controlled workspace." action={<button type="button" onClick={openCreate} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-bold text-white"><Plus className="h-4 w-4" /> New manual</button>} />
-    <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,420px)]">
-      <div>{loading ? <Skeleton className="h-64" /> : error ? <ErrorState title="Manuals could not be loaded." retry={() => void load()} /> : !items.length ? <EmptyState title="No manuals yet." description="Create your first SOP or customer guide." /> : <div className="overflow-x-auto rounded-2xl border border-border bg-white/90"><table className="w-full min-w-[720px] text-left text-sm"><thead className="border-b border-border text-xs uppercase tracking-wider text-slate-500"><tr>{['Title', 'Type', 'Status', 'Updated', 'Actions'].map((label) => <th className="px-5 py-4" key={label}>{label}</th>)}</tr></thead><tbody className="divide-y divide-border">{items.map((manual) => <tr className="hover:bg-muted/40" key={manual._id}><td className="max-w-xs px-5 py-4"><p className="font-bold">{manual.title}</p><p className="truncate text-xs text-slate-500">/{manual.slug}</p></td><td className="px-5 py-4 capitalize">{manual.type.replace('_', ' ')}</td><td className="px-5 py-4"><span className="rounded-full bg-muted px-2.5 py-1 text-xs font-bold">{manual.status}</span></td><td className="whitespace-nowrap px-5 py-4 text-slate-500">{new Date(manual.updatedAt).toLocaleDateString()}</td><td className="whitespace-nowrap px-5 py-4"><button type="button" onClick={() => openEdit(manual)} className="mr-4 inline-flex min-h-10 items-center gap-1 font-bold text-primary"><Edit3 className="h-4 w-4" /> Edit</button><button type="button" onClick={() => void remove(manual._id)} className="inline-flex min-h-10 items-center gap-1 font-bold text-rose-600"><Trash2 className="h-4 w-4" /> Delete</button></td></tr>)}</tbody></table></div>}</div>
-      <form onSubmit={save} className="rounded-2xl border border-border bg-white/90 p-5 shadow-sm sm:p-6"><div className="mb-5 flex items-start justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-wider text-primary">{editing ? 'Edit manual' : 'New manual'}</p><h2 className="mt-1 text-xl font-bold">{editing ? editing.title : 'Build a guide'}</h2></div>{editing && <button type="button" onClick={() => { setEditing(null); setDraft({ ...emptyDraft }); }} aria-label="Close editor" className="rounded-lg p-2 text-slate-500 hover:bg-muted"><X className="h-5 w-5" /></button>}</div><div className="grid gap-4"><label className="grid gap-2 text-sm font-semibold">Title<input value={draft.title} onChange={(event) => setField('title', event.target.value)} className="min-h-11 rounded-xl border border-border px-3 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" placeholder="e.g. Perfume care guide" /></label><label className="grid gap-2 text-sm font-semibold">Slug<input value={draft.slug} onChange={(event) => setField('slug', event.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))} className="min-h-11 rounded-xl border border-border px-3 font-mono text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" placeholder="perfume-care-guide" /></label><div className="grid gap-4 sm:grid-cols-2"><label className="grid gap-2 text-sm font-semibold">Type<select value={draft.type} onChange={(event) => setField('type', event.target.value as Draft['type'])} className="min-h-11 rounded-xl border border-border px-3 outline-none focus:border-primary"><option value="staff_sop">Staff SOP</option><option value="customer_guide">Customer guide</option></select></label><label className="grid gap-2 text-sm font-semibold">Status<select value={draft.status} onChange={(event) => setField('status', event.target.value as Draft['status'])} className="min-h-11 rounded-xl border border-border px-3 outline-none focus:border-primary"><option value="draft">Draft</option><option value="active">Active</option></select></label></div>{draft.type === 'customer_guide' && <label className="grid gap-2 text-sm font-semibold">Related products<span className="text-xs font-normal text-slate-500">Leave empty for a general guide.</span><select multiple value={draft.relatedProducts} onChange={(event) => setField('relatedProducts', Array.from(event.target.selectedOptions, (option) => option.value))} className="min-h-28 rounded-xl border border-border px-3 py-2 text-sm outline-none focus:border-primary">{products.map((product) => <option key={product._id} value={product._id}>{product.name}</option>)}</select></label>}<label className="grid gap-2 text-sm font-semibold">Content<span className="text-xs font-normal text-slate-500">Markdown-friendly text: headings, lists, and image URLs are supported.</span><textarea required value={draft.content} onChange={(event) => setField('content', event.target.value)} rows={12} className="w-full resize-y rounded-xl border border-border px-3 py-3 font-mono text-sm leading-6 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" placeholder="# How to use\n\n1. Apply to clean skin..." /></label><div className="rounded-xl border border-border bg-slate-50 p-4"><p className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-500"><BookOpen className="h-4 w-4" /> Preview</p><div className="max-h-48 overflow-y-auto whitespace-pre-wrap break-words text-sm leading-7 text-slate-700">{draft.content || 'Your guide preview will appear here.'}</div></div><button type="submit" disabled={saving} className="min-h-11 rounded-xl bg-primary px-5 py-3 text-sm font-bold text-white transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60">{saving ? 'Saving…' : editing ? 'Update manual' : 'Create manual'}</button></div></form>
-    </div>
-  </section>;
+  // Copy slug to clipboard
+  const copySlug = (slug: string) => {
+    navigator.clipboard.writeText(slug);
+    toast.success(`Copied slug "${slug}" to clipboard.`);
+  };
+
+  // Metrics calculation
+  const metrics = useMemo(() => {
+    const total = items.length;
+    const sops = items.filter((m) => m.type === 'staff_sop').length;
+    const guides = items.filter((m) => m.type === 'customer_guide').length;
+    const active = items.filter((m) => m.status === 'active').length;
+    return { total, sops, guides, active };
+  }, [items]);
+
+  // Filtered manuals
+  const filteredItems = useMemo(() => {
+    return items.filter((item) => {
+      // Type filter
+      if (typeFilter !== 'all' && item.type !== typeFilter) return false;
+      // Status filter
+      if (statusFilter !== 'all' && item.status !== statusFilter) return false;
+      // Search query
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase();
+        const matchesTitle = item.title.toLowerCase().includes(query);
+        const matchesSlug = item.slug.toLowerCase().includes(query);
+        const matchesContent = item.content.toLowerCase().includes(query);
+        return matchesTitle || matchesSlug || matchesContent;
+      }
+      return true;
+    });
+  }, [items, typeFilter, statusFilter, searchQuery]);
+
+  return (
+    <section className="mx-auto max-w-7xl space-y-6 pb-16">
+      {/* Breadcrumbs */}
+      <Breadcrumbs items={[{ label: 'Manuals & SOPs' }]} />
+
+      {/* Page Header */}
+      <PageHeader
+        eyebrow="Knowledge base"
+        title="Manuals & SOPs"
+        description="Create staff standard operating procedures and product activation guides from one controlled workspace."
+        action={
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => void load(true)}
+              disabled={refreshing || loading}
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-border bg-white px-3.5 text-xs font-bold text-slate-700 shadow-xs transition hover:bg-slate-50 disabled:opacity-50"
+              title="Refresh manuals list"
+            >
+              <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">Refresh</span>
+            </button>
+
+            <Link
+              href="/manuals/new"
+              className="inline-flex h-11 items-center gap-2 rounded-xl bg-primary px-5 text-sm font-bold text-white shadow-xs transition hover:bg-primary/90"
+            >
+              <Plus className="h-4 w-4" />
+              <span>New manual</span>
+            </Link>
+          </div>
+        }
+      />
+
+      {/* Metric Cards */}
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <div className="rounded-2xl border border-border bg-white/90 p-4 shadow-xs sm:p-5">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+              Total Guides
+            </span>
+            <BookOpen className="h-4 w-4 text-primary" />
+          </div>
+          <p className="mt-2 text-2xl font-bold text-slate-900">{metrics.total}</p>
+          <p className="mt-1 text-[11px] text-slate-400">All documented records</p>
+        </div>
+
+        <div className="rounded-2xl border border-border bg-white/90 p-4 shadow-xs sm:p-5">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+              Staff SOPs
+            </span>
+            <FileCheck className="h-4 w-4 text-indigo-500" />
+          </div>
+          <p className="mt-2 text-2xl font-bold text-slate-900">{metrics.sops}</p>
+          <p className="mt-1 text-[11px] text-slate-400">Internal operations</p>
+        </div>
+
+        <div className="rounded-2xl border border-border bg-white/90 p-4 shadow-xs sm:p-5">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+              Customer Guides
+            </span>
+            <ShoppingBag className="h-4 w-4 text-emerald-500" />
+          </div>
+          <p className="mt-2 text-2xl font-bold text-slate-900">{metrics.guides}</p>
+          <p className="mt-1 text-[11px] text-slate-400">Product activations</p>
+        </div>
+
+        <div className="rounded-2xl border border-border bg-white/90 p-4 shadow-xs sm:p-5">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+              Live & Active
+            </span>
+            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+          </div>
+          <p className="mt-2 text-2xl font-bold text-emerald-600">{metrics.active}</p>
+          <p className="mt-1 text-[11px] text-slate-400">Published to users</p>
+        </div>
+      </div>
+
+      {/* Main Content Area: Data Table (No Form on this page) */}
+      <div className="space-y-4">
+        {/* Filter and Search Bar */}
+        <div className="flex flex-col gap-3 rounded-2xl border border-border bg-white/90 p-3 shadow-xs sm:flex-row sm:items-center sm:justify-between sm:p-4">
+          {/* Search Input */}
+          <div className="relative flex-1">
+            <Search className="pointer-events-none absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by title, slug, or content..."
+              className="h-10 w-full rounded-xl border border-border pl-10 pr-4 text-xs font-medium outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-2.5 rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            )}
+          </div>
+
+          {/* Filter Pills */}
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Type Filter */}
+            <div className="inline-flex rounded-xl border border-border bg-slate-50 p-1 text-xs">
+              <button
+                type="button"
+                onClick={() => setTypeFilter('all')}
+                className={`rounded-lg px-2.5 py-1 font-bold transition ${
+                  typeFilter === 'all'
+                    ? 'bg-white text-slate-900 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                All
+              </button>
+              <button
+                type="button"
+                onClick={() => setTypeFilter('staff_sop')}
+                className={`rounded-lg px-2.5 py-1 font-bold transition ${
+                  typeFilter === 'staff_sop'
+                    ? 'bg-white text-slate-900 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                Staff SOP
+              </button>
+              <button
+                type="button"
+                onClick={() => setTypeFilter('customer_guide')}
+                className={`rounded-lg px-2.5 py-1 font-bold transition ${
+                  typeFilter === 'customer_guide'
+                    ? 'bg-white text-slate-900 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                Customer Guide
+              </button>
+            </div>
+
+            {/* Status Filter */}
+            <div className="inline-flex rounded-xl border border-border bg-slate-50 p-1 text-xs">
+              <button
+                type="button"
+                onClick={() => setStatusFilter('all')}
+                className={`rounded-lg px-2.5 py-1 font-bold transition ${
+                  statusFilter === 'all'
+                    ? 'bg-white text-slate-900 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                All
+              </button>
+              <button
+                type="button"
+                onClick={() => setStatusFilter('active')}
+                className={`rounded-lg px-2.5 py-1 font-bold transition ${
+                  statusFilter === 'active'
+                    ? 'bg-white text-emerald-700 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                Active
+              </button>
+              <button
+                type="button"
+                onClick={() => setStatusFilter('draft')}
+                className={`rounded-lg px-2.5 py-1 font-bold transition ${
+                  statusFilter === 'draft'
+                    ? 'bg-white text-amber-700 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                Draft
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Data Table / State View */}
+        {loading ? (
+          <div className="space-y-3 rounded-2xl border border-border bg-white p-6">
+            <Skeleton className="h-8 w-1/4 rounded-lg" />
+            <Skeleton className="h-12 w-full rounded-xl" />
+            <Skeleton className="h-12 w-full rounded-xl" />
+            <Skeleton className="h-12 w-full rounded-xl" />
+          </div>
+        ) : error ? (
+          <ErrorState
+            title="Manuals could not be loaded."
+            retry={() => void load()}
+          />
+        ) : !items.length ? (
+          <div className="rounded-2xl border border-border bg-white/90 p-8 shadow-sm text-center">
+            <EmptyState
+              title="No manuals or SOPs yet."
+              description="Create your first standard operating procedure or product activation guide."
+            />
+            <div className="mt-5">
+              <Link
+                href="/manuals/new"
+                className="inline-flex h-11 items-center gap-2 rounded-xl bg-primary px-6 text-sm font-bold text-white shadow-xs transition hover:bg-primary/90"
+              >
+                <Plus className="h-4 w-4" />
+                Build your first manual
+              </Link>
+            </div>
+          </div>
+        ) : !filteredItems.length ? (
+          <div className="rounded-2xl border border-border bg-white/90 p-12 text-center">
+            <Filter className="mx-auto h-8 w-8 text-slate-400" />
+            <h3 className="mt-3 text-base font-bold text-slate-800">No matching manuals found</h3>
+            <p className="mt-1 text-xs text-slate-500">
+              Try adjusting your search query or clear the active filters.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setSearchQuery('');
+                setTypeFilter('all');
+                setStatusFilter('all');
+              }}
+              className="mt-4 inline-flex h-9 items-center rounded-xl border border-border bg-white px-4 text-xs font-bold text-slate-700 hover:bg-slate-50"
+            >
+              Clear filters
+            </button>
+          </div>
+        ) : (
+          <div className="overflow-x-auto rounded-2xl border border-border bg-white/95 shadow-xs">
+            <table className="w-full min-w-[760px] text-left text-sm">
+              <thead className="border-b border-border bg-slate-50/70 text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                <tr>
+                  <th className="px-5 py-4">Title & Slug</th>
+                  <th className="px-5 py-4">Type</th>
+                  <th className="px-5 py-4">Status</th>
+                  <th className="px-5 py-4">Linked Products</th>
+                  <th className="px-5 py-4">Last Updated</th>
+                  <th className="px-5 py-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {filteredItems.map((manual) => {
+                  const isStaff = manual.type === 'staff_sop';
+                  const isActive = manual.status === 'active';
+                  const productsCount = manual.relatedProducts?.length || 0;
+
+                  return (
+                    <tr
+                      key={manual._id}
+                      className="group transition hover:bg-slate-50/70"
+                    >
+                      {/* Title & Slug */}
+                      <td className="max-w-xs px-5 py-4">
+                        <div className="flex items-start gap-2.5">
+                          <div
+                            className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+                              isStaff
+                                ? 'bg-indigo-50 text-indigo-600'
+                                : 'bg-emerald-50 text-emerald-600'
+                            }`}
+                          >
+                            {isStaff ? (
+                              <FileCheck className="h-4 w-4" />
+                            ) : (
+                              <ShoppingBag className="h-4 w-4" />
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <Link
+                              href={`/manuals/${manual._id}/edit`}
+                              className="font-bold text-slate-900 transition hover:text-primary"
+                            >
+                              {manual.title}
+                            </Link>
+                            <div className="mt-0.5 flex items-center gap-1.5 font-mono text-[11px] text-slate-500">
+                              <span className="truncate">/{manual.slug}</span>
+                              <button
+                                type="button"
+                                onClick={() => copySlug(manual.slug)}
+                                className="opacity-0 transition group-hover:opacity-100 hover:text-slate-800"
+                                title="Copy slug"
+                              >
+                                <Copy className="h-3 w-3" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Type */}
+                      <td className="whitespace-nowrap px-5 py-4">
+                        <span
+                          className={`inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-xs font-semibold ${
+                            isStaff
+                              ? 'bg-indigo-50 text-indigo-700 border border-indigo-200/60'
+                              : 'bg-emerald-50 text-emerald-700 border border-emerald-200/60'
+                          }`}
+                        >
+                          {isStaff ? 'Staff SOP' : 'Customer Guide'}
+                        </span>
+                      </td>
+
+                      {/* Status */}
+                      <td className="whitespace-nowrap px-5 py-4">
+                        <button
+                          type="button"
+                          onClick={() => void toggleStatus(manual)}
+                          title={`Click to switch to ${isActive ? 'draft' : 'active'}`}
+                          className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold transition hover:opacity-80 ${
+                            isActive
+                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/80'
+                              : 'bg-amber-50 text-amber-700 border border-amber-200/80'
+                          }`}
+                        >
+                          <span
+                            className={`h-1.5 w-1.5 rounded-full ${
+                              isActive ? 'bg-emerald-500' : 'bg-amber-500'
+                            }`}
+                          />
+                          {isActive ? 'Active' : 'Draft'}
+                        </button>
+                      </td>
+
+                      {/* Linked Products */}
+                      <td className="whitespace-nowrap px-5 py-4 text-xs">
+                        {isStaff ? (
+                          <span className="text-slate-400 italic">Internal SOP</span>
+                        ) : productsCount > 0 ? (
+                          <span className="font-semibold text-slate-700">
+                            {productsCount} {productsCount === 1 ? 'product' : 'products'}
+                          </span>
+                        ) : (
+                          <span className="text-slate-400">General guide</span>
+                        )}
+                      </td>
+
+                      {/* Last Updated */}
+                      <td className="whitespace-nowrap px-5 py-4 text-xs text-slate-500">
+                        {new Date(manual.updatedAt).toLocaleDateString(undefined, {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric'
+                        })}
+                      </td>
+
+                      {/* Actions */}
+                      <td className="whitespace-nowrap px-5 py-4 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          {/* Preview modal trigger */}
+                          <button
+                            type="button"
+                            onClick={() => setPreviewManual(manual)}
+                            className="inline-flex h-8 items-center gap-1 rounded-lg px-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
+                            title="Quick Preview"
+                          >
+                            <Eye className="h-3.5 w-3.5" />
+                            <span className="hidden md:inline">Preview</span>
+                          </button>
+
+                          {/* Edit link */}
+                          <Link
+                            href={`/manuals/${manual._id}/edit`}
+                            className="inline-flex h-8 items-center gap-1 rounded-lg px-2 text-xs font-semibold text-primary transition hover:bg-primary/10"
+                            title="Edit manual"
+                          >
+                            <Edit3 className="h-3.5 w-3.5" />
+                            <span className="hidden md:inline">Edit</span>
+                          </Link>
+
+                          {/* Delete button */}
+                          <button
+                            type="button"
+                            onClick={() => void remove(manual._id, manual.title)}
+                            className="inline-flex h-8 items-center gap-1 rounded-lg px-2 text-xs font-semibold text-rose-600 transition hover:bg-rose-50"
+                            title="Delete manual"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Quick Preview Slide-over / Modal */}
+      {previewManual && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-xs">
+          <div
+            className="relative flex max-h-[90vh] w-full max-w-3xl flex-col rounded-3xl border border-border bg-white shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-start justify-between border-b border-border bg-slate-50/80 px-6 py-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`rounded px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                      previewManual.type === 'staff_sop'
+                        ? 'bg-indigo-100 text-indigo-800'
+                        : 'bg-emerald-100 text-emerald-800'
+                    }`}
+                  >
+                    {previewManual.type.replace('_', ' ')}
+                  </span>
+                  <span className="font-mono text-xs text-slate-500">
+                    /{previewManual.slug}
+                  </span>
+                </div>
+                <h2 className="mt-1 text-lg font-bold text-slate-900">
+                  {previewManual.title}
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPreviewManual(null)}
+                className="rounded-xl p-2 text-slate-400 hover:bg-slate-200 hover:text-slate-700"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Modal Body: Rendered Markdown */}
+            <div className="flex-1 overflow-y-auto p-6 sm:p-8">
+              <MarkdownPreview content={previewManual.content} />
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex items-center justify-between border-t border-border bg-slate-50 px-6 py-3.5">
+              <span className="text-xs text-slate-500">
+                Last updated: {new Date(previewManual.updatedAt).toLocaleString()}
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPreviewManual(null)}
+                  className="rounded-xl border border-border bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                >
+                  Close
+                </button>
+                <Link
+                  href={`/manuals/${previewManual._id}/edit`}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-white hover:bg-primary/90"
+                >
+                  <Edit3 className="h-3.5 w-3.5" />
+                  Edit Manual
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </section>
+  );
 }
