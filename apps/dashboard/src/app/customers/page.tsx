@@ -1,3 +1,126 @@
 'use client';
-import { useCallback,useEffect,useState } from 'react'; import Link from 'next/link'; import { adminDirectoryService,type AdminCustomer } from '../../services/api-service'; import { Breadcrumbs,PageHeader } from '../../components/ui/page-header'; import { EmptyState,ErrorState,Skeleton } from '../../components/ui/primitives';
-export default function CustomersPage(){const [items,setItems]=useState<AdminCustomer[]>([]);const [loading,setLoading]=useState(true);const [error,setError]=useState(false);const load=useCallback(()=>{setLoading(true);adminDirectoryService.customers().then(r=>setItems(r.data)).catch(()=>setError(true)).finally(()=>setLoading(false))},[]);useEffect(()=>{load()},[load]);return <section className="mx-auto max-w-7xl"><Breadcrumbs items={[{label:'Customers'}]}/><PageHeader eyebrow="Relationships" title="Customers" description="Understand customer activity and lifetime value from real order data."/>{loading?<Skeleton className="h-48"/>:error?<ErrorState title="Customers could not be loaded." retry={load}/>:!items.length?<EmptyState title="No customers yet." description="Registered customers will appear here."/>:<div className="overflow-x-auto rounded-2xl border border-border bg-white/85"><table className="w-full min-w-[800px] text-left text-sm"><thead className="border-b border-border text-xs uppercase text-slate-500"><tr>{['Customer','Phone','Orders','Lifetime spend','Joined','Status',''].map(x=><th className="px-5 py-4" key={x}>{x}</th>)}</tr></thead><tbody className="divide-y divide-border">{items.map(c=><tr key={c._id} className="hover:bg-muted/50"><td className="px-5 py-4"><p className="font-bold">{c.name}</p><p className="text-xs text-slate-500">{c.email}</p></td><td className="px-5 py-4">{c.phone||'—'}</td><td className="px-5 py-4 font-bold">{c.totalOrders}</td><td className="px-5 py-4 font-bold">৳{c.totalSpend||0}</td><td className="px-5 py-4 whitespace-nowrap">{new Date(c.createdAt).toLocaleDateString()}</td><td className="px-5 py-4"><span className={`rounded-full px-2.5 py-1 text-xs font-bold ${c.isActive?'bg-emerald-50 text-emerald-700':'bg-slate-100 text-slate-500'}`}>{c.isActive?'Active':'Inactive'}</span></td><td className="px-5 py-4 text-right"><Link className="font-bold text-primary" href={`/customers/${c._id}`}>View</Link></td></tr>)}</tbody></table></div>}</section>}
+
+import { Suspense, useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { adminDirectoryService, type AdminCustomer } from '../../services/api-service';
+import { Breadcrumbs, PageHeader } from '../../components/ui/page-header';
+import { Skeleton } from '../../components/ui/primitives';
+import { DataTable, Column } from '../../components/ui/data-table';
+import { Pagination } from '../../components/ui/pagination';
+
+function CustomersClient() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const [customers, setCustomers] = useState<AdminCustomer[]>([]);
+  const [pagination, setPagination] = useState({ page: 1, limit: 20, total: 0, pages: 1 });
+  const [loading, setLoading] = useState(true);
+
+  // URL state
+  const currentPage = Number(searchParams.get('page')) || 1;
+  const initialSearch = searchParams.get('search') || '';
+  const currentSortKey = searchParams.get('sort');
+  const currentSortOrder = searchParams.get('order');
+
+  const [search, setSearch] = useState(initialSearch);
+  const [debouncedSearch, setDebouncedSearch] = useState(initialSearch);
+
+  // Update URL helper
+  const updateUrl = useCallback((key: string, value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value) params.set(key, value);
+    else params.delete(key);
+    if (key !== 'page') params.delete('page'); // reset page on filter
+    router.replace(`${pathname}?${params.toString()}`);
+  }, [searchParams, pathname, router]);
+
+  // Debounce search
+  useEffect(() => {
+    const t = setTimeout(() => {
+      if (search !== debouncedSearch) {
+        setDebouncedSearch(search);
+        updateUrl('search', search);
+      }
+    }, 300);
+    return () => clearTimeout(t);
+  }, [search, debouncedSearch, updateUrl]);
+
+  // Fetch data
+  const load = useCallback(() => {
+    setLoading(true);
+    adminDirectoryService.customers({
+      page: currentPage,
+      search: debouncedSearch || undefined,
+      sort: currentSortKey || undefined,
+      order: currentSortOrder || undefined
+    })
+    .then((r) => {
+      setCustomers(r.data);
+      if (r.pagination) setPagination(r.pagination);
+    })
+    .catch(console.error)
+    .finally(() => setLoading(false));
+  }, [currentPage, debouncedSearch, currentSortKey, currentSortOrder]);
+
+  useEffect(() => { load(); }, [load]);
+
+  const columns: Column<AdminCustomer>[] = [
+    { key: 'name', label: 'Customer', sortable: true, render: (row) => (<div><p className="font-bold">{row.name}</p><p className="text-xs text-slate-500">{row.email}</p></div>) },
+    { key: 'phone', label: 'Phone', render: (row) => <span>{row.phone || '—'}</span> },
+    { key: 'totalOrders', label: 'Orders', sortable: true, render: (row) => <span className="font-bold">{row.totalOrders}</span> },
+    { key: 'totalSpend', label: 'Lifetime Spend', sortable: true, render: (row) => <span className="font-bold">৳{row.totalSpend || 0}</span> },
+    { key: 'createdAt', label: 'Joined', sortable: true, render: (row) => <span className="whitespace-nowrap">{new Date(row.createdAt).toLocaleDateString()}</span> },
+    { key: 'isActive', label: 'Status', render: (row) => (
+      <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${row.isActive ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+        {row.isActive ? 'Active' : 'Inactive'}
+      </span>
+    )},
+    { key: 'actions', label: '', align: 'right', render: (row) => (
+      <Link href={`/customers/${row._id}`} className="font-bold text-primary hover:underline">
+        View
+      </Link>
+    )}
+  ];
+
+  return (
+    <>
+      <div className="mb-5 flex items-center justify-between gap-4 rounded-2xl border border-border bg-white p-4 shadow-sm">
+        <input 
+          value={search} 
+          onChange={(e) => setSearch(e.target.value)} 
+          placeholder="Search by name, email, or phone..." 
+          className="min-h-11 w-full max-w-md rounded-xl border border-border bg-background px-4 text-sm outline-none transition-all focus:border-primary focus:ring-1 focus:ring-primary" 
+        />
+      </div>
+
+      <DataTable
+        data={customers}
+        columns={columns}
+        keyExtractor={(row) => row._id}
+        isLoading={loading}
+      />
+
+      <Pagination 
+        currentPage={pagination.page}
+        totalPages={pagination.pages}
+        totalItems={pagination.total}
+        itemsPerPage={pagination.limit}
+      />
+    </>
+  );
+}
+
+export default function CustomersPage() {
+  return (
+    <section className="mx-auto max-w-7xl pb-24">
+      <Breadcrumbs items={[{ label: 'Customers' }]} />
+      <PageHeader eyebrow="Relationships" title="Customers" description="Understand customer activity and lifetime value from real order data." />
+      
+      <Suspense fallback={<div className="mt-8 space-y-4">{[1, 2, 3, 4, 5].map(x => <Skeleton className="h-16 w-full rounded-xl" key={x} />)}</div>}>
+        <CustomersClient />
+      </Suspense>
+    </section>
+  );
+}
