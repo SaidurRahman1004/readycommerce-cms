@@ -56,6 +56,7 @@ router.put('/orders/:id/payment', authorize(...ORDER_ROLES), updatePayment);
 router.put('/orders/:id/refund', authorize(...ORDER_ROLES), refund.refund);
 
 router.get('/products', authorize(...CATALOG_ROLES), catalog.listProducts);
+router.get('/products/:id', authorize(...CATALOG_ROLES), catalog.getProduct);
 router.post('/products', authorize(...CATALOG_ROLES), catalog.createProduct);
 router.put('/products/:id', authorize(...CATALOG_ROLES), catalog.updateProduct);
 router.delete('/products/:id', authorize(...CATALOG_ROLES), catalog.archiveProduct);

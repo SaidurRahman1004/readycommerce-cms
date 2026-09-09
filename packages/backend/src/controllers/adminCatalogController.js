@@ -11,6 +11,15 @@ const updateProduct = async (req, res, next) => { try { if (!mongoose.isValidObj
 const archiveProduct = async (req, res, next) => { try { const product = await Product.findByIdAndUpdate(req.params.id, { status: 'archived' }, { new: true }); if (!product) return next(new AppError('Product not found.', 404, 'PRODUCT_NOT_FOUND')); await ProductVariant.updateMany({ product: product._id }, { isActive: false }); await clearCatalogCache(); return res.json({ success: true, data: { id: product._id, status: product.status } }); } catch (e) { return next(e); } };
 const listInventory = async (req, res, next) => { try { const rows = await Inventory.find({ trackInventory: true }).populate({ path: 'variant', populate: { path: 'product', select: 'name status images' } }).sort({ quantity: 1 }).lean(); return res.json({ success: true, data: rows.filter((x) => x.variant?.product?.status !== 'archived').map((x) => ({ _id: x._id, variantId: x.variant._id, product: x.variant.product.name, image: x.variant.product.images?.[0], sku: x.variant.sku, variant: x.variant.name, quantity: x.quantity, reservedQuantity: x.reservedQuantity, available: Math.max(0, x.quantity - x.reservedQuantity), threshold: x.lowStockThreshold, status: x.quantity - x.reservedQuantity <= 0 ? 'out_of_stock' : x.quantity - x.reservedQuantity <= x.lowStockThreshold ? 'low_stock' : 'in_stock' })) }); } catch (e) { return next(e); } };
 const updateInventory = async (req, res, next) => { try { const quantity = Number(req.body.quantity); if (!Number.isInteger(quantity) || quantity < 0) return next(new AppError('Quantity must be a non-negative integer.', 400, 'INVALID_QUANTITY')); const inventory = await Inventory.findById(req.params.id); if (!inventory) return next(new AppError('Inventory record not found.', 404, 'INVENTORY_NOT_FOUND')); if (quantity < inventory.reservedQuantity) return next(new AppError('Quantity cannot be below reserved stock.', 409, 'RESERVED_STOCK_CONFLICT')); const previousQuantity = inventory.quantity; inventory.quantity = quantity; if (req.body.lowStockThreshold !== undefined) inventory.lowStockThreshold = Math.max(0, Number(req.body.lowStockThreshold)); if (quantity > previousQuantity) inventory.lastRestockedAt = new Date(); await inventory.save(); await clearCatalogCache(); return res.json({ success: true, data: inventory }); } catch (e) { return next(e); } };
+const getProduct = async (req, res, next) => {
+  try {
+    const product = await Product.findById(req.params.id).populate('category', 'name slug').lean();
+    if (!product) return next(new AppError('Product not found.', 404, 'PRODUCT_NOT_FOUND'));
+    return res.json({ success: true, data: await serialize(product) });
+  } catch (e) {
+    return next(e);
+  }
+};
 
 const bulkUpdateInventoryThreshold = async (req, res, next) => {
   try {
@@ -29,4 +38,4 @@ const bulkUpdateInventoryThreshold = async (req, res, next) => {
     return res.json({ success: true, message: `Successfully updated threshold for ${result.modifiedCount} items.` });
   } catch (e) { return next(e); }
 };
-module.exports = { listProducts, createProduct, updateProduct, archiveProduct, listInventory, updateInventory, bulkUpdateInventoryThreshold };
+module.exports = { listProducts, getProduct, createProduct, updateProduct, archiveProduct, listInventory, updateInventory, bulkUpdateInventoryThreshold };
