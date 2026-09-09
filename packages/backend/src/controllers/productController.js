@@ -42,7 +42,10 @@ const listProducts = async (req, res, next) => {
     }
     
     const sortMap = { priceLow: { basePrice: 1 }, priceHigh: { basePrice: -1 }, newest: { createdAt: -1 }, featured: { isFeatured: -1, createdAt: -1 }, popular: { createdAt: 1, basePrice: 1 } };
-    const [products, total] = await Promise.all([Product.find(filter).populate('category', 'name slug image').sort(sortMap[sort] || sortMap.featured).skip((page - 1) * limit).limit(limit).lean(), Product.countDocuments(filter)]);
+    const query = Product.find(filter).populate('category', 'name slug image');
+    if (sort === 'relevance' && search) query.sort({ score: { $meta: 'textScore' } });
+    else query.sort(sortMap[sort] || sortMap.featured);
+    const [products, total] = await Promise.all([query.skip((page - 1) * limit).limit(limit).lean(), Product.countDocuments(filter)]);
     const data = await Promise.all(products.map(async (product) => ({ ...product, variants: await variantData(await ProductVariant.find({ product: product._id, isActive: true })) })));
     
     const responseData = { success: true, data, pagination: { page, limit, total, pages: Math.ceil(total / limit) } };

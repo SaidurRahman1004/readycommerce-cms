@@ -10,9 +10,10 @@ import { useAuth } from '@/components/auth/auth-context';
 import WishlistButton from './wishlist-button';
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 import CatalogCard from './catalog-card';
-import { ShieldCheck, Truck, RefreshCcw, Award, HelpCircle, Bell, Mail, CheckCircle2, Loader2 } from 'lucide-react';
-
-function DetailSkeleton() { return <main className="mx-auto grid max-w-7xl animate-pulse gap-10 px-5 py-10 lg:grid-cols-2 lg:px-10 lg:py-16"><div className="aspect-square rounded-[2rem] bg-muted" /><div className="space-y-5 py-8"><div className="h-5 w-1/3 rounded bg-muted" /><div className="h-14 w-4/5 rounded bg-muted" /><div className="h-8 w-1/4 rounded bg-muted" /><div className="h-32 rounded bg-muted" /></div></main>; }
+import { ShieldCheck, Truck, RefreshCcw, Award, HelpCircle, Bell, Mail, CheckCircle2, Loader2, PackageSearch, ShoppingBag } from 'lucide-react';
+import { ProductDetailSkeleton } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/ui/empty-state';
+import { ErrorState } from '@/components/ui/error-state';
 
 export default function ProductDetail({ productId }: { productId: string }) {
   const t = useTranslations('Storefront');
@@ -57,8 +58,48 @@ export default function ProductDetail({ productId }: { productId: string }) {
     return () => { mounted = false; };
   }, [productId, addProduct]);
 
-  if (loading) return <DetailSkeleton />;
-  if (error || !product) return <main className="mx-auto min-h-[60vh] max-w-3xl px-5 py-20 text-center"><h1 className="text-2xl font-bold">{t('shop.empty')}</h1></main>;
+  if (loading) return <ProductDetailSkeleton />;
+  if (error) {
+    return (
+      <main className="mx-auto max-w-2xl px-5 py-24 text-center">
+        <ErrorState
+          title="Unable to load product details"
+          message="We could not connect to the catalog server to fetch this item. Please check your network and try again."
+          onRetry={() => {
+            setLoading(true);
+            setError(false);
+            catalogService
+              .product(productId)
+              .then((result) => setProduct(result.data))
+              .catch(() => setError(true))
+              .finally(() => setLoading(false));
+          }}
+          homeLink
+        />
+      </main>
+    );
+  }
+  if (!product) {
+    return (
+      <main className="mx-auto max-w-2xl px-5 py-24 text-center">
+        <EmptyState
+          icon={PackageSearch}
+          badge="404 · Not Found"
+          title="Product Not Available"
+          description="The product you are looking for does not exist, has been unlisted, or the link is invalid."
+          action={{
+            label: 'Explore Catalog',
+            href: '/shop',
+            icon: ShoppingBag,
+          }}
+          secondaryAction={{
+            label: 'Return Home',
+            href: '/',
+          }}
+        />
+      </main>
+    );
+  }
 
   const gallery = product.images.length ? product.images : [];
   const selected = product.variants.find((item) => item._id === variant) || product.variants[0];

@@ -3,6 +3,8 @@ const Product = require('../models/Product');
 const Order = require('../models/Order');
 const Payment = require('../models/Payment');
 const Inventory = require('../models/Inventory');
+const Campaign = require('../models/Campaign');
+const RestockLead = require('../models/RestockLead');
 
 const ORDER_STATUSES = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'failed', 'returned', 'refunded'];
 const PAYMENT_STATUSES = ['pending', 'processing', 'verified', 'failed', 'cancelled', 'refunded'];
@@ -22,7 +24,7 @@ const getOverview = async (req, res, next) => {
     const revenueMatch = { paymentStatus: 'paid' };
     const [
       orderCounts, totalOrderCount, revenue, todayRevenue, periodRevenue, customerCounts, productCounts,
-      paymentCounts, recentOrders, lowStock,
+      paymentCounts, recentOrders, lowStock, activeCampaignCount, activeCampaignStats, pendingRestockLeads, topProducts
     ] = await Promise.all([
       Order.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]),
       Order.countDocuments(),
@@ -46,20 +48,34 @@ const getOverview = async (req, res, next) => {
         { $match: { 'product.status': 'active' } }, { $sort: { availableQuantity: 1 } }, { $limit: 10 },
         { $project: { _id: 1, product: '$product.name', sku: '$variant.sku', stock: '$availableQuantity', threshold: '$lowStockThreshold', status: { $cond: [{ $eq: ['$availableQuantity', 0] }, 'out_of_stock', 'low_stock'] } } },
       ]),
+      Campaign.countDocuments({ status: 'active' }),
+      Campaign.aggregate([{ $match: { status: 'active' } }, { $group: { _id: null, views: { $sum: '$analytics.views' }, clicks: { $sum: '$analytics.clicks' }, conversions: { $sum: '$analytics.conversions' } } }]),
+      RestockLead.countDocuments({ status: 'pending' }),
+      Order.aggregate([
+        { $match: { ...revenueMatch, createdAt: { $gte: periodStart } } },
+        { $lookup: { from: 'orderitems', localField: '_id', foreignField: 'order', as: 'items' } }, { $unwind: '$items' },
+        { $group: { _id: '$items.product', product: { $first: '$items.productName' }, quantity: { $sum: '$items.quantity' }, revenue: { $sum: '$items.total' } } },
+        { $sort: { revenue: -1 } }, { $limit: 5 }, { $project: { _id: 1, product: 1, quantity: 1, revenue: 1 } },
+      ]),
     ]);
 
     const toMap = (rows) => Object.fromEntries(rows.map((row) => [row._id, row.count]));
     const orderMap = toMap(orderCounts); const paymentMap = toMap(paymentCounts);
     const trendMap = Object.fromEntries(periodRevenue.map((row) => [row._id, { amount: row.amount, orders: row.orders }]));
     const trend = Array.from({ length: range }, (_, index) => { const date = new Date(periodStart); date.setDate(periodStart.getDate() + index); const key = dayKey(date); return { date: key, amount: trendMap[key]?.amount || 0, orders: trendMap[key]?.orders || 0 }; });
+    
     return res.json({ success: true, data: {
-      range, orders: { total: totalOrderCount, byStatus: Object.fromEntries(ORDER_STATUSES.map((status) => [status, orderMap[status] || 0])) },
+      range, 
+      orders: { total: totalOrderCount, byStatus: Object.fromEntries(ORDER_STATUSES.map((status) => [status, orderMap[status] || 0])) },
       revenue: { total: revenue[0]?.amount || 0, today: todayRevenue[0]?.amount || 0, period: periodRevenue.reduce((sum, item) => sum + item.amount, 0), trend },
       customers: { total: customerCounts[0], newInPeriod: customerCounts[1] },
       products: { total: productCounts[0], active: productCounts[1], lowStock: lowStock.filter((item) => item.status === 'low_stock').length, outOfStock: lowStock.filter((item) => item.status === 'out_of_stock').length },
       payments: { byStatus: Object.fromEntries(PAYMENT_STATUSES.map((status) => [status, paymentMap[status] || 0])) },
       recentOrders: recentOrders.map((order) => ({ ...order, customerName: order.customerName || 'Guest customer', amount: order.totalAmount ?? order.total })),
       lowStock,
+      campaigns: { active: activeCampaignCount, stats: activeCampaignStats[0] || { views: 0, clicks: 0, conversions: 0 } },
+      restockLeads: { pending: pendingRestockLeads },
+      topProducts
     } });
   } catch (error) { return next(error); }
 };

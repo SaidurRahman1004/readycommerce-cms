@@ -8,6 +8,8 @@ import { z } from 'zod';
 import toast from 'react-hot-toast';
 import { addressService, cartService, CustomerAddress, orderService, ServerCart, shippingService } from '@/services/api-service';
 import { useCart } from '@/components/store/cart-context';
+import { ShoppingBag } from 'lucide-react';
+import { EmptyState } from '@/components/ui/empty-state';
 
 type Values = { name: string; email: string; phone: string; address: string; city: string; postal: string; payment: 'bkash' | 'nagad'; txid: string };
 const initialValues: Values = { name: '', email: '', phone: '', address: '', city: '', postal: '', payment: 'bkash', txid: '' };
@@ -85,6 +87,41 @@ export default function CheckoutClient() {
   const input = (key: string) => `mt-2.5 min-h-[52px] w-full rounded-xl border bg-background px-5 text-[15px] outline-none transition focus:border-primary focus:ring-4 focus:ring-primary-subtle ${errors[key] ? 'border-rose-400' : 'border-border'}`;
   const addressFields: Array<[keyof Values, string]> = [['name', 'fields.name'], ['phone', 'fields.phone'], ['address', 'fields.address'], ['city', 'fields.city'], ['postal', 'fields.postal']];
   const subtotal = cart?.subtotal || 0;
+
+  if (!cartLoading && (!cart || !cart.items || cart.items.length === 0)) {
+    return (
+      <main className="min-h-screen bg-background pb-12 text-foreground">
+        <header className="border-b border-border bg-surface">
+          <div className="mx-auto flex h-[76px] max-w-6xl items-center justify-between px-5 sm:px-8">
+            <Link href="/" className="text-[17px] font-semibold">
+              ReadyCommerce
+            </Link>
+            <Link href="/shop" className="text-[15px] font-bold text-primary">
+              {t('continueShopping')}
+            </Link>
+          </div>
+        </header>
+        <div className="mx-auto max-w-2xl px-5 py-20 sm:px-8 text-center">
+          <EmptyState
+            icon={ShoppingBag}
+            badge="Checkout unavailable"
+            title="Your cart is currently empty"
+            description="You don't have any items in your cart to checkout. Explore our premium collections, add your favorite products, and return to complete your order."
+            action={{
+              label: 'Explore Shop',
+              href: '/shop',
+              icon: ShoppingBag,
+            }}
+            secondaryAction={{
+              label: 'Return Home',
+              href: '/',
+            }}
+          />
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-background pb-12 text-foreground">
       <header className="border-b border-border bg-surface"><div className="mx-auto flex h-[76px] max-w-6xl items-center justify-between px-5 sm:px-8"><Link href="/" className="text-[17px] font-semibold">ReadyCommerce</Link><Link href="/shop" className="text-[15px] font-bold text-primary">{t('continueShopping')}</Link></div></header>
