@@ -137,5 +137,7 @@ This document serves as the central source of truth for the **ReadyCommerce CMS 
   - Seeded canonical staff SOPs for all core dashboard routes (`page-overview`, `page-orders`, `page-products`, `page-inventory`, `page-campaigns`, `page-customers`, `page-manuals`) to ensure immediate data availability.
   - Fixed `relatedProducts` ID mapping in both `manual-form.tsx` and `/manuals/page.tsx` toggle status to prevent runtime object vs string type mismatch bugs.
   - Added backdrop click-to-dismiss, `Escape` key listeners, and body scroll locking to both the Help Drawer and Manuals quick preview modal.
+  - **Resolved CSS Containing Block & Vertical Height Trap**: Decoupled the Help Drawer and Manual Preview modals from the dashboard `<header>` by portaling directly to `document.body` via `createPortal`. The header's `backdrop-blur-xl` was trapping `position: fixed` children within its 80px container, causing the drawer to appear squashed and unscrollable. Portaling restores 100vh full-screen height, comfortable desktop width (`sm:max-w-md md:max-w-lg lg:max-w-xl`), full-width on mobile (`w-full max-w-full`), and smooth vertical scrolling with `min-h-0`, `overscroll-contain`, and a custom visible scrollbar (`.custom-drawer-scrollbar`).
+
 
 

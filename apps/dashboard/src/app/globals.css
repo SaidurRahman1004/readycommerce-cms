@@ -80,6 +80,29 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   animation: sheetFadeIn 0.25s ease-out forwards;
 }
 
+/* Custom Visible Scrollbar for Drawers and Modals */
+.custom-drawer-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.custom-drawer-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-drawer-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-drawer-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 9999px;
+}
+
+.custom-drawer-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8;
+}
+
 /* Prose Markdown Typography System */
 .prose {
   color: #334155;

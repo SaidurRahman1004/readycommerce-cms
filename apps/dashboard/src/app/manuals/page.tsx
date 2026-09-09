@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import {
@@ -26,6 +27,11 @@ export default function ManualsPage() {
 
   // Preview Drawer Modal
   const [previewManual, setPreviewManual] = useState<AdminManual | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const load = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
@@ -533,18 +539,18 @@ export default function ManualsPage() {
         )}
       </div>
 
-      {/* Quick Preview Slide-over / Modal */}
-      {previewManual && (
+      {/* Quick Preview Slide-over / Modal (Portaled to document.body) */}
+      {previewManual && mounted && typeof document !== 'undefined' && createPortal(
         <div
           onClick={() => setPreviewManual(null)}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-xs animate-fade-in"
+          className="fixed inset-0 z-[999] flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-xs animate-fade-in"
         >
           <div
             className="relative flex max-h-[90vh] w-full max-w-3xl flex-col rounded-3xl border border-border bg-white shadow-2xl overflow-hidden animate-sheet-in"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="flex items-start justify-between border-b border-border bg-slate-50/80 px-6 py-4">
+            <div className="flex shrink-0 items-start justify-between border-b border-border bg-slate-50/80 px-6 py-4">
               <div>
                 <div className="flex items-center gap-2">
                   <span
@@ -573,13 +579,13 @@ export default function ManualsPage() {
               </button>
             </div>
 
-            {/* Modal Body: Rendered Markdown */}
-            <div className="flex-1 overflow-y-auto p-6 sm:p-8">
+            {/* Modal Body: Rendered Markdown with scrollbar */}
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-6 sm:p-8 custom-drawer-scrollbar">
               <MarkdownPreview content={previewManual.content} />
             </div>
 
             {/* Modal Footer */}
-            <div className="flex items-center justify-between border-t border-border bg-slate-50 px-6 py-3.5">
+            <div className="flex shrink-0 items-center justify-between border-t border-border bg-slate-50 px-6 py-3.5">
               <span className="text-xs text-slate-500">
                 Last updated: {new Date(previewManual.updatedAt).toLocaleString()}
               </span>
@@ -601,7 +607,8 @@ export default function ManualsPage() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </section>
   );

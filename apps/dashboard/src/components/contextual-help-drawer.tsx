@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
@@ -88,10 +89,15 @@ export default function ContextualHelpDrawer() {
   const router = useRouter();
 
   const [isOpen, setIsOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [manual, setManual] = useState<AdminManual | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // In-memory cache to prevent redundant fetches when opening/closing
   const manualCache = useRef<Record<string, AdminManual | null>>({});
@@ -232,9 +238,9 @@ export default function ContextualHelpDrawer() {
         <HelpCircle className="h-4 w-4" />
       </button>
 
-      {/* 2. Slide-out Sheet Drawer (Right) */}
-      {isOpen && (
-        <div className="fixed inset-0 z-50 overflow-hidden">
+      {/* 2. Slide-out Sheet Drawer (Right - Portaled directly to document.body to prevent containing-block traps) */}
+      {isOpen && mounted && typeof document !== 'undefined' && createPortal(
+        <div className="fixed inset-0 z-[999] overflow-hidden" role="region" aria-label="Contextual Help Drawer">
           {/* Backdrop Blur Overlay */}
           <div
             onClick={() => setIsOpen(false)}
@@ -242,15 +248,15 @@ export default function ContextualHelpDrawer() {
             aria-hidden="true"
           />
 
-          {/* Drawer Panel: Proportional desktop width (sm:max-w-md lg:max-w-lg) & full mobile width */}
+          {/* Drawer Panel: Proportional desktop width (sm:max-w-md md:max-w-lg lg:max-w-xl) & full mobile width */}
           <aside
             role="dialog"
             aria-modal="true"
             aria-labelledby="help-drawer-title"
-            className="fixed inset-y-0 right-0 z-50 flex w-full max-w-full sm:max-w-md lg:max-w-lg flex-col border-l border-border bg-white shadow-2xl animate-sheet-in"
+            className="fixed inset-y-0 right-0 z-[1000] flex h-full h-[100dvh] max-h-screen w-full sm:max-w-md md:max-w-lg lg:max-w-xl flex-col border-l border-border bg-white shadow-2xl animate-sheet-in"
           >
             {/* Sheet Header */}
-            <div className="flex shrink-0 items-start justify-between border-b border-border/80 bg-white px-5 py-4 sm:px-6">
+            <div className="flex shrink-0 items-start justify-between border-b border-border/80 bg-white/95 backdrop-blur-xs px-5 py-4 sm:px-6 z-10">
               <div className="min-w-0 pr-3">
                 <div className="flex items-center gap-2">
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
@@ -285,8 +291,8 @@ export default function ContextualHelpDrawer() {
               </button>
             </div>
 
-            {/* Sheet Body (Scrollable with custom padding) */}
-            <div className="flex-1 overflow-y-auto px-5 py-6 sm:px-6 space-y-5">
+            {/* Sheet Body (Scrollable with custom padding & min-h-0 for flex sizing) */}
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-5 py-6 sm:px-7 space-y-6 custom-drawer-scrollbar">
               {/* STATE 1: LOADING */}
               {loading && (
                 <div className="space-y-4 py-2">
@@ -477,7 +483,7 @@ export default function ContextualHelpDrawer() {
             </div>
 
             {/* Sheet Footer */}
-            <div className="flex shrink-0 items-center justify-between border-t border-border/80 bg-slate-50/90 px-5 py-3.5 text-xs sm:px-6">
+            <div className="flex shrink-0 items-center justify-between border-t border-border/80 bg-slate-50/95 px-5 py-3.5 text-xs sm:px-6 z-10">
               <span className="text-slate-400">
                 Press <kbd className="rounded border border-slate-300 bg-white px-1.5 py-0.5 font-mono text-[10px] text-slate-600 shadow-2xs">Esc</kbd> to close
               </span>
@@ -491,7 +497,8 @@ export default function ContextualHelpDrawer() {
               </Link>
             </div>
           </aside>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
