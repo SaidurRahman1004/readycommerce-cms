@@ -138,6 +138,21 @@ This document serves as the central source of truth for the **ReadyCommerce CMS 
   - Fixed `relatedProducts` ID mapping in both `manual-form.tsx` and `/manuals/page.tsx` toggle status to prevent runtime object vs string type mismatch bugs.
   - Added backdrop click-to-dismiss, `Escape` key listeners, and body scroll locking to both the Help Drawer and Manuals quick preview modal.
   - **Resolved CSS Containing Block & Vertical Height Trap**: Decoupled the Help Drawer and Manual Preview modals from the dashboard `<header>` by portaling directly to `document.body` via `createPortal`. The header's `backdrop-blur-xl` was trapping `position: fixed` children within its 80px container, causing the drawer to appear squashed and unscrollable. Portaling restores 100vh full-screen height, comfortable desktop width (`sm:max-w-md md:max-w-lg lg:max-w-xl`), full-width on mobile (`w-full max-w-full`), and smooth vertical scrolling with `min-h-0`, `overscroll-contain`, and a custom visible scrollbar (`.custom-drawer-scrollbar`).
-
-
-
+* **[2026-09-09]**: **[Storefront Enterprise UI Architecture: Loading, Empty, Error & Success States]**:
+  - **Phase 1: Centralized UI Primitives** (`apps/storefront/src/components/ui/`):
+    - `skeleton.tsx`: Created reusable `Skeleton` base, `ProductCardSkeleton` (matching `CatalogCard` layout and dimensions), `ProductDetailSkeleton` (with gallery, options, and purchase form placeholders), and `OrderCardSkeleton` (with status header and multi-step progress bar).
+    - `empty-state.tsx`: Polymorphic component with double-ring Lucide icon, badge, title, description, primary CTA (link or onClick), and secondary action.
+    - `error-state.tsx`: Premium card with connection badge, warning icon, user-friendly message, full retry handler with spinning feedback, and optional return-home link.
+    - `success-state.tsx`: Animated double-ring green checkmark (`CheckCircle2`) banner with status pills and configurable CTA buttons.
+  - **Phase 2: Next.js Global Boundaries** (`apps/storefront/src/app/[locale]/`):
+    - `loading.tsx`: Global route transition skeleton preventing white screens and UI freeze during server transitions.
+    - `error.tsx`: Global client error boundary catching uncaught rendering errors with `reset()` reload button and safe navigation back to home.
+    - `not-found.tsx`: Localized 404 page featuring 404 badge, return-to-shop action, and quick discovery collection pills.
+  - **Phase 3: Component Integration & Bug Squashing**:
+    - `shop-client.tsx` & `home-catalog.tsx`: Eliminated silent failure catches (`.catch(() => undefined)`). Integrated `ProductCardSkeleton` grids, `ErrorState` with retry callbacks, and zero-match `EmptyState` with a "Clear all filters" CTA.
+    - `checkout-client.tsx`: [CRITICAL] Completely hides the checkout form when the cart is empty and displays a prominent "Your cart is currently empty" `EmptyState` with direct links to the shop and homepage.
+    - `account-orders.tsx` & `account-addresses.tsx`: Replaced raw text fallbacks with `OrderCardSkeleton` loaders, and polished `EmptyState` views.
+    - `product-reviews.tsx`: Added loading skeleton cards and a "Be the first to review" empty state.
+    - `success-client.tsx`: Enhanced order completion screen with an animated green checkmark, confirmed status chip, timeline summary (packaging, 24-48h delivery, SMS/email updates), and a "View Order in Account" button.
+    - `product-detail.tsx`, `wishlist-page.tsx`, `search-results.tsx`, & `search-bar.tsx`: Replaced raw skeletons with `ProductCardSkeleton`, connected `EmptyState` and `ErrorState` handling, and added live dropdown loading and zero-match suggestions in the search bar.
+  - **Build & Quality Gates**: Successfully validated Next.js 16 production builds across both `apps/storefront` and `apps/dashboard` with 0 type errors, zero hydration mismatches, and fully responsive breakpoints.

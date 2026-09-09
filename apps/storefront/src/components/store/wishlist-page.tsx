@@ -1,8 +1,85 @@
 'use client';
-import {useEffect, useState} from 'react';
-import {useTranslations} from 'next-intl';
-import {Link} from '@/i18n/routing';
-import {catalogService, CatalogProduct} from '@/services/api-service';
-import {useCart} from './cart-context';
+
+import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
+import { HeartOff, ShoppingBag } from 'lucide-react';
+import { catalogService, CatalogProduct } from '@/services/api-service';
+import { useCart } from './cart-context';
 import CatalogCard from './catalog-card';
-export default function WishlistPage() { const t = useTranslations('Discovery'); const {wishlist} = useCart(); const [products, setProducts] = useState<CatalogProduct[]>([]); const [loading, setLoading] = useState(true); useEffect(() => {let active = true; Promise.all(wishlist.map((id) => catalogService.product(id).then((result) => result.data).catch(() => null))).then((items) => {if (active) setProducts(items.filter((item): item is CatalogProduct => Boolean(item)));}).finally(() => {if (active) setLoading(false);}); return () => {active = false;};}, [wishlist]); return <main className="min-h-screen bg-[#fafbff] px-5 py-12 text-slate-950 sm:px-8 lg:px-10"><div className="mx-auto max-w-7xl"><p className="text-xs font-semibold uppercase tracking-[0.22em] text-indigo-600">{t('wishlist.eyebrow')}</p><h1 className="mt-3 text-4xl font-semibold tracking-[-0.06em] sm:text-5xl">{t('wishlist.title')}</h1>{loading ? <div className="mt-10 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">{[1,2,3,4].map((item) => <div key={item} className="aspect-[4/5] animate-pulse rounded-2xl bg-slate-200" />)}</div> : products.length ? <div className="mt-10 grid grid-cols-2 gap-x-4 gap-y-9 sm:gap-x-6 lg:grid-cols-3 xl:grid-cols-4">{products.map((product) => <CatalogCard key={product._id} product={product} />)}</div> : <div className="mt-10 rounded-3xl border border-slate-200 bg-white px-6 py-20 text-center shadow-sm"><div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-rose-50 text-3xl text-rose-500">♡</div><h2 className="mt-6 text-2xl font-semibold">{t('wishlist.emptyTitle')}</h2><p className="mx-auto mt-3 max-w-md text-sm leading-6 text-slate-500">{t('wishlist.emptyDescription')}</p><Link href="/shop" className="mt-7 inline-flex min-h-12 items-center rounded-full bg-slate-950 px-6 text-sm font-semibold text-white">{t('wishlist.continue')}</Link></div>}</div></main>; }
+import { ProductCardSkeleton } from '@/components/ui/skeleton';
+import { EmptyState } from '@/components/ui/empty-state';
+
+export default function WishlistPage() {
+  const t = useTranslations('Discovery');
+  const { wishlist } = useCart();
+  const [products, setProducts] = useState<CatalogProduct[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    Promise.all(
+      wishlist.map((id) =>
+        catalogService
+          .product(id)
+          .then((result) => result.data)
+          .catch(() => null)
+      )
+    )
+      .then((items) => {
+        if (active) {
+          setProducts(items.filter((item): item is CatalogProduct => Boolean(item)));
+        }
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [wishlist]);
+
+  return (
+    <main className="min-h-screen bg-[#fafbff] px-5 py-12 text-slate-950 sm:px-8 lg:px-10">
+      <div className="mx-auto max-w-7xl">
+        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-indigo-600">
+          {t('wishlist.eyebrow')}
+        </p>
+        <h1 className="mt-3 text-4xl font-semibold tracking-[-0.06em] sm:text-5xl">
+          {t('wishlist.title')}
+        </h1>
+
+        {/* 1. Loading Skeleton */}
+        {loading ? (
+          <div className="mt-10 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
+            {[1, 2, 3, 4].map((item) => (
+              <ProductCardSkeleton key={item} />
+            ))}
+          </div>
+        ) : products.length > 0 ? (
+          /* 2. Wishlist Products Grid */
+          <div className="mt-10 grid grid-cols-2 gap-x-4 gap-y-9 sm:gap-x-6 lg:grid-cols-3 xl:grid-cols-4">
+            {products.map((product) => (
+              <CatalogCard key={product._id} product={product} />
+            ))}
+          </div>
+        ) : (
+          /* 3. Empty State */
+          <div className="mt-10">
+            <EmptyState
+              icon={HeartOff}
+              badge="0 Saved Items"
+              title={t('wishlist.emptyTitle')}
+              description={t('wishlist.emptyDescription')}
+              action={{
+                label: t('wishlist.continue'),
+                href: '/shop',
+                icon: ShoppingBag,
+              }}
+            />
+          </div>
+        )}
+      </div>
+    </main>
+  );
+}
