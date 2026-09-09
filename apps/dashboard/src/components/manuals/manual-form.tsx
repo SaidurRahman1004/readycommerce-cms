@@ -44,7 +44,9 @@ export default function ManualForm({ initialData, mode, manualId }: ManualFormPr
   const [status, setStatus] = useState<'active' | 'draft'>(initialData?.status || 'draft');
   const [content, setContent] = useState(initialData?.content || '');
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>(
-    initialData?.relatedProducts?.map((p) => p._id) || []
+    (initialData?.relatedProducts || [])
+      .map((p) => (typeof p === 'string' ? p : p?._id))
+      .filter(Boolean) as string[]
   );
 
   // UI State

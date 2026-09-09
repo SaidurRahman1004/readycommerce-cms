@@ -1,13 +1,13 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import {
   HelpCircle, X, BookOpen, Edit3, Plus, Copy, ExternalLink,
   RefreshCw, FileCheck, Sparkles, Check, ChevronRight, AlertCircle,
-  FileText, ShieldCheck, ArrowRight
+  FileText, ShieldCheck, ArrowRight, Compass
 } from 'lucide-react';
 import { manualService, type AdminManual } from '../services/api-service';
 import { MarkdownPreview } from './manuals/markdown-preview';
@@ -15,7 +15,7 @@ import { Skeleton } from './ui/primitives';
 
 /**
  * Maps any pathname to the canonical help slug, section key, and human-readable title.
- * Format requested: page-[current-path] (e.g. page-orders, page-products, page-overview)
+ * Format: page-[current-path] (e.g. page-orders, page-products, page-overview)
  */
 export function resolveHelpContext(pathname: string): {
   sectionKey: string;
@@ -23,22 +23,23 @@ export function resolveHelpContext(pathname: string): {
   pageTitle: string;
   routePath: string;
 } {
-  const clean = pathname.replace(/\/+$/, '') || '/';
+  // Strip trailing slashes and query strings
+  const clean = (pathname || '/').split('?')[0].replace(/\/+$/, '') || '/';
 
   if (clean === '/' || clean === '') {
     return {
       sectionKey: 'overview',
       slug: 'page-overview',
-      pageTitle: 'Overview',
+      pageTitle: 'Dashboard Overview',
       routePath: '/'
     };
   }
 
-  // Extract root segment (e.g. /orders/123 -> orders)
+  // Extract root segment: e.g. /orders/6789 -> orders
   const segments = clean.split('/').filter(Boolean);
   const rootSegment = segments[0] || 'overview';
 
-  // Map known routes to nice titles and clean slugs
+  // Human-friendly title mapping
   const knownTitles: Record<string, string> = {
     overview: 'Dashboard Overview',
     orders: 'Orders Management',
@@ -53,7 +54,7 @@ export function resolveHelpContext(pathname: string): {
     'media-library': 'Media Library',
     manuals: 'Manuals & SOPs',
     analytics: 'Analytics & Reports',
-    notifications: 'Operations Notifications',
+    notifications: 'Notifications',
     'team-&-roles': 'Team & Roles',
     settings: 'Store Settings',
     'audit-logs': 'Audit Logs'
@@ -66,9 +67,12 @@ export function resolveHelpContext(pathname: string): {
       .replace(/&/g, 'and')
       .replace(/\b\w/g, (c) => c.toUpperCase());
 
-  // Slug: page-[current-path] (e.g. page-orders, page-products)
-  // Sanitize special characters like & -> and for safe URL slug
-  const cleanSlugPart = rootSegment.replace(/&/g, 'and').replace(/[^a-z0-9-_]/g, '-').replace(/(^-|-$)+/g, '');
+  // Slug formatting: page-[current-path]
+  const cleanSlugPart = rootSegment
+    .replace(/&/g, 'and')
+    .replace(/[^a-z0-9-_]/g, '-')
+    .replace(/(^-|-$)+/g, '');
+
   const slug = `page-${cleanSlugPart}`;
 
   return {
@@ -89,40 +93,68 @@ export default function ContextualHelpDrawer() {
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  // Extract context based on current route
+  // In-memory cache to prevent redundant fetches when opening/closing
+  const manualCache = useRef<Record<string, AdminManual | null>>({});
+
+  // Resolve current route context
   const { sectionKey, slug, pageTitle, routePath } = useMemo(
     () => resolveHelpContext(pathname || '/'),
     [pathname]
   );
 
   // Load manual for the current page
-  const loadManual = useCallback(async (targetSlug: string) => {
+  const loadManual = useCallback(async (targetSlug: string, bypassCache = false) => {
+    if (!bypassCache && manualCache.current[targetSlug] !== undefined) {
+      setManual(manualCache.current[targetSlug]);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
     try {
-      // First attempt: fetch by exact target slug
+      // 1. Primary slug attempt
       const res = await manualService.get(targetSlug);
-      setManual(res.data || null);
+      if (res && res.data) {
+        manualCache.current[targetSlug] = res.data;
+        setManual(res.data);
+        setLoading(false);
+        return;
+      }
+      manualCache.current[targetSlug] = null;
+      setManual(null);
     } catch (err: unknown) {
-      // Check if it was 404 (Not Found) or a real network error
       const isNotFound =
-        err instanceof Error &&
-        (err.message.includes('not found') || (err as { status?: number }).status === 404);
+        (err as { status?: number })?.status === 404 ||
+        (err instanceof Error && err.message.toLowerCase().includes('not found'));
 
       if (isNotFound) {
-        // Fallback check if route had special characters like team-&-roles
-        if (targetSlug.includes('and')) {
+        // 2. Fallback check for alternate plural/singular forms (e.g. page-orders vs page-order)
+        let alternateSlug = '';
+        if (targetSlug.endsWith('s')) {
+          alternateSlug = targetSlug.slice(0, -1);
+        } else {
+          alternateSlug = `${targetSlug}s`;
+        }
+
+        if (alternateSlug && alternateSlug !== targetSlug) {
           try {
-            const fallbackSlug = targetSlug.replace('and', '');
-            const fallbackRes = await manualService.get(fallbackSlug);
-            setManual(fallbackRes.data || null);
-            setLoading(false);
-            return;
+            const fallbackRes = await manualService.get(alternateSlug);
+            if (fallbackRes && fallbackRes.data) {
+              manualCache.current[targetSlug] = fallbackRes.data;
+              setManual(fallbackRes.data);
+              setLoading(false);
+              return;
+            }
           } catch {
-            // ignore fallback error
+            // Ignore fallback failure
           }
         }
+
+        // Neither found: set clean empty state
+        manualCache.current[targetSlug] = null;
         setManual(null);
       } else {
         console.error('Failed to load contextual manual:', err);
@@ -158,6 +190,18 @@ export default function ContextualHelpDrawer() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen]);
 
+  // Lock body scroll when drawer is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
   // Copy slug helper
   const handleCopySlug = () => {
     navigator.clipboard.writeText(slug);
@@ -182,17 +226,10 @@ export default function ContextualHelpDrawer() {
         type="button"
         onClick={() => setIsOpen(true)}
         aria-label={`In-app help for ${pageTitle}`}
-        title={`Contextual Help (${pageTitle}) - Press ?`}
+        title={`In-App Help (${pageTitle}) - Press ?`}
         className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-white text-slate-600 transition-all duration-200 hover:border-primary/50 hover:bg-primary/5 hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
       >
         <HelpCircle className="h-4 w-4" />
-        {/* Subtle indicator ring if manual exists */}
-        {manual && (
-          <span className="absolute -right-0.5 -top-0.5 flex h-2.5 w-2.5">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary/40 opacity-75" />
-            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-primary" />
-          </span>
-        )}
       </button>
 
       {/* 2. Slide-out Sheet Drawer (Right) */}
@@ -201,38 +238,38 @@ export default function ContextualHelpDrawer() {
           {/* Backdrop Blur Overlay */}
           <div
             onClick={() => setIsOpen(false)}
-            className="fixed inset-0 bg-slate-950/40 backdrop-blur-xs transition-opacity duration-300 animate-in fade-in"
+            className="fixed inset-0 bg-slate-950/45 backdrop-blur-xs animate-fade-in"
             aria-hidden="true"
           />
 
-          {/* Drawer Panel */}
+          {/* Drawer Panel: Proportional desktop width (sm:max-w-md lg:max-w-lg) & full mobile width */}
           <aside
             role="dialog"
             aria-modal="true"
             aria-labelledby="help-drawer-title"
-            className="fixed inset-y-0 right-0 z-50 flex w-full max-w-xl flex-col border-l border-border bg-white shadow-2xl transition-transform duration-300 ease-out animate-in slide-in-from-right sm:max-w-xl"
+            className="fixed inset-y-0 right-0 z-50 flex w-full max-w-full sm:max-w-md lg:max-w-lg flex-col border-l border-border bg-white shadow-2xl animate-sheet-in"
           >
             {/* Sheet Header */}
-            <div className="flex items-start justify-between border-b border-border/80 bg-slate-50/90 px-6 py-4">
-              <div className="min-w-0 pr-4">
+            <div className="flex shrink-0 items-start justify-between border-b border-border/80 bg-white px-5 py-4 sm:px-6">
+              <div className="min-w-0 pr-3">
                 <div className="flex items-center gap-2">
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
                     <Sparkles className="h-3 w-3" />
                     In-App Help
                   </span>
-                  <span className="font-mono text-xs text-slate-400 truncate">
+                  <span className="font-mono text-[11px] text-slate-400 truncate">
                     {routePath}
                   </span>
                 </div>
                 <h2
                   id="help-drawer-title"
-                  className="mt-1 text-lg font-bold text-slate-900 truncate"
+                  className="mt-1 text-base font-bold text-slate-900 truncate sm:text-lg"
                 >
-                  {manual?.title || `${pageTitle} Guide`}
+                  {manual?.title || `${pageTitle} SOP`}
                 </h2>
-                <div className="mt-0.5 flex items-center gap-1 text-[11px] text-slate-500">
-                  <span>Target Slug:</span>
-                  <code className="rounded bg-slate-200/70 px-1.5 py-0.2 font-mono text-[10px] font-semibold text-slate-700">
+                <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-slate-500">
+                  <span>System Slug:</span>
+                  <code className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-slate-700">
                     {slug}
                   </code>
                 </div>
@@ -241,45 +278,45 @@ export default function ContextualHelpDrawer() {
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                className="rounded-xl p-2 text-slate-400 transition hover:bg-slate-200 hover:text-slate-700"
+                className="rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
                 title="Close drawer (Esc)"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            {/* Sheet Body (Scrollable) */}
-            <div className="flex-1 overflow-y-auto p-6 sm:p-7">
+            {/* Sheet Body (Scrollable with custom padding) */}
+            <div className="flex-1 overflow-y-auto px-5 py-6 sm:px-6 space-y-5">
               {/* STATE 1: LOADING */}
               {loading && (
-                <div className="space-y-4">
-                  <Skeleton className="h-7 w-3/4 rounded-lg" />
+                <div className="space-y-4 py-2">
+                  <Skeleton className="h-7 w-3/4 rounded-xl" />
                   <div className="flex gap-2">
                     <Skeleton className="h-6 w-24 rounded-full" />
                     <Skeleton className="h-6 w-20 rounded-full" />
                   </div>
                   <div className="space-y-2 pt-4">
-                    <Skeleton className="h-4 w-full rounded" />
-                    <Skeleton className="h-4 w-5/6 rounded" />
-                    <Skeleton className="h-4 w-4/6 rounded" />
+                    <Skeleton className="h-4 w-full rounded-lg" />
+                    <Skeleton className="h-4 w-5/6 rounded-lg" />
+                    <Skeleton className="h-4 w-4/6 rounded-lg" />
                   </div>
                   <div className="space-y-2 pt-4">
-                    <Skeleton className="h-5 w-1/3 rounded" />
-                    <Skeleton className="h-4 w-full rounded" />
-                    <Skeleton className="h-4 w-full rounded" />
+                    <Skeleton className="h-5 w-1/3 rounded-lg" />
+                    <Skeleton className="h-4 w-full rounded-lg" />
+                    <Skeleton className="h-4 w-full rounded-lg" />
                   </div>
                 </div>
               )}
 
               {/* STATE 2: ERROR */}
               {!loading && error && (
-                <div className="rounded-2xl border border-rose-200 bg-rose-50/80 p-5 text-center text-sm text-rose-800">
+                <div className="rounded-2xl border border-rose-200 bg-rose-50/90 p-5 text-center text-sm text-rose-800">
                   <AlertCircle className="mx-auto h-8 w-8 text-rose-500" />
                   <h3 className="mt-2 font-bold">Could not load help guide</h3>
                   <p className="mt-1 text-xs text-rose-600">{error}</p>
                   <button
                     type="button"
-                    onClick={() => void loadManual(slug)}
+                    onClick={() => void loadManual(slug, true)}
                     className="mt-4 inline-flex items-center gap-1.5 rounded-xl bg-rose-700 px-4 py-2 text-xs font-bold text-white transition hover:bg-rose-800"
                   >
                     <RefreshCw className="h-3.5 w-3.5" />
@@ -291,9 +328,9 @@ export default function ContextualHelpDrawer() {
               {/* STATE 3: MANUAL FOUND */}
               {!loading && !error && manual && (
                 <div className="space-y-5">
-                  {/* Guide Metadata Card */}
-                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-slate-50/60 p-3.5 text-xs">
-                    <div className="flex flex-wrap items-center gap-2">
+                  {/* Guide Metadata Pill Bar */}
+                  <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-slate-50/70 p-3 text-xs">
+                    <div className="flex flex-wrap items-center gap-1.5">
                       <span
                         className={`inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-bold ${
                           manual.type === 'staff_sop'
@@ -332,91 +369,107 @@ export default function ContextualHelpDrawer() {
                       title="Edit this manual in CMS"
                     >
                       <Edit3 className="h-3 w-3" />
-                      Edit Guide
+                      Edit SOP
                     </Link>
                   </div>
 
-                  {/* Rendered Markdown Content */}
-                  <div className="rounded-2xl border border-slate-100 bg-white p-2">
-                    <MarkdownPreview content={manual.content} />
+                  {/* Rendered Markdown Content using Typography Prose */}
+                  <div className="prose prose-slate max-w-none break-words">
+                    {manual.content && manual.content.trim() ? (
+                      <MarkdownPreview content={manual.content} />
+                    ) : (
+                      <div className="rounded-xl border border-dashed border-border bg-slate-50 p-6 text-center text-xs text-slate-500">
+                        <p className="font-semibold text-slate-700">This guide has no written content yet.</p>
+                        <p className="mt-1">Click &quot;Edit SOP&quot; above to add procedures, rules, or checklists.</p>
+                      </div>
+                    )}
                   </div>
 
                   {/* Footer note for existing guide */}
                   <div className="rounded-xl border border-slate-100 bg-slate-50/60 p-3 text-xs text-slate-500">
-                    <p className="flex items-center justify-between">
-                      <span>Last updated: {new Date(manual.updatedAt).toLocaleDateString()}</span>
+                    <div className="flex items-center justify-between">
+                      <span>Updated: {new Date(manual.updatedAt).toLocaleDateString()}</span>
                       <Link
                         href="/manuals"
                         onClick={() => setIsOpen(false)}
-                        className="font-bold text-primary hover:underline"
+                        className="font-bold text-primary hover:underline inline-flex items-center gap-1"
                       >
-                        Browse all manuals →
+                        <span>All SOPs</span>
+                        <ChevronRight className="h-3 w-3" />
                       </Link>
-                    </p>
+                    </div>
                   </div>
                 </div>
               )}
 
-              {/* STATE 4: NO MANUAL FOUND (EMPTY STATE) */}
+              {/* STATE 4: NO MANUAL FOUND (PREMIUM REDESIGNED EMPTY STATE) */}
               {!loading && !error && !manual && (
-                <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-slate-50/50 p-8 text-center sm:p-10">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary shadow-xs">
-                    <BookOpen className="h-7 w-7" />
+                <div className="rounded-2xl border border-border/80 bg-gradient-to-b from-slate-50/90 to-white p-6 text-center sm:p-7 shadow-xs">
+                  {/* Icon with Double Ring */}
+                  <div className="relative mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-8 ring-primary/5">
+                    <Compass className="h-7 w-7 stroke-[1.75]" />
                   </div>
 
-                  <h3 className="mt-4 text-base font-bold text-slate-900">
-                    No guide available for this section yet.
+                  {/* Status Indicator */}
+                  <div className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-amber-200/80 bg-amber-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-800">
+                    <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                    No Guide Published Yet
+                  </div>
+
+                  <h3 className="mt-2 text-base font-bold text-slate-900 sm:text-lg">
+                    Procedure not yet documented
                   </h3>
 
-                  <p className="mt-1.5 max-w-sm text-xs leading-relaxed text-slate-500">
-                    Staff standard operating procedures and documentation have not been published for the{' '}
-                    <strong className="text-slate-700">{pageTitle}</strong> page yet.
+                  <p className="mx-auto mt-1.5 max-w-xs text-xs leading-relaxed text-slate-500">
+                    Standard operating procedures for <strong className="font-semibold text-slate-700">{pageTitle}</strong> haven&apos;t been published in the CMS yet.
                   </p>
 
-                  {/* Slug Requirement Box with Copy Button */}
-                  <div className="mt-5 w-full max-w-md rounded-xl border border-primary/20 bg-white p-3.5 shadow-xs text-left">
+                  {/* System Slug Box */}
+                  <div className="mt-5 rounded-xl border border-slate-200/80 bg-white p-3.5 text-left shadow-2xs">
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
-                        Target Slug Required:
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                        Mapped System Slug
                       </span>
                       <button
                         type="button"
                         onClick={handleCopySlug}
-                        className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-semibold text-primary hover:bg-primary/5 transition"
+                        className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-semibold text-primary hover:bg-primary/5 transition"
+                        title="Copy slug to clipboard"
                       >
                         {copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
                         <span>{copied ? 'Copied' : 'Copy'}</span>
                       </button>
                     </div>
 
-                    <div className="mt-1.5 flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 border border-slate-200">
-                      <code className="font-mono text-xs font-bold text-slate-800">
+                    <div className="mt-1.5 flex items-center justify-between rounded-lg bg-slate-50 px-3 py-2 border border-slate-200/70">
+                      <code className="font-mono text-xs font-bold text-slate-800 truncate">
                         {slug}
                       </code>
                     </div>
 
-                    <p className="mt-2 text-[11px] text-slate-500">
-                      Tip: Create a new manual with slug <code className="font-bold text-slate-700">&apos;{slug}&apos;</code> to make it appear automatically on this page.
+                    <p className="mt-2 text-[11px] text-slate-500 leading-normal">
+                      Manuals with slug <code className="font-mono font-semibold text-slate-700">&apos;{slug}&apos;</code> will automatically appear in this contextual drawer.
                     </p>
                   </div>
 
-                  {/* Call to Action: Create One in Manuals CMS */}
-                  <div className="mt-6 flex flex-col gap-2 w-full max-w-md">
+                  {/* Primary CTA Button */}
+                  <div className="mt-6 flex flex-col gap-2.5">
                     <button
                       type="button"
                       onClick={handleCreateGuide}
-                      className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 text-xs font-bold text-white shadow-xs transition hover:bg-primary/90"
+                      className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary px-5 text-xs font-bold text-white shadow-xs transition-all hover:bg-primary/90 hover:shadow-sm"
                     >
-                      <Plus className="h-4 w-4" />
-                      Create one in the Manuals CMS with slug: &apos;{slug}&apos;
+                      <Plus className="h-4 w-4 stroke-[2.5]" />
+                      <span>Create {pageTitle} Guide</span>
                     </button>
 
                     <Link
                       href="/manuals"
                       onClick={() => setIsOpen(false)}
-                      className="inline-flex min-h-9 items-center justify-center gap-1 text-xs font-semibold text-slate-500 hover:text-slate-800"
+                      className="inline-flex min-h-9 items-center justify-center gap-1 text-xs font-semibold text-slate-500 hover:text-slate-800 transition"
                     >
-                      View existing manuals <ChevronRight className="h-3.5 w-3.5" />
+                      <span>Browse existing manuals</span>
+                      <ChevronRight className="h-3.5 w-3.5" />
                     </Link>
                   </div>
                 </div>
@@ -424,7 +477,7 @@ export default function ContextualHelpDrawer() {
             </div>
 
             {/* Sheet Footer */}
-            <div className="flex items-center justify-between border-t border-border bg-slate-50/90 px-6 py-3.5 text-xs">
+            <div className="flex shrink-0 items-center justify-between border-t border-border/80 bg-slate-50/90 px-5 py-3.5 text-xs sm:px-6">
               <span className="text-slate-400">
                 Press <kbd className="rounded border border-slate-300 bg-white px-1.5 py-0.5 font-mono text-[10px] text-slate-600 shadow-2xs">Esc</kbd> to close
               </span>

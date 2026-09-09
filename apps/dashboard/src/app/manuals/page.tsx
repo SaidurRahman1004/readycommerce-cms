@@ -48,6 +48,25 @@ export default function ManualsPage() {
     void load();
   }, [load]);
 
+  // Handle ESC key and scroll lock for preview modal
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && previewManual) {
+        setPreviewManual(null);
+      }
+    };
+    if (previewManual) {
+      document.body.style.overflow = 'hidden';
+      window.addEventListener('keydown', handleKeyDown);
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [previewManual]);
+
   // Quick toggle status (draft <-> active)
   const toggleStatus = async (manual: AdminManual) => {
     const nextStatus = manual.status === 'active' ? 'draft' : 'active';
@@ -58,7 +77,9 @@ export default function ManualsPage() {
         type: manual.type,
         status: nextStatus,
         content: manual.content,
-        relatedProducts: manual.relatedProducts.map((p) => p._id)
+        relatedProducts: (manual.relatedProducts || [])
+          .map((p) => (typeof p === 'string' ? p : p?._id))
+          .filter(Boolean) as string[]
       });
       toast.success(`Manual marked as ${nextStatus}.`);
       setItems((prev) =>
@@ -514,9 +535,12 @@ export default function ManualsPage() {
 
       {/* Quick Preview Slide-over / Modal */}
       {previewManual && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4 backdrop-blur-xs">
+        <div
+          onClick={() => setPreviewManual(null)}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/45 p-4 backdrop-blur-xs animate-fade-in"
+        >
           <div
-            className="relative flex max-h-[90vh] w-full max-w-3xl flex-col rounded-3xl border border-border bg-white shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+            className="relative flex max-h-[90vh] w-full max-w-3xl flex-col rounded-3xl border border-border bg-white shadow-2xl overflow-hidden animate-sheet-in"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
