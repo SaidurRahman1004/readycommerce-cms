@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
@@ -28,12 +28,19 @@ interface ManualFormProps {
 
 export default function ManualForm({ initialData, mode, manualId }: ManualFormProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const paramSlug = searchParams.get('slug');
+  const paramTitle = searchParams.get('title');
+  const paramType = searchParams.get('type') as 'staff_sop' | 'customer_guide' | null;
+
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Form State
-  const [title, setTitle] = useState(initialData?.title || '');
-  const [slug, setSlug] = useState(initialData?.slug || '');
-  const [type, setType] = useState<'staff_sop' | 'customer_guide'>(initialData?.type || 'staff_sop');
+  const [title, setTitle] = useState(initialData?.title || paramTitle || '');
+  const [slug, setSlug] = useState(initialData?.slug || paramSlug || '');
+  const [type, setType] = useState<'staff_sop' | 'customer_guide'>(
+    initialData?.type || paramType || 'staff_sop'
+  );
   const [status, setStatus] = useState<'active' | 'draft'>(initialData?.status || 'draft');
   const [content, setContent] = useState(initialData?.content || '');
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>(

@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { ErrorState, Skeleton } from './ui/primitives';
 import NotificationBell from './notification-bell';
+import ContextualHelpDrawer from './contextual-help-drawer';
 
 type Locale = 'en' | 'bn';
 type AccessState = 'loading' | 'allowed' | 'denied' | 'error';
@@ -311,6 +312,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           <div className="ml-auto flex items-center gap-2 sm:gap-3">
             <button type="button" onClick={() => setLocale(locale === 'en' ? 'bn' : 'en')} className="rounded-full border border-border px-3 py-2 text-xs font-bold" aria-label={t.language}>{locale === 'en' ? 'BN' : 'EN'}</button>
             <NotificationBell label={t.notifications} />
+            <ContextualHelpDrawer />
             <span className="hidden text-right sm:block"><span className="block text-sm font-bold">{user ? `${user.firstName} ${user.lastName}` : t.user}</span><span className="block text-xs capitalize text-slate-500">{user?.role.replace('-', ' ') || t.administrator}</span></span>
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 font-bold uppercase text-primary">{user?.firstName?.[0] || 'A'}</span>
             <button
