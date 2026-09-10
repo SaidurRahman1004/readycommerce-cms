@@ -1,0 +1,18 @@
+{
+  "default_branch": "main",
+  "branches": [
+    "dashboard-all",
+    "main",
+    "origin"
+  ],
+  "parent": {
+    "dashboard-all": "main",
+    "main": null,
+    "origin": "main"
+  },
+  "order": [
+    "main",
+    "dashboard-all",
+    "origin"
+  ]
+}

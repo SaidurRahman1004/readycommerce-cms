@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "npm run dev --workspace=apps/storefront",
+    "dev": "node api.js && npm run dev --workspace=apps/storefront",
     "dev:dashboard": "npm run dev --workspace=apps/dashboard",
     "dev:backend": "npm run dev --workspace=packages/backend",
     "dev:all": "concurrently \"npm run dev\" \"npm run dev:dashboard\" \"npm run dev:backend\""
