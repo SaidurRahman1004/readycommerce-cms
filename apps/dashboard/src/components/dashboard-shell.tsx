@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import toast from 'react-hot-toast';
 import {
-  Archive, BarChart3, Bell, BookOpen, CreditCard, FileText, Home, Image, Layout, Menu,
+  Archive, BarChart3, Bell, BookOpen, CreditCard, FileText, Home, Image, Layout, MapPin, Menu,
   Package, Percent, RotateCcw, Settings, Shield, ShoppingCart, Sparkles, Star, Tags, Users, X,
   LogOut, Lock, Mail, ArrowRight, Loader2,
   type LucideIcon,
@@ -37,7 +37,7 @@ const copy = {
       overview: 'Overview', orders: 'Orders', payments: 'Payments', products: 'Products', categories: 'Categories',
       inventory: 'Inventory', customers: 'Customers', reviews: 'Reviews', coupons: 'Coupons & Promotions', campaigns: 'Campaigns & Landing', cms: 'Website CMS',
       media: 'Media Library', manuals: 'Manuals & SOPs', analytics: 'Analytics & Reports', returns: 'Returns & Refunds', notifications: 'Notifications',
-      team: 'Team & Roles', settings: 'Settings', paymentSettings: 'Payment Settings', deliveryZones: 'Delivery Zones', audit: 'Audit Logs',
+      team: 'Team & Roles', settings: 'Settings', paymentSettings: 'Payment Settings', delivery: 'Delivery Zones', audit: 'Audit Logs',
     },
   },
   bn: {
@@ -49,7 +49,7 @@ const copy = {
       overview: 'ওভারভিউ', orders: 'অর্ডার', payments: 'পেমেন্ট', products: 'পণ্য', categories: 'ক্যাটাগরি',
       inventory: 'ইনভেন্টরি', customers: 'কাস্টমার', reviews: 'রিভিউ', coupons: 'কুপন ও প্রোমোশন', campaigns: 'ক্যাম্পেইন ও ল্যান্ডিং', cms: 'ওয়েবসাইট CMS',
       media: 'মিডিয়া লাইব্রেরি', manuals: 'ম্যানুয়াল ও SOP', analytics: 'অ্যানালিটিক্স ও রিপোর্ট', returns: 'রিটার্ন ও রিফান্ড',
-      notifications: 'নোটিফিকেশন', team: 'টিম ও রোল', settings: 'সেটিংস', paymentSettings: 'পেমেন্ট সেটিংস', deliveryZones: 'ডেলিভারি জোন', audit: 'অডিট লগ',
+      notifications: 'নোটিফিকেশন', team: 'টিম ও রোল', settings: 'সেটিংস', paymentSettings: 'পেমেন্ট সেটিংস', delivery: 'ডেলিভারি জোন', audit: 'অডিট লগ',
     },
   },
 } as const;
@@ -73,8 +73,8 @@ const navItems: NavItem[] = [
   { key: 'notifications', icon: Bell, href: '/notifications', roles: ['super-admin', 'manager'] },
   { key: 'team', icon: Shield, href: '/team-&-roles', roles: SUPER_ADMIN },
   { key: 'settings', icon: Settings, href: '/settings', roles: SUPER_ADMIN },
-  { key: 'paymentSettings', icon: Settings, href: '/settings/payments', roles: SUPER_ADMIN },
-  { key: 'deliveryZones', icon: Settings, href: '/settings/delivery/locations', roles: SUPER_ADMIN },
+  { key: 'paymentSettings', icon: CreditCard, href: '/settings/payments', roles: ['super-admin', 'manager'] },
+  { key: 'delivery', icon: MapPin, href: '/settings/delivery/locations', roles: ['super-admin', 'manager'] },
   { key: 'audit', icon: FileText, href: '/audit-logs', roles: SUPER_ADMIN },
 ];
 
