@@ -8,6 +8,8 @@ const paymentSchema = new mongoose.Schema({
   amount: { type: Number, required: true, min: 0 }, 
   currency: { type: String, default: 'BDT', uppercase: true, length: 3 }, 
   transactionId: { type: String, trim: true, sparse: true, index: true },
+  senderNumber: { type: String, trim: true },
+  reference: { type: String, trim: true },
   status: { 
     type: String, 
     enum: [

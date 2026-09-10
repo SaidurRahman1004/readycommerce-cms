@@ -26,8 +26,10 @@ const leadRoutes = require('./routes/leadRoutes');
 const campaignRoutes = require('./routes/campaignRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const adminNotificationRoutes = require('./routes/adminNotificationRoutes');
+const adminDeliveryZoneRoutes = require('./routes/adminDeliveryZoneRoutes');
 const adminMediaRoutes = require('./routes/adminMediaRoutes');
 const paymentSettingsRoutes = require('./routes/paymentSettingsRoutes');
+const manualPaymentRoutes = require('./routes/manualPaymentRoutes');
 const webhookRoutes = require('./routes/webhookRoutes');
 
 const app = express();
@@ -85,17 +87,24 @@ app.get('/api/cms/homepage', async (req, res, next) => {
 });
 app.use('/api/admin', adminRoutes);
 app.use('/api/admin/notifications', adminNotificationRoutes);
+const { getPublicPaymentMethods } = require('./controllers/paymentSettingsController');
+
 app.use('/api/admin/media', adminMediaRoutes);
+app.use('/api/admin/delivery-zones', adminDeliveryZoneRoutes);
 app.use('/api/admin/manuals', adminManualRoutes);
 app.use('/api/admin/payments', paymentSettingsRoutes);
+app.use('/api/admin/payments/manual-requests', manualPaymentRoutes);
 app.use('/api/webhooks', webhookRoutes);
+app.get('/api/payments/methods', getPublicPaymentMethods);
 app.get('/api/manuals/customer-guides', optionalAuth, customerGuides);
 app.use('/uploads', express.static(path.resolve(__dirname, '../public/uploads'), { index: false, maxAge: '1d' }));
 
 app.get('/api/shipping/quote', async (req, res, next) => {
   try {
     const city = typeof req.query.city === 'string' ? req.query.city : '';
-    res.json({ success: true, data: { city, cost: await getShippingCost(city), currency: 'BDT' } });
+    const postalCode = typeof req.query.postal === 'string' ? req.query.postal : '';
+    const result = await getShippingCost(city, postalCode);
+    res.json({ success: true, data: { city, postalCode, cost: result.cost, codAvailable: result.codAvailable, zoneName: result.zoneName, currency: 'BDT' } });
   } catch (e) {
     next(e);
   }

@@ -1,15 +1,17 @@
 const StripeProvider = require('./providers/StripeProvider');
-// Other imports like BKashProvider, SSLCommerzProvider, ManualProvider, CODProvider
+const SSLCommerzProvider = require('./providers/SSLCommerzProvider');
+const BKashProvider = require('./providers/BKashProvider');
+// Other imports like ManualProvider, CODProvider
 
 class PaymentProviderFactory {
   static getProvider(providerName) {
     switch (providerName.toLowerCase()) {
       case 'stripe':
         return new StripeProvider();
-      // case 'sslcommerz':
-      //   return new SSLCommerzProvider();
-      // case 'bkash':
-      //   return new BKashProvider();
+      case 'sslcommerz':
+        return new SSLCommerzProvider();
+      case 'bkash':
+        return new BKashProvider();
       // case 'manual':
       //   return new ManualProvider();
       // case 'cod':

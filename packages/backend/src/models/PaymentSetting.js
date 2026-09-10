@@ -19,12 +19,25 @@ const paymentSettingSchema = new mongoose.Schema({
   // Encrypted JSON string containing API keys/secrets for online gateways
   credentials: { type: String },
   
-  // Details for manual payment (bKash/Nagad/Rocket/Bank)
+  // Details for manual payment (legacy single method)
   manualDetails: {
     accountNumber: String,
     accountType: String,
     instructions: String
   },
+  
+  // Array of dynamic manual payment methods
+  manualMethods: [{
+    id: { type: String, required: true }, // e.g. 'bkash', 'nagad', 'bank'
+    name: { type: String, required: true },
+    accountNumber: String,
+    accountType: String,
+    bankInfo: String,
+    instructions: String,
+    logo: String,
+    enabled: { type: Boolean, default: true },
+    sortOrder: { type: Number, default: 0 }
+  }],
   
   // Details for Cash on Delivery
   codDetails: {

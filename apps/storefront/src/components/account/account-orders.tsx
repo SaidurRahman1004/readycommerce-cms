@@ -179,6 +179,28 @@ export default function AccountOrders() {
                 </div>
               </div>
               <OrderTimeline status={order.status} t={t13} />
+              
+              {order.manualPayment && (
+                <div className="mt-4 rounded-xl border border-border bg-background p-4 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-slate-700">Manual Payment Status</span>
+                    {order.manualPayment.status === 'approved' && <span className="text-emerald-600 font-bold">Approved</span>}
+                    {order.manualPayment.status === 'rejected' && <span className="text-rose-600 font-bold">Rejected</span>}
+                    {order.manualPayment.status === 'under_review' && <span className="text-blue-600 font-bold">Under Review</span>}
+                    {order.manualPayment.status === 'submitted' && <span className="text-amber-600 font-bold">Submitted</span>}
+                  </div>
+                  {order.manualPayment.status === 'rejected' && order.manualPayment.failureReason && (
+                    <div className="mt-2 text-rose-600 bg-rose-50 p-2 rounded-lg text-xs">
+                      <span className="font-bold">Reason:</span> {order.manualPayment.failureReason}
+                    </div>
+                  )}
+                  {(order.manualPayment.status === 'submitted' || order.manualPayment.status === 'under_review') && (
+                    <div className="mt-2 text-slate-500 text-xs">
+                      Your payment is being verified by our team. This usually takes a few hours.
+                    </div>
+                  )}
+                </div>
+              )}
             </article>
           ))}
         </div>

@@ -161,3 +161,12 @@ This document serves as the central source of truth for the **ReadyCommerce CMS 
   - Hardened `api-service.ts` across both apps with global `AbortController` timeouts (15s limit) and automatic `401/403` redirection logic for unauthenticated states.
   - Created standardized UI primitives: `<FormError>` for validation states and `<ImageWithFallback>` for graceful broken-image handling in the Storefront.
   - Investigated and fixed the `npm run dev` lifecycle failure post-merge by correctly marking the new Next.js `not-found.tsx` files as `'use client'` to allow `window.history.back()` event handlers.
+* **[2026-09-10]**: **[SSLCommerz Payment Gateway End-to-End Integration]**:
+  - Installed `sslcommerz-lts` and created a dynamic `SSLCommerzProvider.js` adhering to the `PaymentProviderFactory` interface.
+  - Designed a premium Admin Dashboard configuration modal at `/settings/payments/sslcommerz` allowing tenants to seamlessly toggle between Sandbox and Live modes without hardcoded `.env` secrets.
+  - Refactored `webhookController.js` to natively support HTTP redirects in response to SSLCommerz's form-urlencoded IPN, Success, Fail, and Cancel callbacks.
+  - Upgraded the Storefront Checkout Client UI to display SSLCommerz as a first-class payment method alongside Stripe, bKash, and Nagad, orchestrating a seamless handoff to the bank portal.
+* **[2026-09-10]**: **[bKash Tokenized Payment Gateway Integration]**:
+  - Installed `axios` in the backend and engineered a robust `BKashProvider.js` class integrating bKash's Tokenized API (`/checkout/create`, `/checkout/execute`).
+  - Added a responsive Admin Dashboard configuration panel at `/settings/payments/bkash` to manage multi-tenant `app_key`, `app_secret`, `username`, and `password` for both Sandbox and Live modes.
+  - Refactored the Storefront Checkout Client to graduate bKash from a "Manual" transaction-ID input flow to a fully automated redirection flow, dynamically exchanging authentication tokens and capturing funds via background API calls.

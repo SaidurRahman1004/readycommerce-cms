@@ -100,7 +100,7 @@ export const orderService = {
   cancel: async (id: string) => request<{success: boolean; data: {orderId: string; status: string}}>(`/orders/${encodeURIComponent(id)}/cancel`, {method: 'PUT'})
   ,details: async (id: string) => request<{success: boolean; data: CustomerOrder & {shippingAddress: {recipientName: string; phone: string; addressLine1: string; city: string; postalCode: string}; items: Array<{productName: string; quantity: number; unitPrice: number; total: number}>}}>(`/orders/${encodeURIComponent(id)}`)
 };
-export type CustomerOrder = { _id: string; orderNumber: string; status: string; paymentStatus: string; subtotal: number; shipping: number; total: number; createdAt: string };
+export type CustomerOrder = { _id: string; orderNumber: string; status: string; paymentStatus: string; subtotal: number; shipping: number; total: number; createdAt: string; manualPayment?: { status: string; failureReason?: string } };
 export const userService = { profile: async () => request<{success: boolean; user: AuthUser}>('/users/profile'), updateProfile: async (payload: {firstName: string; lastName: string; phone: string}) => request<{success: boolean; user: AuthUser}>('/users/profile', {method: 'PUT', body: JSON.stringify(payload)}) };
 export type ProductReview = { _id: string; rating: number; title?: string; body: string; createdAt: string; user?: { firstName: string; lastName: string } };
 export const reviewService = { list: async (productId: string) => request<{success: boolean; data: ProductReview[]}>(`/reviews/${encodeURIComponent(productId)}`), create: async (payload: {productId: string; rating: number; title?: string; body: string}) => request<{success: boolean; data: ProductReview}>('/reviews', {method: 'POST', body: JSON.stringify(payload)}) };
@@ -307,10 +307,11 @@ export type PaymentSetting = {
   mode: 'test' | 'live';
   isConfigured: boolean;
   credentials?: {
-    test?: { key?: string; secret?: string; endpoint?: string };
-    live?: { key?: string; secret?: string; endpoint?: string };
+    test?: { key?: string; secret?: string; endpoint?: string; app_key?: string; app_secret?: string; username?: string; password?: string };
+    live?: { key?: string; secret?: string; endpoint?: string; app_key?: string; app_secret?: string; username?: string; password?: string };
   };
   manualDetails?: { accountNumber?: string; accountType?: string; instructions?: string; };
+  manualMethods?: Array<{ id: string; name: string; accountNumber?: string; accountType?: string; bankInfo?: string; instructions?: string; logo?: string; enabled: boolean; sortOrder: number; }>;
   codDetails?: { minAmount?: number; maxAmount?: number; fee?: number; };
 };
 
@@ -320,4 +321,31 @@ export const adminPaymentSettingsService = {
     request<{ message: string; data: PaymentSetting }>(`/admin/payments/settings/${provider}`, { method: 'PUT', body: JSON.stringify(data) }),
   testConnection: (provider: string) => 
     request<{ message: string }>(`/admin/payments/settings/${provider}/test`, { method: 'POST' })
+};
+
+export type AdminManualPaymentRequest = { _id: string; provider: string; method: string; amount: number; currency: string; transactionId: string; senderNumber?: string; reference?: string; status: 'submitted'|'under_review'|'approved'|'rejected'; failureReason?: string; createdAt: string; order: { _id: string; orderNumber: string; total: number; status: string; }; user: { name: string; email: string; }; };
+export const adminManualPaymentService = {
+  list: (params: Record<string, string | number | undefined> = {}) => {
+    const q = new URLSearchParams(Object.entries(params).filter(([, v]) => v !== undefined && v !== '').map(([k, v]) => [k, String(v)]));
+    return request<{ success: boolean; data: AdminManualPaymentRequest[]; pagination: { page: number; limit: number; total: number; pages: number } }>(`/admin/payments/manual-requests?${q}`);
+  },
+  updateStatus: (id: string, status: 'approved' | 'rejected' | 'under_review', failureReason?: string) =>
+    request<{ success: boolean; message: string }>(`/admin/payments/manual-requests/${id}/status`, { method: 'PUT', body: JSON.stringify({ status, failureReason }) })
+};
+
+export type AdminDeliveryZone = {
+  _id: string;
+  name: string;
+  type: string;
+  postalCodes: string[];
+  isActive: boolean;
+  deliveryCharge: number;
+  codAvailable: boolean;
+};
+
+export const adminDeliveryZoneService = {
+  list: () => request<{ success: boolean; data: AdminDeliveryZone[] }>('/admin/delivery-zones'),
+  create: (payload: Partial<AdminDeliveryZone>) => request<{ success: boolean; data: AdminDeliveryZone }>('/admin/delivery-zones', { method: 'POST', body: JSON.stringify(payload) }),
+  update: (id: string, payload: Partial<AdminDeliveryZone>) => request<{ success: boolean; data: AdminDeliveryZone }>(`/admin/delivery-zones/${id}`, { method: 'PUT', body: JSON.stringify(payload) }),
+  delete: (id: string) => request<{ success: boolean; data: { id: string } }>(`/admin/delivery-zones/${id}`, { method: 'DELETE' })
 };

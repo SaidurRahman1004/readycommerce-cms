@@ -37,7 +37,7 @@ exports.updatePaymentSetting = async (req, res) => {
     const tenantId = req.user.tenantId || null;
     const { 
       name, type, enabled, mode, credentials, 
-      manualDetails, codDetails, restrictions, logo, sortOrder 
+      manualDetails, manualMethods, codDetails, restrictions, logo, sortOrder 
     } = req.body;
 
     let setting = await PaymentSetting.findOne({ tenantId, provider });
@@ -59,6 +59,7 @@ exports.updatePaymentSetting = async (req, res) => {
     }
     
     if (manualDetails !== undefined) setting.manualDetails = manualDetails;
+    if (manualMethods !== undefined) setting.manualMethods = manualMethods;
     if (codDetails !== undefined) setting.codDetails = codDetails;
     if (restrictions !== undefined) setting.restrictions = restrictions;
     if (logo !== undefined) setting.logo = logo;
@@ -87,4 +88,53 @@ exports.testPaymentConnection = async (req, res) => {
   // const tenantId = req.user.tenantId || null;
   // TODO: Implement actual ping to provider using decrypted credentials
   res.json({ message: 'Connection successful (Mocked)' });
+};
+
+/**
+ * @desc    Get active payment methods for storefront checkout
+ * @route   GET /api/payments/methods
+ * @access  Public
+ */
+exports.getPublicPaymentMethods = async (req, res) => {
+  try {
+    const settings = await PaymentSetting.find({ enabled: true }).sort({ sortOrder: 1 });
+    
+    let activeMethods = [];
+    
+    for (const setting of settings) {
+      if (['stripe', 'sslcommerz', 'bkash'].includes(setting.provider)) {
+        activeMethods.push({
+          id: setting.provider,
+          name: setting.name || setting.provider,
+          type: 'online'
+        });
+      } else if (setting.provider === 'manual' && setting.manualMethods && setting.manualMethods.length > 0) {
+        for (const manual of setting.manualMethods) {
+          if (manual.enabled) {
+            activeMethods.push({
+              id: manual.id,
+              name: manual.name,
+              type: 'manual',
+              accountNumber: manual.accountNumber,
+              accountType: manual.accountType,
+              bankInfo: manual.bankInfo,
+              instructions: manual.instructions,
+              logo: manual.logo
+            });
+          }
+        }
+      } else if (setting.provider === 'cod') {
+        activeMethods.push({
+          id: 'cod',
+          name: setting.name || 'Cash on Delivery',
+          type: 'cod',
+          details: setting.codDetails
+        });
+      }
+    }
+
+    res.json({ success: true, data: activeMethods });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch payment methods', error: error.message });
+  }
 };
