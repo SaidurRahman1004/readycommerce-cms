@@ -170,3 +170,8 @@ This document serves as the central source of truth for the **ReadyCommerce CMS 
   - Installed `axios` in the backend and engineered a robust `BKashProvider.js` class integrating bKash's Tokenized API (`/checkout/create`, `/checkout/execute`).
   - Added a responsive Admin Dashboard configuration panel at `/settings/payments/bkash` to manage multi-tenant `app_key`, `app_secret`, `username`, and `password` for both Sandbox and Live modes.
   - Refactored the Storefront Checkout Client to graduate bKash from a "Manual" transaction-ID input flow to a fully automated redirection flow, dynamically exchanging authentication tokens and capturing funds via background API calls.
+* **[2026-09-10]**: **[Manual Payments, Cash on Delivery & Delivery Management]**:
+  - Implemented the end-to-end Manual Payment system, allowing custom offline methods (bKash, Nagad, Bank Transfer, etc.) with dynamic instruction UI during checkout and an Admin review dashboard (`/admin/payments/manual-requests`) for approving/rejecting manual transactions with failure reasons.
+  - Developed the Backend Delivery Zone API (`DeliveryZone` schema) mapping location hierarchies (postal codes and cities) to delivery charges and COD eligibility rules.
+  - Refactored `getShippingCost` and the Storefront Checkout to dynamically re-calculate shipping fees on user input and filter out Cash on Delivery when unavailable for a given postal code.
+  - Built comprehensive, responsive Admin Dashboard interfaces to manage custom Manual payment methods (`/settings/payments/manual`), Cash on Delivery limits/fees (`/settings/payments/cod`), and Delivery Zone mappings (`/settings/delivery/locations`).
