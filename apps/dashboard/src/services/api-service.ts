@@ -164,7 +164,40 @@ export const adminTeamService = {
 export type AdminMedia = { _id: string; filename: string; url: string; size: number; mimetype: string; createdAt: string };
 export const adminMediaService = {
   list: () => request<{ success: boolean; data: AdminMedia[]; pagination: { page: number; limit: number; total: number; pages: number } }>('/admin/media'),
-  upload: (files: File[]) => { const body = new FormData(); files.forEach((file) => body.append('files', file)); return request<{ success: boolean; data: AdminMedia[] }>('/admin/media/upload', { method: 'POST', body, headers: {} }); },
+  upload: (files: File[], onProgress?: (percent: number) => void) => {
+    return new Promise<{ success: boolean; data: AdminMedia[] }>((resolve, reject) => {
+      const body = new FormData();
+      files.forEach((file) => body.append('files', file));
+      
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', `${API_URL}/admin/media/upload`);
+      xhr.withCredentials = true; // For cookies/auth
+      
+      if (onProgress) {
+        xhr.upload.onprogress = (event) => {
+          if (event.lengthComputable) {
+            onProgress(Math.round((event.loaded / event.total) * 100));
+          }
+        };
+      }
+      
+      xhr.onload = () => {
+        try {
+          const response = JSON.parse(xhr.responseText);
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve(response);
+          } else {
+            reject(new Error(response.error?.message || response.message || 'Upload failed'));
+          }
+        } catch (e) {
+          reject(new Error('Invalid response from server'));
+        }
+      };
+      
+      xhr.onerror = () => reject(new Error('Network Error'));
+      xhr.send(body);
+    });
+  },
   remove: (id: string) => request<{ success: boolean }>(`/admin/media/${encodeURIComponent(id)}`, { method: 'DELETE' }),
 };
 export type AdminNotification = { _id: string; title: string; message: string; type: 'order'|'inventory'|'system'; isRead: boolean; targetUrl?: string; createdAt: string };
@@ -264,4 +297,27 @@ export const adminCampaignService = {
     request<{ success: boolean; message: string }>(`/admin/campaigns/${encodeURIComponent(id)}`, {
       method: 'DELETE',
     }),
+};
+
+export type PaymentSetting = {
+  provider: 'stripe' | 'sslcommerz' | 'bkash' | 'manual' | 'cod';
+  type: 'online' | 'manual' | 'cod';
+  name: string;
+  enabled: boolean;
+  mode: 'test' | 'live';
+  isConfigured: boolean;
+  credentials?: {
+    test?: { key?: string; secret?: string; endpoint?: string };
+    live?: { key?: string; secret?: string; endpoint?: string };
+  };
+  manualDetails?: { accountNumber?: string; accountType?: string; instructions?: string; };
+  codDetails?: { minAmount?: number; maxAmount?: number; fee?: number; };
+};
+
+export const adminPaymentSettingsService = {
+  getSettings: () => request<{ success: boolean; data: PaymentSetting[] }>('/admin/payments/settings'),
+  updateSetting: (provider: string, data: Partial<PaymentSetting>) => 
+    request<{ message: string; data: PaymentSetting }>(`/admin/payments/settings/${provider}`, { method: 'PUT', body: JSON.stringify(data) }),
+  testConnection: (provider: string) => 
+    request<{ message: string }>(`/admin/payments/settings/${provider}/test`, { method: 'POST' })
 };

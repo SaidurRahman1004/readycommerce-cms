@@ -18,6 +18,7 @@ export default function ProductReviews({ productId }: { productId: string }) {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoading(true);
     reviewService
       .list(productId)

@@ -156,3 +156,8 @@ This document serves as the central source of truth for the **ReadyCommerce CMS 
     - `success-client.tsx`: Enhanced order completion screen with an animated green checkmark, confirmed status chip, timeline summary (packaging, 24-48h delivery, SMS/email updates), and a "View Order in Account" button.
     - `product-detail.tsx`, `wishlist-page.tsx`, `search-results.tsx`, & `search-bar.tsx`: Replaced raw skeletons with `ProductCardSkeleton`, connected `EmptyState` and `ErrorState` handling, and added live dropdown loading and zero-match suggestions in the search bar.
   - **Build & Quality Gates**: Successfully validated Next.js 16 production builds across both `apps/storefront` and `apps/dashboard` with 0 type errors, zero hydration mismatches, and fully responsive breakpoints.
+* **[2026-09-09]**: **[Global Error Handling Audit & Resiliency Upgrades]**:
+  - Upgraded `404` (Not Found) and `error.tsx` (500 Server Error) pages in both `apps/dashboard` and `apps/storefront` with premium, user-friendly designs and return-home CTAs.
+  - Hardened `api-service.ts` across both apps with global `AbortController` timeouts (15s limit) and automatic `401/403` redirection logic for unauthenticated states.
+  - Created standardized UI primitives: `<FormError>` for validation states and `<ImageWithFallback>` for graceful broken-image handling in the Storefront.
+  - Investigated and fixed the `npm run dev` lifecycle failure post-merge by correctly marking the new Next.js `not-found.tsx` files as `'use client'` to allow `window.history.back()` event handlers.

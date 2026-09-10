@@ -27,6 +27,8 @@ const campaignRoutes = require('./routes/campaignRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const adminNotificationRoutes = require('./routes/adminNotificationRoutes');
 const adminMediaRoutes = require('./routes/adminMediaRoutes');
+const paymentSettingsRoutes = require('./routes/paymentSettingsRoutes');
+const webhookRoutes = require('./routes/webhookRoutes');
 
 const app = express();
 
@@ -48,7 +50,13 @@ app.use(rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 }));
-app.use(express.json());
+app.use(express.json({
+  verify: (req, res, buf) => {
+    if (req.originalUrl.startsWith('/api/webhooks')) {
+      req.rawBody = buf;
+    }
+  }
+}));
 app.use(express.urlencoded({ extended: true }));
 
 app.get('/api/health', (req, res) => {
@@ -79,6 +87,8 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/admin/notifications', adminNotificationRoutes);
 app.use('/api/admin/media', adminMediaRoutes);
 app.use('/api/admin/manuals', adminManualRoutes);
+app.use('/api/admin/payments', paymentSettingsRoutes);
+app.use('/api/webhooks', webhookRoutes);
 app.get('/api/manuals/customer-guides', optionalAuth, customerGuides);
 app.use('/uploads', express.static(path.resolve(__dirname, '../public/uploads'), { index: false, maxAge: '1d' }));
 
