@@ -1,7 +1,5 @@
 const Stripe = require('stripe');
 const PaymentProvider = require('../PaymentProvider');
-const Order = require('../../../models/Order');
-const Payment = require('../../../models/Payment');
 
 class StripeProvider extends PaymentProvider {
   constructor() {
@@ -9,7 +7,7 @@ class StripeProvider extends PaymentProvider {
   }
 
   _getStripeInstance(paymentSetting) {
-    const creds = JSON.parse(paymentSetting.getDecryptedCredentials() || '{}');
+    const creds = paymentSetting.getDecryptedCredentials() || {};
     const secretKey = paymentSetting.mode === 'live' ? creds.liveSecretKey : creds.testSecretKey;
     if (!secretKey) throw new Error(`Stripe ${paymentSetting.mode} secret key not configured`);
     
@@ -87,27 +85,37 @@ class StripeProvider extends PaymentProvider {
     }
 
     let internalStatus = 'pending';
+    let orderId;
+    let amount;
+    let currency;
+    let transactionId;
     if (event.type === 'checkout.session.completed') {
-      internalStatus = 'processed';
+      internalStatus = 'paid';
       
       const session = event.data.object;
-      const orderId = session.metadata.orderId;
-      
-      if (orderId) {
-         await Payment.findOneAndUpdate(
-           { order: orderId, provider: 'stripe' },
-           { status: 'paid', transactionId: session.payment_intent || session.id }
-         );
-         await Order.findByIdAndUpdate(orderId, { paymentStatus: 'paid' });
-      }
+      orderId = session.metadata?.orderId || session.client_reference_id;
+      amount = session.amount_total;
+      currency = session.currency;
+      transactionId = session.payment_intent || session.id;
+      if (session.payment_status !== 'paid') internalStatus = 'failed';
     } else if (event.type === 'checkout.session.expired') {
       internalStatus = 'failed';
+      const session = event.data.object;
+      orderId = session.metadata?.orderId || session.client_reference_id;
+      amount = session.amount_total;
+      currency = session.currency;
+      transactionId = session.payment_intent || session.id;
     }
 
     return {
       eventId: event.id,
       status: internalStatus,
-      payload: event
+      payload: event,
+      orderId,
+      amount,
+      amountIsMinor: true,
+      currency,
+      transactionId,
     };
   }
 
