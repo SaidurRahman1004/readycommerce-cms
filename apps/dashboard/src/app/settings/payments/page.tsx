@@ -11,17 +11,17 @@ export default function PaymentSettingsPage() {
   const [error, setError] = useState(false);
   const [activeProvider, setActiveProvider] = useState<PaymentSetting | null>(null);
 
-  useEffect(() => {
-    loadProviders();
-  }, []);
-
-  const loadProviders = () => {
+  function loadProviders() {
     setLoading(true);
     adminPaymentSettingsService.getSettings()
       .then(res => setProviders(res.data))
       .catch(() => setError(true))
       .finally(() => setLoading(false));
-  };
+  }
+
+  useEffect(() => {
+    loadProviders();
+  }, []);
 
   const toggleStatus = async (provider: PaymentSetting) => {
     const toastId = toast.loading(`Updating ${provider.name}...`);

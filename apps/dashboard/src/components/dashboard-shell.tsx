@@ -80,8 +80,8 @@ const isActiveRoute = (pathname: string, href: string) =>
   href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(`${href}/`);
 
 function AdminLoginCard({ onLoginSuccess }: { onLoginSuccess: (user: AdminIdentity) => void }) {
-  const [email, setEmail] = useState('siyamsdev2005@gmail.com');
-  const [password, setPassword] = useState('siyamsdev2005@');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e?: React.FormEvent) => {
@@ -129,30 +129,6 @@ function AdminLoginCard({ onLoginSuccess }: { onLoginSuccess: (user: AdminIdenti
           <p className="mt-1 text-sm text-slate-500">
             Sign in to manage ReadyCommerce store & campaigns
           </p>
-        </div>
-
-        <div className="mt-6 rounded-2xl border border-primary/20 bg-primary/5 p-4 text-xs">
-          <div className="flex items-center justify-between font-bold text-primary">
-            <span className="flex items-center gap-1.5">
-              <Shield className="h-4 w-4" />
-              <span>Configured Super-Admin:</span>
-            </span>
-            <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-black uppercase">Active</span>
-          </div>
-          <p className="mt-1.5 font-mono text-slate-700">
-            <strong>Email:</strong> siyamsdev2005@gmail.com
-          </p>
-          <p className="mt-0.5 font-mono text-slate-700">
-            <strong>Pass:</strong> siyamsdev2005@
-          </p>
-          <button
-            type="button"
-            onClick={() => handleLogin()}
-            disabled={loading}
-            className="mt-3 flex h-9 w-full items-center justify-center gap-2 rounded-xl bg-primary text-xs font-bold text-white shadow-sm transition hover:bg-primary/90 disabled:opacity-50"
-          >
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <span>⚡ Instant One-Click Login</span>}
-          </button>
         </div>
 
         <form onSubmit={handleLogin} className="mt-6 space-y-4">

@@ -15,7 +15,7 @@ export interface Column<T> {
 export interface DataTableProps<T> {
   data: T[];
   columns: Column<T>[];
-  keyExtractor: (row: T) => string;
+  keyExtractor?: (row: T) => string;
   isLoading?: boolean;
   emptyState?: ReactNode;
   onRowClick?: (row: T) => void;
@@ -28,7 +28,7 @@ export interface DataTableProps<T> {
 export function DataTable<T>({
   data,
   columns,
-  keyExtractor,
+  keyExtractor = (row) => String((row as { _id?: string })._id ?? ''),
   isLoading = false,
   emptyState,
   onRowClick,

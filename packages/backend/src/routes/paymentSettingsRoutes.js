@@ -1,4 +1,6 @@
 const express = require('express');
+const cookieParser = require('cookie-parser');
+const { authMiddleware, authorize } = require('../middlewares/authMiddleware');
 const router = express.Router();
 const { 
   getPaymentSettings, 
@@ -6,10 +8,7 @@ const {
   testPaymentConnection 
 } = require('../controllers/paymentSettingsController');
 
-// TODO: Add auth middleware (e.g. protect, authorize('admin'))
-// const { protect, authorize } = require('../middleware/auth');
-// router.use(protect);
-// router.use(authorize('admin'));
+router.use(cookieParser(), authMiddleware, authorize('super-admin', 'manager'));
 
 router.route('/settings')
   .get(getPaymentSettings);

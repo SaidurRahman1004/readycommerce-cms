@@ -66,7 +66,7 @@ export const cartService = {
 };
 export type CustomerAddress = { _id: string; type: string; label: string; recipientName: string; phone: string; addressLine1: string; addressLine2?: string; city: string; state?: string; postalCode: string; country: string; isDefault: boolean };
 export const addressService = { list: async () => request<{success: boolean; data: CustomerAddress[]}>('/addresses'), create: async (payload: Omit<CustomerAddress, '_id' | 'isDefault'> & {isDefault?: boolean}) => request<{success: boolean; data: CustomerAddress}>('/addresses', {method: 'POST', body: JSON.stringify(payload)}) };
-export const shippingService = { quote: async (city: string) => request<{success: boolean; data: {city: string; cost: number; currency: string}}>(`/shipping/quote?city=${encodeURIComponent(city)}`) };
+export const shippingService = { quote: async (city: string, postalCode?: string) => request<{ success: boolean; data: { city: string; postalCode?: string; cost: number; codAvailable: boolean; zoneName: string; currency: string } }>(`/shipping/quote?city=${encodeURIComponent(city)}&postal=${encodeURIComponent(postalCode || '')}`) };
 export const couponService = { validate: async (code: string, orderAmount: number) => request<{success: boolean; data: {code: string; discount: number; discountType: string; discountValue: number}}>('/coupons/validate', {method: 'POST', body: JSON.stringify({code, orderAmount})}) };
 export type WishlistResponse = {productId: string; addedAt?: string};
 export const wishlistService = {
@@ -77,7 +77,7 @@ export const wishlistService = {
 export const manualService = { customerGuides: async () => request<{ success: boolean; data: CustomerManual[] }>('/manuals/customer-guides') };
 
 export type AuthPayload = {name?: string; email: string; password: string};
-export type CheckoutPayload = {addressId: string; paymentMethod: 'bkash' | 'nagad' | 'stripe'; txid: string; couponCode?: string; idempotencyKey?: string};
+export type CheckoutPayload = {addressId: string; paymentMethod: string; txid: string; senderNumber?: string; reference?: string; couponCode?: string; idempotencyKey?: string};
 
 export const authService = {
   login: async (payload: AuthPayload) => request<{success: boolean; user: AuthUser}>('/auth/login', {method: 'POST', body: JSON.stringify({email: payload.email, password: payload.password})}),
@@ -96,7 +96,7 @@ export const orderService = {
   cancel: async (id: string) => request<{success: boolean; data: {orderId: string; status: string}}>(`/orders/${encodeURIComponent(id)}/cancel`, {method: 'PUT'})
   ,details: async (id: string) => request<{success: boolean; data: CustomerOrder & {shippingAddress: {recipientName: string; phone: string; addressLine1: string; city: string; postalCode: string}; items: Array<{productName: string; quantity: number; unitPrice: number; total: number}>}}>(`/orders/${encodeURIComponent(id)}`)
 };
-export type CustomerOrder = { _id: string; orderNumber: string; status: string; paymentStatus: string; subtotal: number; shipping: number; total: number; createdAt: string };
+export type CustomerOrder = { _id: string; orderNumber: string; status: string; paymentStatus: string; subtotal: number; shipping: number; total: number; createdAt: string; manualPayment?: { status: string; failureReason?: string } };
 export const userService = { profile: async () => request<{success: boolean; user: AuthUser}>('/users/profile'), updateProfile: async (payload: {firstName: string; lastName: string; phone: string}) => request<{success: boolean; user: AuthUser}>('/users/profile', {method: 'PUT', body: JSON.stringify(payload)}) };
 export type ProductReview = { _id: string; rating: number; title?: string; body: string; createdAt: string; isVerifiedPurchase?: boolean; user?: { firstName: string; lastName: string } };
 export const reviewService = { list: async (productId: string) => request<{success: boolean; data: ProductReview[]}>(`/reviews/${encodeURIComponent(productId)}`), create: async (payload: {productId: string; rating: number; title?: string; body: string}) => request<{success: boolean; data: ProductReview}>('/reviews', {method: 'POST', body: JSON.stringify(payload)}) };

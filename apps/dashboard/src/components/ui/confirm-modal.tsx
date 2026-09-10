@@ -1,10 +1,11 @@
 'use client';
-import { useEffect } from 'react';
+import { ReactNode, useEffect } from 'react';
 import { AlertTriangle, X } from 'lucide-react';
 
 interface ConfirmModalProps {
   isOpen: boolean;
-  onClose: () => void;
+  onClose?: () => void;
+  onCancel?: () => void;
   onConfirm: () => void;
   title: string;
   description: string;
@@ -12,11 +13,13 @@ interface ConfirmModalProps {
   cancelText?: string;
   isLoading?: boolean;
   isDestructive?: boolean;
+  children?: ReactNode;
 }
 
 export function ConfirmModal({
   isOpen,
   onClose,
+  onCancel,
   onConfirm,
   title,
   description,
@@ -24,7 +27,9 @@ export function ConfirmModal({
   cancelText = 'Cancel',
   isLoading = false,
   isDestructive = true,
+  children,
 }: ConfirmModalProps) {
+  const close = onClose || onCancel || (() => undefined);
   // Prevent body scroll when open
   useEffect(() => {
     if (isOpen) document.body.style.overflow = 'hidden';
@@ -39,7 +44,7 @@ export function ConfirmModal({
       {/* Backdrop */}
       <div 
         className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" 
-        onClick={!isLoading ? onClose : undefined}
+        onClick={!isLoading ? close : undefined}
       />
       
       {/* Modal Content */}
@@ -63,7 +68,7 @@ export function ConfirmModal({
           <div className="flex w-full flex-col gap-3 sm:flex-row">
             <button
               type="button"
-              onClick={onClose}
+              onClick={close}
               disabled={isLoading}
               className="flex-1 rounded-xl border border-border bg-white px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-50"
             >
@@ -82,6 +87,7 @@ export function ConfirmModal({
               {isLoading ? 'Processing...' : confirmText}
             </button>
           </div>
+          {children}
         </div>
       </div>
     </div>
